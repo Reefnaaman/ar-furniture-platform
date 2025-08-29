@@ -1,44 +1,53 @@
+import { createClient } from '@supabase/supabase-js';
+
 /**
- * Test database connection
+ * Test Supabase connection
  * GET /api/db-test
  */
 export default async function handler(req, res) {
   try {
-    // Test importing postgres
-    console.log('Importing @vercel/postgres...');
-    const { sql } = await import('@vercel/postgres');
+    // Test importing Supabase
+    console.log('Testing Supabase connection...');
     
-    console.log('Testing database connection...');
-    // Simple query to test connection
-    const result = await sql`SELECT NOW() as current_time, version() as pg_version;`;
+    const supabaseUrl = process.env.SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_ANON_KEY;
     
-    console.log('Database query successful!');
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase environment variables');
+    }
+    
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    
+    // Test connection with a simple query
+    const { data, error } = await supabase
+      .from('models')
+      .select('count(*)')
+      .limit(1);
+    
+    if (error) throw error;
+    
+    console.log('Supabase connection successful!');
     
     res.status(200).json({
       success: true,
-      message: 'Database connection working!',
-      data: result.rows[0],
+      message: 'Supabase connection working!',
       env_check: {
-        postgres_url: !!process.env.POSTGRES_URL,
-        postgres_prisma_url: !!process.env.POSTGRES_PRISMA_URL,
-        postgres_host: !!process.env.POSTGRES_HOST
-      }
+        supabase_url: !!process.env.SUPABASE_URL,
+        supabase_anon_key: !!process.env.SUPABASE_ANON_KEY
+      },
+      table_accessible: true
     });
     
   } catch (error) {
-    console.error('Database test error:', error);
+    console.error('Supabase test error:', error);
     
     res.status(500).json({
       success: false,
       error: error.message,
       stack: error.stack,
       env_vars_present: {
-        postgres_url: !!process.env.POSTGRES_URL,
-        postgres_prisma_url: !!process.env.POSTGRES_PRISMA_URL,
-        postgres_host: !!process.env.POSTGRES_HOST,
-        postgres_user: !!process.env.POSTGRES_USER,
-        postgres_password: !!process.env.POSTGRES_PASSWORD,
-        postgres_database: !!process.env.POSTGRES_DATABASE
+        supabase_url: !!process.env.SUPABASE_URL,
+        supabase_anon_key: !!process.env.SUPABASE_ANON_KEY
       }
     });
   }
