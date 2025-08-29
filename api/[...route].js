@@ -24,11 +24,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { route } = req.query;
-    const routePath = Array.isArray(route) ? route.join('/') : route;
+    // Parse route from URL path instead of query params
+    const url = new URL(req.url, `https://${req.headers.host}`);
+    const pathParts = url.pathname.split('/').filter(Boolean); // ['api', 'upload-simple'] or ['api', 'models']
+    const routePath = pathParts.slice(1).join('/'); // Remove 'api' prefix: 'upload-simple' or 'models'
     
     // Debug logging
-    console.log('Route debug:', { route, routePath, method: req.method });
+    console.log('Route debug:', { 
+      url: req.url, 
+      pathname: url.pathname, 
+      pathParts, 
+      routePath, 
+      method: req.method 
+    });
     
     // Route: /api/upload-simple
     if (routePath === 'upload-simple') {
@@ -41,21 +49,20 @@ export default async function handler(req, res) {
     }
     
     // Route: /api/model/[id]
-    if (routePath?.startsWith('model/') && routePath.split('/').length === 2) {
-      const modelId = routePath.split('/')[1];
-      return await handleModelFile(req, res, modelId);
-    }
-    
-    // Route: /api/model/[id]/info
-    if (routePath?.startsWith('model/') && routePath.endsWith('/info')) {
-      const modelId = routePath.split('/')[1];
-      return await handleModelInfo(req, res, modelId);
-    }
-    
-    // Route: /api/model/[id]/view
-    if (routePath?.startsWith('model/') && routePath.endsWith('/view')) {
-      const modelId = routePath.split('/')[1];
-      return await handleModelView(req, res, modelId);
+    if (routePath?.startsWith('model/')) {
+      const routeParts = routePath.split('/');
+      const modelId = routeParts[1];
+      
+      if (routeParts.length === 2) {
+        // /api/model/[id]
+        return await handleModelFile(req, res, modelId);
+      } else if (routeParts.length === 3 && routeParts[2] === 'info') {
+        // /api/model/[id]/info
+        return await handleModelInfo(req, res, modelId);
+      } else if (routeParts.length === 3 && routeParts[2] === 'view') {
+        // /api/model/[id]/view
+        return await handleModelView(req, res, modelId);
+      }
     }
     
     // 404 for unknown routes
