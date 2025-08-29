@@ -1,4 +1,4 @@
-import { incrementViewCount } from '../../../lib/database.js';
+import { incrementViewCount } from '../../../lib/supabase.js';
 
 /**
  * Track model view

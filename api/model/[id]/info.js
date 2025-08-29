@@ -1,4 +1,4 @@
-import { getModel } from '../../../lib/database.js';
+import { getModel } from '../../../lib/supabase.js';
 
 /**
  * Get model info

@@ -1,5 +1,5 @@
 import { uploadModel } from '../lib/cloudinary.js';
-import { saveModel, initDatabase } from '../lib/database.js';
+import { saveModel } from '../lib/supabase.js';
 import multiparty from 'multiparty';
 
 export const config = {
@@ -27,8 +27,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Initialize database
-    await initDatabase();
+    // No database initialization needed with Supabase
     
     // Parse form using multiparty
     const form = new multiparty.Form();

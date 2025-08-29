@@ -1,4 +1,4 @@
-import { getAllModels, getStats, deleteModel } from '../lib/database.js';
+import { getAllModels, getStats, deleteModel } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 
 /**

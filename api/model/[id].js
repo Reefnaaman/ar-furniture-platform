@@ -1,4 +1,4 @@
-import { getModel, incrementViewCount } from '../../lib/database.js';
+import { getModel, incrementViewCount } from '../../lib/supabase.js';
 
 /**
  * Get model by ID

@@ -9,7 +9,7 @@
   },
   "dependencies": {
     "cloudinary": "^1.41.0",
-    "@vercel/postgres": "^0.5.1",
+    "@supabase/supabase-js": "^2.38.0",
     "nanoid": "^5.0.4",
     "multiparty": "^4.2.3"
   },
