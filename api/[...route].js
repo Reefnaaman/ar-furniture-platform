@@ -112,6 +112,15 @@ async function handleUpload(req, res) {
 
     // Save to database
     console.log('Saving to database...');
+    console.log('Data to save:', {
+      title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
+      description: fields.description?.[0] || '',
+      filename: uploadedFile.originalFilename,
+      cloudinaryUrl: cloudinaryResult.url,
+      cloudinaryPublicId: cloudinaryResult.publicId,
+      fileSize: cloudinaryResult.size
+    });
+    
     const dbResult = await saveModel({
       title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
       description: fields.description?.[0] || '',
@@ -125,8 +134,14 @@ async function handleUpload(req, res) {
       }
     });
 
+    console.log('Database save result:', dbResult);
+
     if (!dbResult.success) {
-      return res.status(500).json({ error: 'Failed to save model to database' });
+      console.error('Database save failed:', dbResult.error);
+      return res.status(500).json({ 
+        error: 'Failed to save model to database',
+        details: dbResult.error || 'Unknown database error'
+      });
     }
 
     // Clean up temp file
