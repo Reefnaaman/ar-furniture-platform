@@ -1,16 +1,13 @@
 {
   "functions": {
-    "api/upload.js": {
+    "api/[...route].js": {
       "maxDuration": 30
-    },
-    "api/model/[id].js": {
-      "maxDuration": 10
     }
   },
   "rewrites": [
     {
       "source": "/",
-      "destination": "/index.html"
+      "destination": "/admin.html"
     },
     {
       "source": "/view",
