@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Admin Dashboard - newfurniture.live</title>
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -127,39 +128,92 @@
             background: #5568d3;
         }
         
-        .models-table {
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+        
+        .model-card {
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 5px 20px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+        }
+        
+        .model-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        }
+        
+        .model-preview {
+            position: relative;
+            height: 250px;
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+        }
+        
+        .model-viewer {
             width: 100%;
-            border-collapse: collapse;
+            height: 100%;
         }
         
-        .models-table th {
-            text-align: left;
-            padding: 15px;
-            background: #f9f9f9;
-            color: #666;
-            font-weight: 600;
-            border-bottom: 2px solid #e0e0e0;
-        }
-        
-        .models-table td {
-            padding: 15px;
-            border-bottom: 1px solid #f0f0f0;
-        }
-        
-        .models-table tr:hover {
-            background: #f9f9f9;
+        .model-info {
+            padding: 20px;
         }
         
         .model-title {
+            font-size: 1.2rem;
             font-weight: 600;
             color: #333;
-            margin-bottom: 5px;
+            margin-bottom: 8px;
+        }
+        
+        .model-description {
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+        
+        .model-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            font-size: 0.85rem;
+            color: #888;
         }
         
         .model-id {
-            color: #999;
-            font-size: 0.85rem;
             font-family: monospace;
+            background: #f0f0f0;
+            padding: 2px 6px;
+            border-radius: 4px;
+        }
+        
+        .model-stats {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+        }
+        
+        .stat-item {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-top: 2px;
         }
         
         .model-actions {
@@ -396,43 +450,66 @@
                 return;
             }
             
-            let html = `
-                <table class="models-table">
-                    <thead>
-                        <tr>
-                            <th>Model</th>
-                            <th>Views</th>
-                            <th>Size</th>
-                            <th>Uploaded</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
+            let html = '<div class="models-grid">';
             
             models.forEach(model => {
                 const viewUrl = `https://newfurniture.live/view?id=${model.id}`;
+                const modelUrl = `/api/model/${model.id}`;
+                
                 html += `
-                    <tr>
-                        <td>
+                    <div class="model-card">
+                        <div class="model-preview">
+                            <model-viewer
+                                class="model-viewer"
+                                src="${modelUrl}"
+                                alt="${model.title || 'Furniture Model'}"
+                                camera-controls
+                                auto-rotate
+                                auto-rotate-delay="1000"
+                                rotation-per-second="30deg"
+                                shadow-intensity="1"
+                                camera-orbit="45deg 55deg 2.5m"
+                                loading="eager">
+                            </model-viewer>
+                        </div>
+                        
+                        <div class="model-info">
                             <div class="model-title">${model.title || 'Untitled'}</div>
-                            <div class="model-id">ID: ${model.id}</div>
-                        </td>
-                        <td>${model.view_count || 0}</td>
-                        <td>${formatFileSize(model.file_size)}</td>
-                        <td>${formatDate(model.upload_date)}</td>
-                        <td>
-                            <div class="model-actions">
-                                <a href="/view?id=${model.id}" target="_blank" class="action-button">View</a>
-                                <button class="action-button" onclick="copyToClipboard('${viewUrl}', this)">Copy Link</button>
-                                <button class="action-button delete" onclick="deleteModel('${model.id}', '${model.cloudinary_public_id}')">Delete</button>
+                            <div class="model-description">${model.description || 'No description provided'}</div>
+                            
+                            <div class="model-meta">
+                                <span class="model-id">${model.id}</span>
+                                <span>${formatDate(model.upload_date)}</span>
                             </div>
-                        </td>
-                    </tr>
+                            
+                            <div class="model-stats">
+                                <div class="stat-item">
+                                    <div class="stat-value">${model.view_count || 0}</div>
+                                    <div class="stat-label">Views</div>
+                                </div>
+                                <div class="stat-item">
+                                    <div class="stat-value">${formatFileSize(model.file_size)}</div>
+                                    <div class="stat-label">Size</div>
+                                </div>
+                            </div>
+                            
+                            <div class="model-actions">
+                                <a href="/view?id=${model.id}" target="_blank" class="action-button">
+                                    👁️ View AR
+                                </a>
+                                <button class="action-button" onclick="copyToClipboard('${viewUrl}', this)">
+                                    📋 Copy Link
+                                </button>
+                                <button class="action-button delete" onclick="deleteModel('${model.id}', '${model.cloudinary_public_id}')">
+                                    🗑️ Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 `;
             });
             
-            html += '</tbody></table>';
+            html += '</div>';
             document.getElementById('modelsContainer').innerHTML = html;
         }
         
