@@ -10,15 +10,15 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/pages/index.html"
+      "destination": "/index.html"
     },
     {
       "source": "/view",
-      "destination": "/pages/view.html"
+      "destination": "/view.html"
     },
     {
       "source": "/admin",
-      "destination": "/pages/admin.html"
+      "destination": "/admin.html"
     }
   ],
   "headers": [
