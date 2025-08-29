@@ -1,11 +1,9 @@
 import { uploadModel } from '../lib/cloudinary.js';
-import { saveModel } from '../lib/database.js';
+import { saveModel, initDatabase } from '../lib/database.js';
 
 export const config = {
   api: {
-    bodyParser: {
-      sizeLimit: '100mb'
-    }
+    bodyParser: false
   }
 };
 
@@ -14,12 +12,23 @@ export const config = {
  * POST /api/upload
  */
 export default async function handler(req, res) {
-  // Only allow POST
+  // Enable CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
   try {
+    // Ensure database is initialized
+    await initDatabase();
+    
     // Parse multipart form data
     const { file, title, description } = await parseFormData(req);
     
@@ -77,9 +86,10 @@ export default async function handler(req, res) {
 
   } catch (error) {
     console.error('Upload error:', error);
-    res.status(500).json({ 
+    return res.status(500).json({ 
       error: 'Upload failed', 
-      details: error.message 
+      details: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
     });
   }
 }
