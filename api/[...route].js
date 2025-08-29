@@ -27,6 +27,9 @@ export default async function handler(req, res) {
     const { route } = req.query;
     const routePath = Array.isArray(route) ? route.join('/') : route;
     
+    // Debug logging
+    console.log('Route debug:', { route, routePath, method: req.method });
+    
     // Route: /api/upload-simple
     if (routePath === 'upload-simple') {
       return await handleUpload(req, res);
