@@ -1,6 +1,6 @@
 {
   "name": "ar-furniture-platform",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "AR Furniture Viewing Platform for newfurniture.live",
   "scripts": {
     "dev": "vercel dev",
