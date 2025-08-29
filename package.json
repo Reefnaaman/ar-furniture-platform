@@ -1,0 +1,22 @@
+{
+  "name": "ar-furniture-platform",
+  "version": "1.0.0",
+  "description": "AR Furniture Viewing Platform for newfurniture.live",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build required for serverless'",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "cloudinary": "^1.41.0",
+    "@vercel/postgres": "^0.5.1",
+    "nanoid": "^5.0.4",
+    "multer": "^1.4.5-lts.1"
+  },
+  "devDependencies": {
+    "vercel": "^32.5.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

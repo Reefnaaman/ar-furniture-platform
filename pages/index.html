@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload AR Furniture - newfurniture.live</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 40px;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .header p {
+            font-size: 1.1rem;
+            opacity: 0.95;
+        }
+        
+        .upload-card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .drop-zone {
+            border: 3px dashed #e0e0e0;
+            border-radius: 15px;
+            padding: 60px 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            background: #fafafa;
+        }
+        
+        .drop-zone:hover {
+            border-color: #667eea;
+            background: #f0f5ff;
+        }
+        
+        .drop-zone.dragover {
+            border-color: #667eea;
+            background: #e8efff;
+            transform: scale(1.02);
+        }
+        
+        .drop-zone.uploading {
+            pointer-events: none;
+            opacity: 0.6;
+        }
+        
+        .upload-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+        
+        .upload-text {
+            color: #333;
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .upload-subtext {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .file-input {
+            display: none;
+        }
+        
+        .form-group {
+            margin-top: 30px;
+        }
+        
+        .form-group label {
+            display: block;
+            color: #333;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .upload-button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 30px;
+            width: 100%;
+            font-weight: 600;
+        }
+        
+        .upload-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+        }
+        
+        .upload-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+        
+        .progress-bar {
+            display: none;
+            margin-top: 20px;
+            background: #f0f0f0;
+            border-radius: 50px;
+            overflow: hidden;
+            height: 10px;
+        }
+        
+        .progress-fill {
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            height: 100%;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .result-card {
+            display: none;
+            background: #f0fff4;
+            border: 2px solid #4caf50;
+            border-radius: 15px;
+            padding: 30px;
+            margin-top: 30px;
+            text-align: center;
+        }
+        
+        .result-card h3 {
+            color: #4caf50;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+        
+        .result-link {
+            background: #f5f5f5;
+            padding: 15px;
+            border-radius: 10px;
+            margin: 10px 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .result-link input {
+            background: none;
+            border: none;
+            flex: 1;
+            font-size: 0.9rem;
+            color: #333;
+        }
+        
+        .copy-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-size: 0.85rem;
+        }
+        
+        .copy-button:hover {
+            background: #5568d3;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-button {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: #333;
+            display: inline-block;
+            text-align: center;
+        }
+        
+        .action-button:hover {
+            border-color: #667eea;
+            background: #f0f5ff;
+        }
+        
+        .file-preview {
+            display: none;
+            margin-top: 20px;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 10px;
+        }
+        
+        .file-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .file-icon {
+            font-size: 2rem;
+        }
+        
+        .file-details {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        
+        .file-size {
+            color: #666;
+            font-size: 0.9rem;
+        }
+        
+        .remove-file {
+            color: #cc0000;
+            cursor: pointer;
+            font-size: 1.5rem;
+        }
+        
+        .error-message {
+            display: none;
+            background: #fff5f5;
+            color: #cc0000;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 40px;
+        }
+        
+        .feature {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+        
+        .feature-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+        }
+        
+        .feature-title {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+        
+        .feature-desc {
+            color: #666;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🪑 AR Furniture Upload</h1>
+            <p>Upload your 3D models and share them instantly</p>
+        </div>
+        
+        <div class="upload-card">
+            <form id="uploadForm">
+                <div class="drop-zone" id="dropZone">
+                    <div class="upload-icon">📦</div>
+                    <div class="upload-text">Drop your 3D model here</div>
+                    <div class="upload-subtext">or click to browse (GLB/GLTF files, max 100MB)</div>
+                    <input type="file" class="file-input" id="fileInput" accept=".glb,.gltf">
+                </div>
+                
+                <div class="file-preview" id="filePreview">
+                    <div class="file-info">
+                        <div class="file-icon">📄</div>
+                        <div class="file-details">
+                            <div class="file-name" id="fileName"></div>
+                            <div class="file-size" id="fileSize"></div>
+                        </div>
+                        <div class="remove-file" id="removeFile">✕</div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="title">Model Title</label>
+                    <input type="text" id="title" placeholder="e.g., Modern Sofa">
+                </div>
+                
+                <div class="form-group">
+                    <label for="description">Description (optional)</label>
+                    <textarea id="description" placeholder="Describe your furniture model..."></textarea>
+                </div>
+                
+                <button type="submit" class="upload-button" id="uploadButton">
+                    Upload & Generate Link
+                </button>
+                
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </form>
+            
+            <div class="error-message" id="errorMessage"></div>
+            
+            <div class="result-card" id="resultCard">
+                <h3>✅ Upload Successful!</h3>
+                <p style="margin-bottom: 20px;">Your AR model is ready to share</p>
+                
+                <div class="result-link">
+                    <input type="text" id="viewLink" readonly>
+                    <button class="copy-button" onclick="copyLink('viewLink')">Copy</button>
+                </div>
+                
+                <div class="action-buttons">
+                    <a href="#" id="viewButton" class="action-button" target="_blank">
+                        👁️ View Model
+                    </a>
+                    <button class="action-button" onclick="resetForm()">
+                        📤 Upload Another
+                    </button>
+                    <a href="/admin" class="action-button">
+                        ⚙️ Manage Models
+                    </a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="features">
+            <div class="feature">
+                <div class="feature-icon">🚀</div>
+                <div class="feature-title">Instant Links</div>
+                <div class="feature-desc">Get shareable links immediately after upload</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">📱</div>
+                <div class="feature-title">Mobile AR</div>
+                <div class="feature-desc">Works on iOS Safari and Android Chrome</div>
+            </div>
+            <div class="feature">
+                <div class="feature-icon">💾</div>
+                <div class="feature-title">100MB Files</div>
+                <div class="feature-desc">Support for large, detailed 3D models</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let selectedFile = null;
+        
+        // Elements
+        const dropZone = document.getElementById('dropZone');
+        const fileInput = document.getElementById('fileInput');
+        const uploadForm = document.getElementById('uploadForm');
+        const uploadButton = document.getElementById('uploadButton');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const resultCard = document.getElementById('resultCard');
+        const errorMessage = document.getElementById('errorMessage');
+        const filePreview = document.getElementById('filePreview');
+        
+        // Drop zone events
+        dropZone.addEventListener('click', () => fileInput.click());
+        
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+        
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+        
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+        
+        // File input change
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+        
+        // Remove file
+        document.getElementById('removeFile').addEventListener('click', () => {
+            selectedFile = null;
+            fileInput.value = '';
+            filePreview.style.display = 'none';
+            dropZone.style.display = 'block';
+        });
+        
+        // Handle file selection
+        function handleFile(file) {
+            // Validate file type
+            if (!file.name.match(/\.(glb|gltf)$/i)) {
+                showError('Please select a GLB or GLTF file');
+                return;
+            }
+            
+            // Validate file size (100MB)
+            if (file.size > 100 * 1024 * 1024) {
+                showError('File size must be less than 100MB');
+                return;
+            }
+            
+            selectedFile = file;
+            document.getElementById('fileName').textContent = file.name;
+            document.getElementById('fileSize').textContent = formatFileSize(file.size);
+            filePreview.style.display = 'block';
+            dropZone.style.display = 'none';
+            
+            // Auto-fill title if empty
+            if (!document.getElementById('title').value) {
+                document.getElementById('title').value = file.name.replace(/\.(glb|gltf)$/i, '');
+            }
+        }
+        
+        // Form submission
+        uploadForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            if (!selectedFile) {
+                showError('Please select a file');
+                return;
+            }
+            
+            const formData = new FormData();
+            formData.append('file', selectedFile);
+            formData.append('title', document.getElementById('title').value);
+            formData.append('description', document.getElementById('description').value);
+            
+            // Show progress
+            uploadButton.disabled = true;
+            uploadButton.textContent = 'Uploading...';
+            progressBar.style.display = 'block';
+            errorMessage.style.display = 'none';
+            
+            try {
+                // Simulate progress (actual progress tracking would require more complex implementation)
+                let progress = 0;
+                const progressInterval = setInterval(() => {
+                    progress += 10;
+                    if (progress <= 90) {
+                        progressFill.style.width = progress + '%';
+                    }
+                }, 200);
+                
+                const response = await fetch('/api/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                clearInterval(progressInterval);
+                progressFill.style.width = '100%';
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Upload failed');
+                }
+                
+                const result = await response.json();
+                
+                // Show success
+                document.getElementById('viewLink').value = result.viewUrl;
+                document.getElementById('viewButton').href = result.viewUrl;
+                resultCard.style.display = 'block';
+                uploadForm.style.display = 'none';
+                
+            } catch (error) {
+                showError(error.message);
+                uploadButton.disabled = false;
+                uploadButton.textContent = 'Upload & Generate Link';
+                progressBar.style.display = 'none';
+            }
+        });
+        
+        function showError(message) {
+            errorMessage.textContent = message;
+            errorMessage.style.display = 'block';
+            setTimeout(() => {
+                errorMessage.style.display = 'none';
+            }, 5000);
+        }
+        
+        function formatFileSize(bytes) {
+            const mb = bytes / (1024 * 1024);
+            return mb.toFixed(2) + ' MB';
+        }
+        
+        function copyLink(inputId) {
+            const input = document.getElementById(inputId);
+            input.select();
+            document.execCommand('copy');
+            
+            // Show feedback
+            const button = event.target;
+            const originalText = button.textContent;
+            button.textContent = 'Copied!';
+            setTimeout(() => {
+                button.textContent = originalText;
+            }, 2000);
+        }
+        
+        function resetForm() {
+            uploadForm.style.display = 'block';
+            resultCard.style.display = 'none';
+            uploadForm.reset();
+            selectedFile = null;
+            filePreview.style.display = 'none';
+            dropZone.style.display = 'block';
+            uploadButton.disabled = false;
+            uploadButton.textContent = 'Upload & Generate Link';
+            progressBar.style.display = 'none';
+            progressFill.style.width = '0%';
+        }
+    </script>
+</body>
+</html>
