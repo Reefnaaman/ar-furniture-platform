@@ -15,9 +15,28 @@
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Helvetica Neue', sans-serif;
-            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 255, 0.05) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0c10 0%, #0d1117 50%, #111418 100%);
             color: #e6edf3;
             min-height: 100vh;
+            position: relative;
+        }
+        
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="0.5" fill="%23ffffff" opacity="0.02"/><circle cx="75" cy="75" r="0.3" fill="%23ffffff" opacity="0.02"/><circle cx="50" cy="10" r="0.4" fill="%23ffffff" opacity="0.01"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>'),
+                linear-gradient(180deg, rgba(88, 166, 255, 0.02) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: -1;
         }
         
         .header {
@@ -79,19 +98,35 @@
         }
         
         .stat-card {
-            background: rgba(22, 27, 34, 0.6);
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.9) 0%, rgba(30, 35, 42, 0.8) 100%);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(240, 246, 252, 0.1);
+            border: 1px solid rgba(240, 246, 252, 0.15);
             padding: 25px;
-            border-radius: 16px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border-radius: 20px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 1px 0 rgba(255, 255, 255, 0.05) inset;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.5), transparent);
         }
         
         .stat-card:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-            border-color: rgba(240, 246, 252, 0.2);
+            transform: translateY(-4px);
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 1px 0 rgba(255, 255, 255, 0.1) inset;
+            border-color: rgba(88, 166, 255, 0.3);
         }
         
         .stat-label {
@@ -120,12 +155,26 @@
         }
         
         .models-section {
-            background: rgba(22, 27, 34, 0.6);
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.9) 0%, rgba(30, 35, 42, 0.8) 100%);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(240, 246, 252, 0.1);
-            border-radius: 16px;
-            padding: 30px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(240, 246, 252, 0.15);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.4),
+                0 1px 0 rgba(255, 255, 255, 0.05) inset;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .models-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.6), rgba(120, 200, 255, 0.6), transparent);
         }
         
         .section-header {
@@ -165,20 +214,39 @@
         }
         
         .model-card {
-            background: rgba(22, 27, 34, 0.8);
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%);
             backdrop-filter: blur(20px);
-            border: 1px solid rgba(240, 246, 252, 0.1);
-            border-radius: 16px;
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 20px;
             overflow: hidden;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 
+                0 8px 32px rgba(0, 0, 0, 0.5),
+                0 1px 0 rgba(255, 255, 255, 0.05) inset;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
         }
         
+        .model-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.4), transparent);
+            z-index: 1;
+        }
+        
         .model-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.4);
-            border-color: rgba(88, 166, 255, 0.3);
+            transform: translateY(-6px) scale(1.02);
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.6),
+                0 2px 0 rgba(88, 166, 255, 0.2) inset;
+            border-color: rgba(88, 166, 255, 0.4);
+        }
+        
+        .model-card:hover::before {
+            background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.8), rgba(120, 200, 255, 0.6), transparent);
         }
         
         .model-preview {
@@ -406,6 +474,401 @@
         .copy-button:hover {
             color: #5568d3;
         }
+        
+        /* Futuristic Upload Styles */
+        .futuristic-upload {
+            max-width: 600px !important;
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.98) 0%, rgba(30, 35, 42, 0.95) 100%);
+            border: 2px solid rgba(88, 166, 255, 0.2);
+            box-shadow: 
+                0 25px 80px rgba(0, 0, 0, 0.6),
+                0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+        }
+        
+        .upload-header {
+            text-align: center;
+            margin-bottom: 30px;
+            position: relative;
+        }
+        
+        .upload-icon-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        
+        .upload-icon-bg {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(120, 200, 255, 0.1));
+            border: 2px solid rgba(88, 166, 255, 0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            animation: iconPulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes iconPulse {
+            0%, 100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.4); }
+            50% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(88, 166, 255, 0); }
+        }
+        
+        .upload-icon {
+            width: 32px;
+            height: 32px;
+            color: #58a6ff;
+        }
+        
+        .upload-title {
+            font-size: 1.6rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e6edf3, #58a6ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+        }
+        
+        .upload-subtitle {
+            color: #7d8590;
+            font-size: 0.95rem;
+            font-weight: 400;
+        }
+        
+        .futuristic-drop-zone {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        .drop-zone-content {
+            border: 2px dashed rgba(88, 166, 255, 0.3);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.02), rgba(120, 200, 255, 0.01));
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .drop-zone-content::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, transparent, rgba(88, 166, 255, 0.1), transparent);
+            border-radius: 16px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .drop-zone-content:hover {
+            border-color: rgba(88, 166, 255, 0.5);
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.05), rgba(120, 200, 255, 0.02));
+        }
+        
+        .drop-zone-content:hover::before {
+            opacity: 1;
+        }
+        
+        .drop-animation {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 20px;
+        }
+        
+        .drop-ring {
+            width: 60px;
+            height: 60px;
+            border: 2px solid rgba(88, 166, 255, 0.3);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            animation: ripple 2s ease-out infinite;
+        }
+        
+        .drop-ring:nth-child(2) { animation-delay: 0.5s; }
+        .drop-ring:nth-child(3) { animation-delay: 1s; }
+        
+        @keyframes ripple {
+            0% {
+                width: 20px;
+                height: 20px;
+                opacity: 1;
+            }
+            100% {
+                width: 80px;
+                height: 80px;
+                opacity: 0;
+            }
+        }
+        
+        .upload-text {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .primary-text {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #e6edf3;
+        }
+        
+        .secondary-text {
+            font-size: 0.95rem;
+            color: #7d8590;
+        }
+        
+        .click-text {
+            color: #58a6ff;
+            font-weight: 500;
+        }
+        
+        .format-info {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+        
+        .format-badge {
+            background: rgba(88, 166, 255, 0.1);
+            color: #58a6ff;
+            padding: 4px 10px;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            border: 1px solid rgba(88, 166, 255, 0.2);
+        }
+        
+        .size-limit {
+            color: #7d8590;
+            font-size: 0.8rem;
+            margin-left: 8px;
+        }
+        
+        .drag-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(120, 200, 255, 0.1));
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(4px);
+        }
+        
+        .futuristic-drop-zone.drag-over .drag-overlay {
+            opacity: 1;
+        }
+        
+        .drag-content {
+            text-align: center;
+            color: #58a6ff;
+        }
+        
+        .drag-icon {
+            font-size: 3rem;
+            margin-bottom: 10px;
+            animation: bounce 0.6s ease infinite alternate;
+        }
+        
+        @keyframes bounce {
+            from { transform: translateY(0); }
+            to { transform: translateY(-10px); }
+        }
+        
+        .file-preview-container {
+            margin-bottom: 25px;
+        }
+        
+        .file-preview-card {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(120, 200, 255, 0.05));
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .file-icon {
+            font-size: 2rem;
+        }
+        
+        .file-info {
+            flex: 1;
+        }
+        
+        .file-name {
+            font-weight: 600;
+            color: #e6edf3;
+            margin-bottom: 4px;
+        }
+        
+        .file-size {
+            color: #7d8590;
+            font-size: 0.9rem;
+        }
+        
+        .remove-file-btn {
+            background: rgba(248, 81, 73, 0.1);
+            color: #f85149;
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            border-radius: 8px;
+            width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .remove-file-btn:hover {
+            background: rgba(248, 81, 73, 0.2);
+        }
+        
+        .input-group {
+            position: relative;
+            margin-bottom: 25px;
+        }
+        
+        .futuristic-input {
+            width: 100%;
+            background: rgba(240, 246, 252, 0.03);
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            color: #e6edf3;
+            padding: 16px;
+            border-radius: 12px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .futuristic-input:focus {
+            outline: none;
+            border-color: rgba(88, 166, 255, 0.5);
+            background: rgba(240, 246, 252, 0.05);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+        
+        .futuristic-input.textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+        
+        .input-line {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            width: 0;
+            background: linear-gradient(90deg, #58a6ff, #79c0ff);
+            transition: width 0.3s ease;
+            border-radius: 1px;
+        }
+        
+        .futuristic-input:focus + .input-line {
+            width: 100%;
+        }
+        
+        .futuristic-primary {
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .button-text {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .button-glow {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .futuristic-primary:hover .button-glow {
+            left: 100%;
+        }
+        
+        .upload-progress {
+            margin-top: 25px;
+        }
+        
+        .progress-label {
+            color: #e6edf3;
+            font-weight: 500;
+            margin-bottom: 12px;
+            text-align: center;
+        }
+        
+        .progress-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .progress-track {
+            flex: 1;
+            height: 6px;
+            background: rgba(240, 246, 252, 0.1);
+            border-radius: 3px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #58a6ff, #79c0ff);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            position: relative;
+        }
+        
+        .progress-glow {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.5), transparent);
+            opacity: 0;
+            animation: progressGlow 2s ease-in-out infinite;
+        }
+        
+        @keyframes progressGlow {
+            0%, 100% { opacity: 0; transform: translateX(-100%); }
+            50% { opacity: 1; transform: translateX(100%); }
+        }
+        
+        .progress-percentage {
+            color: #58a6ff;
+            font-weight: 600;
+            font-size: 0.9rem;
+            min-width: 40px;
+        }
     </style>
 </head>
 <body>
@@ -413,7 +876,7 @@
         <div class="header-content">
             <h1>⚙️ Admin Dashboard</h1>
             <div class="nav-buttons">
-                <button class="nav-button" onclick="toggleUploadModal()">📤 Upload Model</button>
+                <button class="nav-button" onclick="toggleUploadModal()">📤 Upload Furniture</button>
                 <button class="nav-button" onclick="location.reload()">🔄 Refresh</button>
             </div>
         </div>
@@ -423,7 +886,7 @@
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon">📦</div>
-                <div class="stat-label">Total Models</div>
+                <div class="stat-label">Total Furniture</div>
                 <div class="stat-value" id="totalModels">-</div>
             </div>
             <div class="stat-card">
@@ -440,12 +903,12 @@
         
         <div class="models-section">
             <div class="section-header">
-                <h2 class="section-title">Uploaded Models</h2>
+                <h2 class="section-title">Uploaded Furniture</h2>
                 <button class="refresh-button" onclick="loadModels()">Refresh</button>
             </div>
             
             <div id="modelsContainer">
-                <div class="loading">Loading models...</div>
+                <div class="loading">Loading furniture...</div>
             </div>
         </div>
     </div>
@@ -462,28 +925,85 @@
     </div>
     
     <div class="password-modal" id="uploadModal">
-        <div class="modal-content" style="max-width: 500px;">
-            <h3 class="modal-title">📤 Upload New Model</h3>
+        <div class="modal-content futuristic-upload">
+            <div class="upload-header">
+                <div class="upload-icon-container">
+                    <div class="upload-icon-bg">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L15.09 8.26L22 9L17 14.74L18.18 21.02L12 18L5.82 21.02L7 14.74L2 9L8.91 8.26L12 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="upload-title">Upload New Furniture</h3>
+                <p class="upload-subtitle">Transform your 3D furniture into AR experiences</p>
+            </div>
+            
             <form id="uploadForm">
-                <div style="margin-bottom: 20px;">
-                    <input type="file" id="fileInput" accept=".glb,.gltf" style="width: 100%; padding: 12px; border: 1px solid rgba(240, 246, 252, 0.2); background: rgba(240, 246, 252, 0.05); color: #e6edf3; border-radius: 10px; transition: all 0.2s ease;">
+                <div class="futuristic-drop-zone" id="dropZone">
+                    <input type="file" id="fileInput" accept=".glb,.gltf" style="display: none;">
+                    <div class="drop-zone-content">
+                        <div class="drop-animation">
+                            <div class="drop-ring"></div>
+                            <div class="drop-ring"></div>
+                            <div class="drop-ring"></div>
+                        </div>
+                        <div class="upload-text">
+                            <span class="primary-text">Drag & drop your 3D furniture</span>
+                            <span class="secondary-text">or <span class="click-text">click to browse</span></span>
+                        </div>
+                        <div class="format-info">
+                            <span class="format-badge">GLB</span>
+                            <span class="format-badge">GLTF</span>
+                            <span class="size-limit">Max 100MB</span>
+                        </div>
+                    </div>
+                    <div class="drag-overlay">
+                        <div class="drag-content">
+                            <div class="drag-icon">⚡</div>
+                            <span>Drop to upload</span>
+                        </div>
+                    </div>
                 </div>
-                <div style="margin-bottom: 20px;">
-                    <input type="text" id="titleInput" placeholder="Model Title" style="width: 100%; padding: 12px; border: 1px solid rgba(240, 246, 252, 0.2); background: rgba(240, 246, 252, 0.05); color: #e6edf3; border-radius: 10px; transition: all 0.2s ease;">
+                
+                <div class="file-preview-container" id="filePreviewContainer" style="display: none;">
+                    <div class="file-preview-card">
+                        <div class="file-icon">📦</div>
+                        <div class="file-info">
+                            <div class="file-name" id="previewFileName"></div>
+                            <div class="file-size" id="previewFileSize"></div>
+                        </div>
+                        <button type="button" class="remove-file-btn" onclick="removeFile()">✕</button>
+                    </div>
                 </div>
-                <div style="margin-bottom: 20px;">
-                    <textarea id="descriptionInput" placeholder="Description (optional)" rows="3" style="width: 100%; padding: 12px; border: 1px solid rgba(240, 246, 252, 0.2); background: rgba(240, 246, 252, 0.05); color: #e6edf3; border-radius: 10px; resize: vertical; transition: all 0.2s ease;"></textarea>
+                
+                <div class="input-group">
+                    <input type="text" id="titleInput" placeholder="Furniture Title" class="futuristic-input">
+                    <div class="input-line"></div>
                 </div>
+                
+                <div class="input-group">
+                    <textarea id="descriptionInput" placeholder="Description (optional)" rows="3" class="futuristic-input textarea"></textarea>
+                    <div class="input-line"></div>
+                </div>
+                
                 <div class="modal-buttons">
                     <button type="button" class="modal-button secondary" onclick="closeUploadModal()">Cancel</button>
-                    <button type="submit" class="modal-button primary" id="uploadButton">Upload</button>
+                    <button type="submit" class="modal-button primary futuristic-primary" id="uploadButton">
+                        <span class="button-text">Upload Furniture</span>
+                        <div class="button-glow"></div>
+                    </button>
                 </div>
             </form>
-            <div id="uploadProgress" style="display: none; margin-top: 15px;">
-                <div style="background: #f0f0f0; border-radius: 10px; overflow: hidden; height: 8px;">
-                    <div id="progressBar" style="background: #667eea; height: 100%; width: 0%; transition: width 0.3s;"></div>
+            
+            <div id="uploadProgress" class="upload-progress" style="display: none;">
+                <div class="progress-label" id="uploadStatus">Uploading...</div>
+                <div class="progress-container">
+                    <div class="progress-track">
+                        <div id="progressBar" class="progress-fill"></div>
+                        <div class="progress-glow"></div>
+                    </div>
+                    <div class="progress-percentage" id="progressPercentage">0%</div>
                 </div>
-                <div style="text-align: center; margin-top: 10px; color: #666;" id="uploadStatus">Uploading...</div>
             </div>
         </div>
     </div>
@@ -511,10 +1031,10 @@
                 displayModels(data.models);
                 
             } catch (error) {
-                console.error('Error loading models:', error);
+                console.error('Error loading furniture:', error);
                 document.getElementById('modelsContainer').innerHTML = `
                     <div class="empty-state">
-                        <h3>Error Loading Models</h3>
+                        <h3>Error Loading Furniture</h3>
                         <p>${error.message}</p>
                     </div>
                 `;
@@ -525,10 +1045,10 @@
             if (!models || models.length === 0) {
                 document.getElementById('modelsContainer').innerHTML = `
                     <div class="empty-state">
-                        <h3>No Models Yet</h3>
-                        <p>Upload your first model to get started!</p>
+                        <h3>No Furniture Yet</h3>
+                        <p>Upload your first furniture piece to get started!</p>
                         <br>
-                        <button class="action-button" onclick="toggleUploadModal()">📤 Upload Model</button>
+                        <button class="action-button" onclick="toggleUploadModal()">📤 Upload Furniture</button>
                     </div>
                 `;
                 return;
@@ -546,7 +1066,7 @@
                             <model-viewer
                                 class="model-viewer"
                                 src="${modelUrl}"
-                                alt="${model.title || 'Furniture Model'}"
+                                alt="${model.title || 'Furniture Piece'}"
                                 camera-controls
                                 auto-rotate
                                 auto-rotate-delay="2000"
@@ -589,7 +1109,7 @@
                                     📋 Copy Link
                                 </button>
                                 <button class="action-button delete" onclick="deleteModel('${model.id}', '${model.cloudinary_public_id}')">
-                                    🗑️ Delete
+                                    🗑️ Remove
                                 </button>
                             </div>
                         </div>
@@ -685,9 +1205,12 @@
             return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
         }
         
+        let selectedFile = null;
+
         // Upload modal functions
         function toggleUploadModal() {
             document.getElementById('uploadModal').classList.add('show');
+            setupDragAndDrop();
         }
         
         function closeUploadModal() {
@@ -695,40 +1218,147 @@
             document.getElementById('uploadForm').reset();
             document.getElementById('uploadProgress').style.display = 'none';
             document.getElementById('progressBar').style.width = '0%';
+            document.getElementById('progressPercentage').textContent = '0%';
+            selectedFile = null;
+            hideFilePreview();
+        }
+        
+        function setupDragAndDrop() {
+            const dropZone = document.getElementById('dropZone');
+            const fileInput = document.getElementById('fileInput');
+            
+            dropZone.onclick = () => fileInput.click();
+            
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropZone.addEventListener(eventName, handleDragEnter, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropZone.addEventListener(eventName, handleDragLeave, false);
+            });
+
+            dropZone.addEventListener('drop', handleFileDrop, false);
+            fileInput.addEventListener('change', handleFileSelect, false);
+        }
+        
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        
+        function handleDragEnter(e) {
+            document.getElementById('dropZone').classList.add('drag-over');
+        }
+        
+        function handleDragLeave(e) {
+            document.getElementById('dropZone').classList.remove('drag-over');
+        }
+        
+        function handleFileDrop(e) {
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        }
+        
+        function handleFileSelect(e) {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        }
+        
+        function handleFile(file) {
+            if (!file.name.match(/\.(glb|gltf)$/i)) {
+                alert('Please select a GLB or GLTF file');
+                return;
+            }
+            
+            if (file.size > 100 * 1024 * 1024) {
+                alert('File size must be less than 100MB');
+                return;
+            }
+            
+            selectedFile = file;
+            showFilePreview(file);
+            
+            // Auto-fill title
+            if (!document.getElementById('titleInput').value) {
+                document.getElementById('titleInput').value = file.name.replace(/\.(glb|gltf)$/i, '');
+            }
+        }
+        
+        function showFilePreview(file) {
+            document.getElementById('previewFileName').textContent = file.name;
+            document.getElementById('previewFileSize').textContent = formatFileSize(file.size);
+            document.getElementById('filePreviewContainer').style.display = 'block';
+            document.getElementById('dropZone').style.display = 'none';
+        }
+        
+        function hideFilePreview() {
+            document.getElementById('filePreviewContainer').style.display = 'none';
+            document.getElementById('dropZone').style.display = 'block';
+        }
+        
+        function removeFile() {
+            selectedFile = null;
+            document.getElementById('fileInput').value = '';
+            hideFilePreview();
+        }
+        
+        function formatFileSize(bytes) {
+            const mb = bytes / (1024 * 1024);
+            if (mb < 1) {
+                return (bytes / 1024).toFixed(1) + ' KB';
+            }
+            return mb.toFixed(1) + ' MB';
         }
         
         // Handle upload form
         document.getElementById('uploadForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            const fileInput = document.getElementById('fileInput');
-            const titleInput = document.getElementById('titleInput');
-            const descriptionInput = document.getElementById('descriptionInput');
-            
-            if (!fileInput.files[0]) {
-                alert('Please select a file');
+            if (!selectedFile) {
+                alert('Please select a furniture file');
                 return;
             }
             
+            const titleInput = document.getElementById('titleInput');
+            const descriptionInput = document.getElementById('descriptionInput');
+            
             const formData = new FormData();
-            formData.append('file', fileInput.files[0]);
-            formData.append('title', titleInput.value || fileInput.files[0].name.replace(/\.(glb|gltf)$/i, ''));
+            formData.append('file', selectedFile);
+            formData.append('title', titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''));
             formData.append('description', descriptionInput.value || '');
             
             // Show progress
             document.getElementById('uploadProgress').style.display = 'block';
             document.getElementById('uploadButton').disabled = true;
-            document.getElementById('uploadStatus').textContent = 'Uploading...';
+            document.getElementById('uploadStatus').textContent = 'Preparing upload...';
             
             try {
-                // Simulate progress
+                // Enhanced progress simulation with different stages
                 let progress = 0;
+                let stage = 0;
+                const stages = ['Preparing upload...', 'Uploading furniture...', 'Processing file...', 'Finalizing...'];
+                
                 const progressInterval = setInterval(() => {
-                    progress += 10;
+                    progress += 5;
                     if (progress <= 90) {
                         document.getElementById('progressBar').style.width = progress + '%';
+                        document.getElementById('progressPercentage').textContent = Math.round(progress) + '%';
+                        
+                        // Update stage text
+                        const newStage = Math.floor(progress / 25);
+                        if (newStage !== stage && stages[newStage]) {
+                            stage = newStage;
+                            document.getElementById('uploadStatus').textContent = stages[stage];
+                        }
                     }
-                }, 200);
+                }, 150);
                 
                 const response = await fetch('/api/upload-simple', {
                     method: 'POST',
@@ -737,6 +1367,7 @@
                 
                 clearInterval(progressInterval);
                 document.getElementById('progressBar').style.width = '100%';
+                document.getElementById('progressPercentage').textContent = '100%';
                 
                 if (!response.ok) {
                     const error = await response.json();
@@ -744,7 +1375,7 @@
                 }
                 
                 const result = await response.json();
-                document.getElementById('uploadStatus').textContent = 'Upload successful!';
+                document.getElementById('uploadStatus').textContent = '✅ Upload successful!';
                 
                 // Close modal and refresh models after 2 seconds
                 setTimeout(() => {
@@ -753,8 +1384,10 @@
                 }, 2000);
                 
             } catch (error) {
-                document.getElementById('uploadStatus').textContent = 'Upload failed: ' + error.message;
+                document.getElementById('uploadStatus').textContent = '❌ Upload failed: ' + error.message;
                 document.getElementById('uploadButton').disabled = false;
+                document.getElementById('progressBar').style.width = '0%';
+                document.getElementById('progressPercentage').textContent = '0%';
             }
         });
         
