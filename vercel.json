@@ -10,12 +10,16 @@
       "destination": "/admin.html"
     },
     {
-      "source": "/view",
-      "destination": "/view.html"
-    },
-    {
       "source": "/admin",
       "destination": "/admin.html"
+    },
+    {
+      "source": "/customer/(.*)",
+      "destination": "/customer.html"
+    },
+    {
+      "source": "/view",
+      "destination": "/view.html"
     }
   ],
   "headers": [

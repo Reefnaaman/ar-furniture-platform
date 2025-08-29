@@ -1,5 +1,5 @@
 import { uploadModel } from '../lib/cloudinary.js';
-import { saveModel, getModel, getAllModels, getStats, deleteModel, incrementViewCount } from '../lib/supabase.js';
+import { saveModel, getModel, getAllModels, getModelsByCustomer, getCustomers, getStats, deleteModel, incrementViewCount } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import multiparty from 'multiparty';
 
@@ -46,6 +46,17 @@ export default async function handler(req, res) {
     // Route: /api/models
     if (routePath === 'models') {
       return await handleModels(req, res);
+    }
+    
+    // Route: /api/customers
+    if (routePath === 'customers') {
+      return await handleCustomers(req, res);
+    }
+    
+    // Route: /api/customer/[id]
+    if (routePath?.startsWith('customer/')) {
+      const customerId = routePath.split('/')[1];
+      return await handleCustomerModels(req, res, customerId);
     }
     
     // Route: /api/model/[id]
@@ -138,6 +149,8 @@ async function handleUpload(req, res) {
       cloudinaryUrl: cloudinaryResult.url,
       cloudinaryPublicId: cloudinaryResult.publicId,
       fileSize: cloudinaryResult.size,
+      customerId: fields.customerId?.[0] || 'unassigned',
+      customerName: fields.customerName?.[0] || 'Unassigned',
       metadata: {
         mimetype: uploadedFile.headers['content-type'],
         uploadedAt: new Date().toISOString()
@@ -316,5 +329,59 @@ async function handleModelView(req, res, modelId) {
   } catch (error) {
     console.error('Error tracking view:', error);
     res.status(500).json({ error: 'Failed to track view' });
+  }
+}
+
+/**
+ * Handle customers list
+ */
+async function handleCustomers(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  try {
+    const customers = await getCustomers();
+    res.status(200).json({ customers, success: true });
+  } catch (error) {
+    console.error('Error fetching customers:', error);
+    res.status(500).json({ error: 'Failed to fetch customers' });
+  }
+}
+
+/**
+ * Handle customer-specific models
+ */
+async function handleCustomerModels(req, res, customerId) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  try {
+    const limit = parseInt(req.query.limit) || 100;
+    const offset = parseInt(req.query.offset) || 0;
+    
+    const models = await getModelsByCustomer(customerId, limit, offset);
+    
+    // Get customer stats
+    const totalViews = models.reduce((sum, model) => sum + (model.view_count || 0), 0);
+    const totalSize = models.reduce((sum, model) => sum + (model.file_size || 0), 0);
+    
+    const stats = {
+      totalModels: models.length,
+      totalViews,
+      totalSize
+    };
+    
+    res.status(200).json({
+      models,
+      stats,
+      customer: customerId,
+      success: true
+    });
+    
+  } catch (error) {
+    console.error('Error fetching customer models:', error);
+    res.status(500).json({ error: 'Failed to fetch customer models' });
   }
 }

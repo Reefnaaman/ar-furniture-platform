@@ -869,6 +869,88 @@
             font-size: 0.9rem;
             min-width: 40px;
         }
+        
+        .customer-select {
+            appearance: none;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="12" height="8" viewBox="0 0 12 8"><path fill="%2358a6ff" d="M6 8L0 2h12L6 8z"/></svg>');
+            background-repeat: no-repeat;
+            background-position: right 16px center;
+            padding-right: 50px;
+        }
+        
+        /* Customer Groups Styles */
+        .customer-groups {
+            margin-top: 30px;
+        }
+        
+        .customer-group {
+            margin-bottom: 40px;
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.6), rgba(30, 35, 42, 0.5));
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 20px;
+            overflow: hidden;
+            transition: all 0.3s ease;
+        }
+        
+        .customer-group:hover {
+            border-color: rgba(88, 166, 255, 0.2);
+        }
+        
+        .customer-header {
+            padding: 20px 30px;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(120, 200, 255, 0.05));
+            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: all 0.2s ease;
+        }
+        
+        .customer-header:hover {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.15), rgba(120, 200, 255, 0.08));
+        }
+        
+        .customer-name {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #e6edf3;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .customer-badge {
+            background: linear-gradient(135deg, #58a6ff, #79c0ff);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .customer-stats {
+            color: #7d8590;
+            font-size: 0.9rem;
+        }
+        
+        .expand-icon {
+            color: #58a6ff;
+            transition: transform 0.3s ease;
+        }
+        
+        .customer-group.collapsed .expand-icon {
+            transform: rotate(-90deg);
+        }
+        
+        .customer-content {
+            padding: 30px;
+            display: none;
+        }
+        
+        .customer-group:not(.collapsed) .customer-content {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -977,6 +1059,14 @@
                 </div>
                 
                 <div class="input-group">
+                    <select id="customerSelect" class="futuristic-input customer-select">
+                        <option value="napo:NAPO">NAPO</option>
+                        <option value="unassigned:Unassigned">Unassigned</option>
+                    </select>
+                    <div class="input-line"></div>
+                </div>
+                
+                <div class="input-group">
                     <input type="text" id="titleInput" placeholder="Furniture Title" class="futuristic-input">
                     <div class="input-line"></div>
                 </div>
@@ -1014,6 +1104,7 @@
         
         // Load models on page load
         loadModels();
+        loadCustomers();
         
         async function loadModels() {
             try {
@@ -1027,8 +1118,8 @@
                 document.getElementById('totalViews').textContent = data.stats.totalViews || 0;
                 document.getElementById('totalSize').textContent = formatFileSize(data.stats.totalSize || 0);
                 
-                // Display models
-                displayModels(data.models);
+                // Group models by customer
+                displayGroupedModels(data.models);
                 
             } catch (error) {
                 console.error('Error loading furniture:', error);
@@ -1041,7 +1132,41 @@
             }
         }
         
-        function displayModels(models) {
+        async function loadCustomers() {
+            try {
+                const response = await fetch('/api/customers');
+                if (!response.ok) throw new Error('Failed to load customers');
+                
+                const data = await response.json();
+                updateCustomerSelect(data.customers);
+                
+            } catch (error) {
+                console.error('Error loading customers:', error);
+            }
+        }
+        
+        function updateCustomerSelect(customers) {
+            const select = document.getElementById('customerSelect');
+            select.innerHTML = '';
+            
+            // Add default customers
+            customers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = `${customer.id}:${customer.name}`;
+                option.textContent = customer.name;
+                select.appendChild(option);
+            });
+            
+            // Ensure NAPO is always available
+            if (!customers.find(c => c.id === 'napo')) {
+                const napoOption = document.createElement('option');
+                napoOption.value = 'napo:NAPO';
+                napoOption.textContent = 'NAPO';
+                select.insertBefore(napoOption, select.firstChild);
+            }
+        }
+        
+        function displayGroupedModels(models) {
             if (!models || models.length === 0) {
                 document.getElementById('modelsContainer').innerHTML = `
                     <div class="empty-state">
@@ -1054,63 +1179,52 @@
                 return;
             }
             
-            let html = '<div class="models-grid">';
-            
+            // Group models by customer
+            const customerGroups = {};
             models.forEach(model => {
-                const viewUrl = `https://newfurniture.live/view?id=${model.id}`;
-                const modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
+                const customerKey = model.customer_id || 'unassigned';
+                const customerName = model.customer_name || 'Unassigned';
                 
+                if (!customerGroups[customerKey]) {
+                    customerGroups[customerKey] = {
+                        id: customerKey,
+                        name: customerName,
+                        models: [],
+                        totalViews: 0,
+                        totalSize: 0
+                    };
+                }
+                
+                customerGroups[customerKey].models.push(model);
+                customerGroups[customerKey].totalViews += model.view_count || 0;
+                customerGroups[customerKey].totalSize += model.file_size || 0;
+            });
+            
+            let html = '<div class="customer-groups">';
+            
+            // Sort customers (NAPO first, then others)
+            const sortedCustomers = Object.values(customerGroups).sort((a, b) => {
+                if (a.id === 'napo') return -1;
+                if (b.id === 'napo') return 1;
+                return a.name.localeCompare(b.name);
+            });
+            
+            sortedCustomers.forEach(customer => {
                 html += `
-                    <div class="model-card">
-                        <div class="model-preview">
-                            <model-viewer
-                                class="model-viewer"
-                                src="${modelUrl}"
-                                alt="${model.title || 'Furniture Piece'}"
-                                camera-controls
-                                auto-rotate
-                                auto-rotate-delay="2000"
-                                rotation-per-second="15deg"
-                                shadow-intensity="1"
-                                camera-orbit="45deg 55deg auto"
-                                loading="eager"
-                                poster=""
-                                environment-image="neutral"
-                                exposure="1">
-                                <div slot="progress-bar" style="display: none;"></div>
-                            </model-viewer>
+                    <div class="customer-group" data-customer="${customer.id}">
+                        <div class="customer-header" onclick="toggleCustomerGroup('${customer.id}')">
+                            <div class="customer-name">
+                                ${customer.name}
+                                <span class="customer-badge">${customer.models.length}</span>
+                            </div>
+                            <div class="customer-stats">
+                                ${customer.totalViews} views • ${formatFileSize(customer.totalSize)}
+                                <span class="expand-icon">▼</span>
+                            </div>
                         </div>
-                        
-                        <div class="model-info">
-                            <div class="model-title">${model.title || 'Untitled'}</div>
-                            <div class="model-description">${model.description || 'No description provided'}</div>
-                            
-                            <div class="model-meta">
-                                <span class="model-id">${model.id}</span>
-                                <span>${formatDate(model.upload_date)}</span>
-                            </div>
-                            
-                            <div class="model-stats">
-                                <div class="stat-item">
-                                    <div class="stat-value">${model.view_count || 0}</div>
-                                    <div class="stat-label">Views</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${formatFileSize(model.file_size)}</div>
-                                    <div class="stat-label">Size</div>
-                                </div>
-                            </div>
-                            
-                            <div class="model-actions">
-                                <a href="/view?id=${model.id}" target="_blank" class="action-button">
-                                    👁️ View AR
-                                </a>
-                                <button class="action-button" onclick="copyToClipboard('${viewUrl}', this)">
-                                    📋 Copy Link
-                                </button>
-                                <button class="action-button delete" onclick="deleteModel('${model.id}', '${model.cloudinary_public_id}')">
-                                    🗑️ Remove
-                                </button>
+                        <div class="customer-content">
+                            <div class="models-grid">
+                                ${customer.models.map(model => generateModelCard(model)).join('')}
                             </div>
                         </div>
                     </div>
@@ -1119,6 +1233,72 @@
             
             html += '</div>';
             document.getElementById('modelsContainer').innerHTML = html;
+        }
+        
+        function generateModelCard(model) {
+            const viewUrl = `https://newfurniture.live/view?id=${model.id}`;
+            const modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
+            
+            return `
+                <div class="model-card">
+                    <div class="model-preview">
+                        <model-viewer
+                            class="model-viewer"
+                            src="${modelUrl}"
+                            alt="${model.title || 'Furniture Piece'}"
+                            camera-controls
+                            auto-rotate
+                            auto-rotate-delay="2000"
+                            rotation-per-second="15deg"
+                            shadow-intensity="1"
+                            camera-orbit="45deg 55deg auto"
+                            loading="eager"
+                            poster=""
+                            environment-image="neutral"
+                            exposure="1">
+                            <div slot="progress-bar" style="display: none;"></div>
+                        </model-viewer>
+                    </div>
+                    
+                    <div class="model-info">
+                        <div class="model-title">${model.title || 'Untitled'}</div>
+                        <div class="model-description">${model.description || 'No description provided'}</div>
+                        
+                        <div class="model-meta">
+                            <span class="model-id">${model.id}</span>
+                            <span>${formatDate(model.upload_date)}</span>
+                        </div>
+                        
+                        <div class="model-stats">
+                            <div class="stat-item">
+                                <div class="stat-value">${model.view_count || 0}</div>
+                                <div class="stat-label">Views</div>
+                            </div>
+                            <div class="stat-item">
+                                <div class="stat-value">${formatFileSize(model.file_size)}</div>
+                                <div class="stat-label">Size</div>
+                            </div>
+                        </div>
+                        
+                        <div class="model-actions">
+                            <a href="/view?id=${model.id}" target="_blank" class="action-button">
+                                👁️ View AR
+                            </a>
+                            <button class="action-button" onclick="copyToClipboard('${viewUrl}', this)">
+                                📋 Copy Link
+                            </button>
+                            <button class="action-button delete" onclick="deleteModel('${model.id}', '${model.cloudinary_public_id}')">
+                                🗑️ Remove
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function toggleCustomerGroup(customerId) {
+            const group = document.querySelector(`[data-customer="${customerId}"]`);
+            group.classList.toggle('collapsed');
         }
         
         function deleteModel(id, cloudinaryPublicId) {
@@ -1328,11 +1508,17 @@
             
             const titleInput = document.getElementById('titleInput');
             const descriptionInput = document.getElementById('descriptionInput');
+            const customerSelect = document.getElementById('customerSelect');
+            
+            // Parse customer selection
+            const [customerId, customerName] = customerSelect.value.split(':');
             
             const formData = new FormData();
             formData.append('file', selectedFile);
             formData.append('title', titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''));
             formData.append('description', descriptionInput.value || '');
+            formData.append('customerId', customerId);
+            formData.append('customerName', customerName);
             
             // Show progress
             document.getElementById('uploadProgress').style.display = 'block';
