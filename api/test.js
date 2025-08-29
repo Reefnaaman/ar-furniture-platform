@@ -15,17 +15,17 @@ export default async function handler(req, res) {
       },
       dependencies: {
         cloudinary: 'available',
-        postgres: 'checking...',
+        supabase: 'checking...',
         nanoid: 'available'
       }
     };
 
-    // Test postgres import
+    // Test supabase import
     try {
-      const { sql } = await import('@vercel/postgres');
-      result.dependencies.postgres = 'available';
+      const { createClient } = await import('@supabase/supabase-js');
+      result.dependencies.supabase = 'available';
     } catch (error) {
-      result.dependencies.postgres = `error: ${error.message}`;
+      result.dependencies.supabase = `error: ${error.message}`;
     }
 
     res.status(200).json(result);

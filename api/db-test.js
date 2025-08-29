@@ -21,7 +21,7 @@ export default async function handler(req, res) {
     // Test connection with a simple query
     const { data, error } = await supabase
       .from('models')
-      .select('count(*)')
+      .select('id')
       .limit(1);
     
     if (error) throw error;
