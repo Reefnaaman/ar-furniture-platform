@@ -5,7 +5,9 @@ import multiparty from 'multiparty';
 
 export const config = {
   api: {
-    bodyParser: false
+    bodyParser: {
+      sizeLimit: '10mb'
+    }
   }
 };
 
@@ -14,6 +16,11 @@ export const config = {
  * Handles: upload, models, model/[id], model/[id]/info, model/[id]/view
  */
 export default async function handler(req, res) {
+  console.log('=== FUNCTION ENTRY ===');
+  console.log('Request method:', req.method);
+  console.log('Request URL:', req.url);
+  console.log('Request headers:', JSON.stringify(req.headers, null, 2));
+  
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
