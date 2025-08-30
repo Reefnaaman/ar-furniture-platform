@@ -1324,6 +1324,22 @@
                 </div>
             </div>
             
+            <!-- Management Section -->
+            <div class="sidebar-customers">
+                <div class="sidebar-customers-header">
+                    <span class="sidebar-customers-title">Management</span>
+                </div>
+                
+                <ul class="customer-list">
+                    <li class="customer-item" onclick="toggleUserModal()" style="cursor: pointer;">
+                        <div class="customer-item-content">
+                            <span class="customer-name">👥 Manage Users</span>
+                            <span class="customer-count">→</span>
+                        </div>
+                    </li>
+                </ul>
+            </div>
+            
             <div class="sidebar-customers">
                 <div class="sidebar-customers-header">
                     <span class="sidebar-customers-title">Customers</span>
@@ -1352,8 +1368,6 @@
                     <h1>⚙️ Admin Dashboard</h1>
                     <div class="nav-buttons">
                         <button class="nav-button" onclick="toggleUploadModal()">📤 Upload Furniture</button>
-                        <button class="nav-button" onclick="toggleUserModal()">👥 Manage Users</button>
-                        <button class="nav-button" onclick="location.reload()">🔄 Refresh</button>
                     </div>
                 </div>
             </div>
@@ -1843,12 +1857,12 @@
 
         // Upload modal functions
         function toggleUploadModal() {
-            document.getElementById('uploadModal').classList.add('show');
+            document.getElementById('uploadModal').style.display = 'flex';
             setupDragAndDrop();
         }
         
         function closeUploadModal() {
-            document.getElementById('uploadModal').classList.remove('show');
+            document.getElementById('uploadModal').style.display = 'none';
             document.getElementById('uploadForm').reset();
             document.getElementById('uploadProgress').style.display = 'none';
             document.getElementById('progressBar').style.width = '0%';
