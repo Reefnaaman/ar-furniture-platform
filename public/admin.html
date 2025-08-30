@@ -2133,8 +2133,11 @@
             allItem.onclick = () => filterByCustomer(null);
             customerList.appendChild(allItem);
             
-            // Add "Unassigned" option
-            const unassignedCount = customers.find(c => c.id === 'unassigned')?.count || 0;
+            // Add "Unassigned" option - always show it, even if count is 0
+            const unassignedCustomer = customers.find(c => c.id === 'unassigned');
+            const unassignedCount = unassignedCustomer?.count || 0;
+            
+            // Always show Unassigned section
             const unassignedItem = document.createElement('li');
             unassignedItem.className = `customer-item ${currentCustomerFilter === 'unassigned' ? 'active' : ''}`;
             unassignedItem.innerHTML = `
@@ -2145,6 +2148,10 @@
             `;
             unassignedItem.onclick = () => filterByCustomer('unassigned', 'Unassigned');
             customerList.appendChild(unassignedItem);
+            
+            console.log('Debug: Customers from API:', customers);
+            console.log('Debug: Unassigned customer found:', unassignedCustomer);
+            console.log('Debug: Unassigned count:', unassignedCount);
             
             // Add customer items (excluding unassigned which we show separately)
             customers.filter(customer => customer.id !== 'unassigned').forEach(customer => {
