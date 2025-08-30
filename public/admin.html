@@ -377,22 +377,6 @@
             color: #666;
         }
         
-        .password-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0,0,0,0.5);
-            z-index: 1000;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .password-modal.show {
-            display: flex;
-        }
         
         .modal-content {
             background: rgba(22, 27, 34, 0.95);
@@ -1389,16 +1373,6 @@
         </div>
     </div>
     
-    <div class="password-modal" id="passwordModal">
-        <div class="modal-content">
-            <h3 class="modal-title">Enter Admin Password</h3>
-            <input type="password" class="password-input" id="passwordInput" placeholder="Password">
-            <div class="modal-buttons">
-                <button class="modal-button secondary" onclick="closePasswordModal()">Cancel</button>
-                <button class="modal-button primary" onclick="confirmDelete()">Delete</button>
-            </div>
-        </div>
-    </div>
     
     <div class="password-modal" id="uploadModal">
         <div class="modal-content futuristic-upload">
@@ -1493,7 +1467,6 @@
     </div>
     
     <script>
-        let adminPassword = localStorage.getItem('adminPassword') || '';
         let deleteTarget = null;
         
         // Load models on page load
@@ -1749,11 +1722,6 @@
             }
         }
         
-        function closePasswordModal() {
-            document.getElementById('passwordModal').classList.remove('show');
-            document.getElementById('passwordInput').value = '';
-            deleteTarget = null;
-        }
         
         function copyToClipboard(text, button) {
             navigator.clipboard.writeText(text).then(() => {
