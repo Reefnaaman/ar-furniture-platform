@@ -2114,21 +2114,26 @@
             allItem.onclick = () => filterByCustomer(null);
             customerList.appendChild(allItem);
             
-            // Add "Unassigned" option - always show it, even if count is 0
+            // Add "Unassigned" option - only show if there are unassigned items
             const unassignedCustomer = customers.find(c => c.id === 'unassigned');
             const unassignedCount = unassignedCustomer?.count || 0;
             
-            // Always show Unassigned section
-            const unassignedItem = document.createElement('li');
-            unassignedItem.className = `customer-item ${currentCustomerFilter === 'unassigned' ? 'active' : ''}`;
-            unassignedItem.innerHTML = `
-                <div class="customer-item-content">
-                    <span class="customer-name">Unassigned</span>
-                    <span class="customer-count">${unassignedCount}</span>
-                </div>
-            `;
-            unassignedItem.onclick = () => filterByCustomer('unassigned', 'Unassigned');
-            customerList.appendChild(unassignedItem);
+            // Only show Unassigned section if there are unassigned items
+            if (unassignedCount > 0) {
+                const unassignedItem = document.createElement('li');
+                unassignedItem.className = `customer-item ${currentCustomerFilter === 'unassigned' ? 'active' : ''}`;
+                unassignedItem.innerHTML = `
+                    <div class="customer-item-content">
+                        <span class="customer-name">Unassigned</span>
+                        <span class="customer-count">${unassignedCount}</span>
+                    </div>
+                `;
+                unassignedItem.onclick = () => filterByCustomer('unassigned', 'Unassigned');
+                customerList.appendChild(unassignedItem);
+            } else if (currentCustomerFilter === 'unassigned') {
+                // If currently filtering by unassigned but no unassigned items exist, reset to "All"
+                filterByCustomer(null);
+            }
             
             console.log('Debug: Customers from API:', customers);
             console.log('Debug: Unassigned customer found:', unassignedCustomer);
