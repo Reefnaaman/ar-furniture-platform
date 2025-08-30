@@ -1301,6 +1301,77 @@
         .model-card.selectable:hover::after {
             border-color: rgba(88, 166, 255, 0.5);
         }
+        
+        /* Assign Dropdown */
+        .assign-dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        
+        .assign-button {
+            background: rgba(255, 165, 0, 0.1);
+            border: 1px solid rgba(255, 165, 0, 0.3);
+            color: #ffa500;
+        }
+        
+        .assign-button:hover {
+            background: rgba(255, 165, 0, 0.2);
+            border-color: rgba(255, 165, 0, 0.5);
+        }
+        
+        .assign-dropdown-content {
+            display: none;
+            position: absolute;
+            bottom: 100%;
+            left: 0;
+            min-width: 200px;
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            padding: 8px 0;
+            margin-bottom: 8px;
+        }
+        
+        .assign-dropdown.show .assign-dropdown-content {
+            display: block;
+        }
+        
+        .assign-option {
+            padding: 10px 16px;
+            color: #e6edf3;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
+        }
+        
+        .assign-option:last-child {
+            border-bottom: none;
+        }
+        
+        .assign-option:hover {
+            background: rgba(240, 246, 252, 0.1);
+        }
+        
+        .assign-option.current {
+            background: rgba(255, 165, 0, 0.1);
+            color: #ffa500;
+            font-weight: 500;
+        }
+        
+        .assign-option.new-customer {
+            background: rgba(46, 160, 67, 0.1);
+            color: #3fb950;
+            border-top: 1px solid rgba(240, 246, 252, 0.1);
+            font-weight: 500;
+        }
+        
+        .assign-option.new-customer:hover {
+            background: rgba(46, 160, 67, 0.2);
+        }
 
         .customer-header {
             padding: 20px 30px;
@@ -1749,6 +1820,14 @@
                             <button class="action-button" onclick="copyToClipboard('${viewUrl}', this)">
                                 📋 Copy Link
                             </button>
+                            <div class="assign-dropdown">
+                                <button class="action-button assign-button" onclick="toggleAssignDropdown(this, '${model.id}', '${model.customer_id}', '${model.customer_name}')">
+                                    🏷️ Assign
+                                </button>
+                                <div class="assign-dropdown-content">
+                                    <!-- Populated dynamically -->
+                                </div>
+                            </div>
                             <button class="action-button delete" onclick="deleteModel('${model.id}', '${model.cloudinary_public_id}')">
                                 🗑️ Remove
                             </button>
@@ -2487,6 +2566,182 @@
                     badge.textContent = cards.length;
                 }
             });
+        }
+        
+        // Assign Dropdown Functions
+        function toggleAssignDropdown(button, modelId, currentCustomerId, currentCustomerName) {
+            // Close any other open dropdowns
+            document.querySelectorAll('.assign-dropdown.show').forEach(dropdown => {
+                if (dropdown !== button.parentNode) {
+                    dropdown.classList.remove('show');
+                }
+            });
+            
+            const dropdown = button.parentNode;
+            const content = dropdown.querySelector('.assign-dropdown-content');
+            
+            if (dropdown.classList.contains('show')) {
+                dropdown.classList.remove('show');
+                return;
+            }
+            
+            // Populate dropdown with customers
+            populateAssignDropdown(content, modelId, currentCustomerId, currentCustomerName);
+            dropdown.classList.add('show');
+            
+            // Close dropdown when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', function closeDropdown(e) {
+                    if (!dropdown.contains(e.target)) {
+                        dropdown.classList.remove('show');
+                        document.removeEventListener('click', closeDropdown);
+                    }
+                });
+            }, 100);
+        }
+        
+        function populateAssignDropdown(content, modelId, currentCustomerId, currentCustomerName) {
+            content.innerHTML = '';
+            
+            // Show current assignment
+            if (currentCustomerId && currentCustomerName) {
+                const currentOption = document.createElement('div');
+                currentOption.className = 'assign-option current';
+                currentOption.innerHTML = `✓ Currently: ${currentCustomerName}`;
+                content.appendChild(currentOption);
+            }
+            
+            // Add all customers
+            allCustomers.forEach(customer => {
+                if (customer.id !== currentCustomerId) {
+                    const option = document.createElement('div');
+                    option.className = 'assign-option';
+                    option.textContent = customer.name;
+                    option.onclick = () => assignFurnitureToCustomer(modelId, customer.id, customer.name);
+                    content.appendChild(option);
+                }
+            });
+            
+            // Add "Create New Customer" option
+            const newOption = document.createElement('div');
+            newOption.className = 'assign-option new-customer';
+            newOption.innerHTML = '+ Create New Customer';
+            newOption.onclick = () => assignToNewCustomer(modelId);
+            content.appendChild(newOption);
+        }
+        
+        async function assignFurnitureToCustomer(modelId, customerId, customerName) {
+            try {
+                // Close dropdown
+                document.querySelectorAll('.assign-dropdown.show').forEach(dropdown => {
+                    dropdown.classList.remove('show');
+                });
+                
+                // For MVP, this simulates the assignment by updating the UI
+                // In a full implementation, this would make an API call to update the database
+                
+                const confirmed = confirm(`Assign this furniture to ${customerName}?\n\nNote: This is a demo - actual implementation would require backend API updates to persist the change.`);
+                
+                if (!confirmed) return;
+                
+                // Find the model card and move it to the correct customer group
+                const modelCard = Array.from(document.querySelectorAll('.model-card')).find(card => 
+                    card.querySelector('.model-id').textContent === modelId
+                );
+                
+                if (modelCard) {
+                    // Find or create target customer group
+                    let targetGroup = document.querySelector(`[data-customer="${customerId}"]`);
+                    
+                    if (!targetGroup) {
+                        // Create new customer group
+                        const groupsContainer = document.querySelector('.customer-groups');
+                        targetGroup = document.createElement('div');
+                        targetGroup.className = 'customer-group';
+                        targetGroup.setAttribute('data-customer', customerId);
+                        targetGroup.innerHTML = `
+                            <div class="customer-header" onclick="toggleCustomerGroup('${customerId}')">
+                                <div class="customer-name">
+                                    ${customerName}
+                                    <span class="customer-badge">0</span>
+                                </div>
+                                <div class="customer-stats">
+                                    0 views • 0 B
+                                    <span class="expand-icon">▼</span>
+                                </div>
+                            </div>
+                            <div class="customer-content">
+                                <div class="models-grid">
+                                </div>
+                            </div>
+                        `;
+                        
+                        // Insert in alphabetical order
+                        const existingGroups = Array.from(groupsContainer.children);
+                        let inserted = false;
+                        for (let group of existingGroups) {
+                            const groupName = group.querySelector('.customer-name')?.textContent.trim() || '';
+                            if (customerName.localeCompare(groupName) < 0) {
+                                groupsContainer.insertBefore(targetGroup, group);
+                                inserted = true;
+                                break;
+                            }
+                        }
+                        if (!inserted) {
+                            groupsContainer.appendChild(targetGroup);
+                        }
+                    }
+                    
+                    // Move the card
+                    const targetGrid = targetGroup.querySelector('.models-grid');
+                    targetGrid.appendChild(modelCard);
+                    
+                    // Update customer badges
+                    updateCustomerBadges();
+                    
+                    // Update assign button to reflect new assignment
+                    const assignButton = modelCard.querySelector('.assign-button');
+                    assignButton.setAttribute('onclick', `toggleAssignDropdown(this, '${modelId}', '${customerId}', '${customerName}')`);
+                }
+                
+                alert(`✅ Furniture assigned to ${customerName}!`);
+                
+                // Refresh data to ensure consistency
+                loadModels();
+                loadCustomers();
+                
+            } catch (error) {
+                alert('Failed to assign furniture: ' + error.message);
+            }
+        }
+        
+        async function assignToNewCustomer(modelId) {
+            const customerName = prompt('Enter new customer name:');
+            if (!customerName?.trim()) return;
+            
+            const customerId = customerName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+            
+            // Add to customer dropdown in upload modal
+            const customerSelect = document.getElementById('customerSelect');
+            const existingOption = Array.from(customerSelect.options).find(option => 
+                option.value.split(':')[1] === customerName
+            );
+            
+            if (!existingOption) {
+                const newOption = document.createElement('option');
+                newOption.value = `${customerId}:${customerName}`;
+                newOption.textContent = customerName;
+                customerSelect.appendChild(newOption);
+                
+                // Add to allCustomers array
+                allCustomers.push({ id: customerId, name: customerName, count: 0 });
+                
+                // Update sidebar
+                loadCustomers();
+            }
+            
+            // Now assign to this customer
+            await assignFurnitureToCustomer(modelId, customerId, customerName);
         }
     </script>
     
