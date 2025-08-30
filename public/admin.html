@@ -896,6 +896,412 @@
             border-color: rgba(88, 166, 255, 0.2);
         }
         
+        /* Sidebar Styles */
+        .admin-layout {
+            display: flex;
+            min-height: 100vh;
+        }
+        
+        .sidebar {
+            width: 320px;
+            background: linear-gradient(180deg, rgba(13, 17, 23, 0.95) 0%, rgba(22, 27, 34, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(240, 246, 252, 0.1);
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100vh;
+            overflow-y: auto;
+            z-index: 1000;
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 8px 0 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .sidebar.collapsed {
+            transform: translateX(-280px);
+        }
+        
+        .sidebar-toggle {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            width: 40px;
+            height: 40px;
+            background: rgba(22, 27, 34, 0.9);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 12px;
+            color: #e6edf3;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            z-index: 1001;
+            transition: all 0.2s ease;
+        }
+        
+        .sidebar-toggle:hover {
+            background: rgba(58, 166, 255, 0.1);
+            border-color: rgba(88, 166, 255, 0.3);
+        }
+        
+        .sidebar-header {
+            padding: 25px 20px;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
+            text-align: center;
+        }
+        
+        .sidebar-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e6edf3;
+            margin-bottom: 5px;
+        }
+        
+        .sidebar-subtitle {
+            font-size: 0.85rem;
+            color: #7d8590;
+        }
+        
+        .sidebar-search {
+            padding: 20px;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
+        }
+        
+        .search-input {
+            width: 100%;
+            background: rgba(22, 27, 34, 0.8);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 12px;
+            color: #e6edf3;
+            padding: 12px 16px;
+            font-size: 0.9rem;
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        
+        .search-input:focus {
+            border-color: rgba(88, 166, 255, 0.5);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+        
+        .search-input::placeholder {
+            color: #7d8590;
+        }
+        
+        .sidebar-stats {
+            padding: 20px;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
+        }
+        
+        .sidebar-stats-title {
+            font-size: 0.9rem;
+            color: #7d8590;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+        
+        .sidebar-stat-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .sidebar-stat-label {
+            color: #e6edf3;
+            font-size: 0.85rem;
+        }
+        
+        .sidebar-stat-value {
+            color: #58a6ff;
+            font-weight: 600;
+            font-size: 0.85rem;
+        }
+        
+        .sidebar-customers {
+            padding: 20px;
+            flex: 1;
+        }
+        
+        .sidebar-customers-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .sidebar-customers-title {
+            font-size: 0.9rem;
+            color: #7d8590;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 500;
+        }
+        
+        .add-customer-btn {
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            color: #58a6ff;
+            border-radius: 8px;
+            padding: 6px 10px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .add-customer-btn:hover {
+            background: rgba(88, 166, 255, 0.2);
+        }
+        
+        .customer-list {
+            list-style: none;
+        }
+        
+        .customer-item {
+            padding: 12px 16px;
+            margin-bottom: 6px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid transparent;
+            position: relative;
+        }
+        
+        .customer-item:hover {
+            background: rgba(240, 246, 252, 0.05);
+            border-color: rgba(240, 246, 252, 0.1);
+        }
+        
+        .customer-item.active {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: rgba(88, 166, 255, 0.3);
+        }
+        
+        .customer-item-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .customer-name {
+            color: #e6edf3;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .customer-count {
+            background: rgba(88, 166, 255, 0.2);
+            color: #58a6ff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .main-content {
+            margin-left: 320px;
+            flex: 1;
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .main-content.expanded {
+            margin-left: 40px;
+        }
+        
+        .add-customer-form {
+            display: none;
+            padding: 10px;
+            background: rgba(22, 27, 34, 0.8);
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+        
+        .add-customer-input {
+            width: 100%;
+            background: rgba(13, 17, 23, 0.8);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 8px;
+            color: #e6edf3;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            outline: none;
+            margin-bottom: 8px;
+        }
+        
+        .add-customer-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .add-customer-save,
+        .add-customer-cancel {
+            flex: 1;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .add-customer-save {
+            background: rgba(46, 160, 67, 0.2);
+            border: 1px solid rgba(46, 160, 67, 0.4);
+            color: #3fb950;
+        }
+        
+        .add-customer-cancel {
+            background: rgba(248, 81, 73, 0.2);
+            border: 1px solid rgba(248, 81, 73, 0.4);
+            color: #f85149;
+        }
+        
+        /* Bulk Actions */
+        .bulk-actions {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(240, 246, 252, 0.15);
+            border-radius: 20px;
+            padding: 20px;
+            display: none;
+            flex-direction: column;
+            gap: 12px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            min-width: 250px;
+        }
+        
+        .bulk-actions.show {
+            display: flex;
+        }
+        
+        .bulk-actions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .bulk-actions-title {
+            color: #e6edf3;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .bulk-actions-count {
+            background: rgba(88, 166, 255, 0.2);
+            color: #58a6ff;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .bulk-move-select {
+            width: 100%;
+            background: rgba(22, 27, 34, 0.8);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 8px;
+            color: #e6edf3;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            outline: none;
+        }
+        
+        .bulk-action-btn {
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        .bulk-move-btn {
+            background: rgba(46, 160, 67, 0.2);
+            border: 1px solid rgba(46, 160, 67, 0.4);
+            color: #3fb950;
+        }
+        
+        .bulk-move-btn:hover {
+            background: rgba(46, 160, 67, 0.3);
+        }
+        
+        .bulk-cancel-btn {
+            background: rgba(248, 81, 73, 0.2);
+            border: 1px solid rgba(248, 81, 73, 0.4);
+            color: #f85149;
+        }
+        
+        .bulk-cancel-btn:hover {
+            background: rgba(248, 81, 73, 0.3);
+        }
+        
+        .select-mode-toggle {
+            position: fixed;
+            bottom: 30px;
+            left: 350px;
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            color: #58a6ff;
+            padding: 12px 20px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            z-index: 999;
+        }
+        
+        .select-mode-toggle:hover {
+            background: rgba(88, 166, 255, 0.2);
+        }
+        
+        .select-mode-toggle.active {
+            background: rgba(88, 166, 255, 0.3);
+            border-color: rgba(88, 166, 255, 0.5);
+        }
+        
+        .model-card.selectable {
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .model-card.selectable::after {
+            content: '';
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(240, 246, 252, 0.3);
+            border-radius: 4px;
+            background: rgba(22, 27, 34, 0.8);
+            transition: all 0.2s ease;
+        }
+        
+        .model-card.selectable.selected::after {
+            background: #58a6ff;
+            border-color: #58a6ff;
+            content: '✓';
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+        
+        .model-card.selectable:hover::after {
+            border-color: rgba(88, 166, 255, 0.5);
+        }
+
         .customer-header {
             padding: 20px 30px;
             background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(120, 200, 255, 0.05));
@@ -954,17 +1360,73 @@
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="header-content">
-            <h1>⚙️ Admin Dashboard</h1>
-            <div class="nav-buttons">
-                <button class="nav-button" onclick="toggleUploadModal()">📤 Upload Furniture</button>
-                <button class="nav-button" onclick="location.reload()">🔄 Refresh</button>
+    <!-- Sidebar Toggle -->
+    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
+    
+    <!-- Admin Layout -->
+    <div class="admin-layout">
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">Admin Panel</div>
+                <div class="sidebar-subtitle">Furniture Management</div>
+            </div>
+            
+            <div class="sidebar-search">
+                <input type="text" class="search-input" placeholder="Search furniture or customers..." 
+                       oninput="handleSearch(this.value)" />
+            </div>
+            
+            <div class="sidebar-stats">
+                <div class="sidebar-stats-title">Quick Stats</div>
+                <div class="sidebar-stat-item">
+                    <span class="sidebar-stat-label">Total Furniture</span>
+                    <span class="sidebar-stat-value" id="sidebarTotalModels">-</span>
+                </div>
+                <div class="sidebar-stat-item">
+                    <span class="sidebar-stat-label">Customers</span>
+                    <span class="sidebar-stat-value" id="sidebarTotalCustomers">-</span>
+                </div>
+                <div class="sidebar-stat-item">
+                    <span class="sidebar-stat-label">Total Views</span>
+                    <span class="sidebar-stat-value" id="sidebarTotalViews">-</span>
+                </div>
+            </div>
+            
+            <div class="sidebar-customers">
+                <div class="sidebar-customers-header">
+                    <span class="sidebar-customers-title">Customers</span>
+                    <button class="add-customer-btn" onclick="showAddCustomerForm()">+ Add</button>
+                </div>
+                
+                <!-- Add Customer Form -->
+                <div class="add-customer-form" id="addCustomerForm">
+                    <input type="text" class="add-customer-input" placeholder="Customer name" id="newCustomerName" />
+                    <div class="add-customer-actions">
+                        <button class="add-customer-save" onclick="saveNewCustomer()">Save</button>
+                        <button class="add-customer-cancel" onclick="hideAddCustomerForm()">Cancel</button>
+                    </div>
+                </div>
+                
+                <ul class="customer-list" id="customerList">
+                    <!-- Customer items will be populated here -->
+                </ul>
             </div>
         </div>
-    </div>
-    
-    <div class="container">
+        
+        <!-- Main Content -->
+        <div class="main-content" id="mainContent">
+            <div class="header">
+                <div class="header-content">
+                    <h1>⚙️ Admin Dashboard</h1>
+                    <div class="nav-buttons">
+                        <button class="nav-button" onclick="toggleUploadModal()">📤 Upload Furniture</button>
+                        <button class="nav-button" onclick="location.reload()">🔄 Refresh</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="container">
         <div class="stats-grid">
             <div class="stat-card">
                 <div class="stat-icon">📦</div>
@@ -1579,6 +2041,481 @@
         
         // Auto-refresh every 30 seconds
         setInterval(loadModels, 30000);
+        
+        // Sidebar functionality
+        let currentCustomerFilter = null;
+        let searchQuery = '';
+        let allCustomers = [];
+        
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const mainContent = document.getElementById('mainContent');
+            
+            sidebar.classList.toggle('collapsed');
+            mainContent.classList.toggle('expanded');
+        }
+        
+        function updateSidebarCustomers(customers) {
+            allCustomers = customers;
+            const customerList = document.getElementById('customerList');
+            customerList.innerHTML = '';
+            
+            // Add "All Furniture" option
+            const allItem = document.createElement('li');
+            allItem.className = `customer-item ${currentCustomerFilter === null ? 'active' : ''}`;
+            allItem.innerHTML = `
+                <div class="customer-item-content">
+                    <span class="customer-name">All Furniture</span>
+                    <span class="customer-count">${customers.reduce((sum, c) => sum + c.count, 0)}</span>
+                </div>
+            `;
+            allItem.onclick = () => filterByCustomer(null);
+            customerList.appendChild(allItem);
+            
+            // Add customer items
+            customers.forEach(customer => {
+                const item = document.createElement('li');
+                item.className = `customer-item ${currentCustomerFilter === customer.id ? 'active' : ''}`;
+                item.innerHTML = `
+                    <div class="customer-item-content">
+                        <span class="customer-name">${customer.name}</span>
+                        <span class="customer-count">${customer.count}</span>
+                    </div>
+                `;
+                item.onclick = () => filterByCustomer(customer.id, customer.name);
+                customerList.appendChild(item);
+            });
+            
+            // Update sidebar stats
+            document.getElementById('sidebarTotalCustomers').textContent = customers.length;
+        }
+        
+        function filterByCustomer(customerId, customerName = null) {
+            currentCustomerFilter = customerId;
+            
+            // Update active state in sidebar
+            document.querySelectorAll('.customer-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            event.target.closest('.customer-item').classList.add('active');
+            
+            // Filter displayed models
+            const customerGroups = document.querySelectorAll('.customer-group');
+            customerGroups.forEach(group => {
+                const groupCustomerId = group.getAttribute('data-customer');
+                if (currentCustomerFilter === null) {
+                    // Show all
+                    group.style.display = 'block';
+                } else {
+                    // Show only matching customer
+                    group.style.display = groupCustomerId === currentCustomerFilter ? 'block' : 'none';
+                }
+            });
+            
+            // Update header to show current filter
+            const headerTitle = document.querySelector('.header h1');
+            if (customerId === null) {
+                headerTitle.textContent = '⚙️ Admin Dashboard';
+            } else {
+                headerTitle.textContent = `⚙️ ${customerName || 'Customer'} Dashboard`;
+            }
+        }
+        
+        function handleSearch(query) {
+            searchQuery = query.toLowerCase();
+            
+            // If no query, show current filter
+            if (!searchQuery) {
+                filterByCustomer(currentCustomerFilter);
+                return;
+            }
+            
+            // Search through all cards
+            const modelCards = document.querySelectorAll('.model-card');
+            const customerGroups = document.querySelectorAll('.customer-group');
+            
+            // First hide all groups
+            customerGroups.forEach(group => {
+                group.style.display = 'none';
+            });
+            
+            // Show cards that match search
+            let hasResults = false;
+            modelCards.forEach(card => {
+                const title = card.querySelector('.model-title')?.textContent?.toLowerCase() || '';
+                const description = card.querySelector('.model-description')?.textContent?.toLowerCase() || '';
+                const customerName = card.closest('.customer-group')?.querySelector('.customer-name')?.textContent?.toLowerCase() || '';
+                
+                const matches = title.includes(searchQuery) || 
+                               description.includes(searchQuery) || 
+                               customerName.includes(searchQuery);
+                
+                if (matches) {
+                    hasResults = true;
+                    // Show the parent group
+                    const group = card.closest('.customer-group');
+                    if (group) {
+                        group.style.display = 'block';
+                    }
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            if (!hasResults) {
+                // Show empty state in main area
+                document.getElementById('modelsContainer').innerHTML = `
+                    <div class="empty-state">
+                        <h3>No Results Found</h3>
+                        <p>No furniture matches "${query}"</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function showAddCustomerForm() {
+            document.getElementById('addCustomerForm').style.display = 'block';
+            document.getElementById('newCustomerName').focus();
+        }
+        
+        function hideAddCustomerForm() {
+            document.getElementById('addCustomerForm').style.display = 'none';
+            document.getElementById('newCustomerName').value = '';
+        }
+        
+        async function saveNewCustomer() {
+            const customerName = document.getElementById('newCustomerName').value.trim();
+            if (!customerName) return;
+            
+            try {
+                hideAddCustomerForm();
+                
+                // Create customer ID from name (simple slug)
+                const customerId = customerName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+                
+                // Add to customer select dropdown immediately
+                const customerSelect = document.getElementById('customerSelect');
+                
+                // Check if already exists
+                const existingOption = Array.from(customerSelect.options).find(option => 
+                    option.value.split(':')[1] === customerName
+                );
+                
+                if (existingOption) {
+                    alert('Customer already exists!');
+                    return;
+                }
+                
+                // Add new option
+                const newOption = document.createElement('option');
+                newOption.value = `${customerId}:${customerName}`;
+                newOption.textContent = customerName;
+                customerSelect.appendChild(newOption);
+                
+                // Update sidebar immediately with 0 count
+                const customerList = document.getElementById('customerList');
+                const newItem = document.createElement('li');
+                newItem.className = 'customer-item';
+                newItem.innerHTML = `
+                    <div class="customer-item-content">
+                        <span class="customer-name">${customerName}</span>
+                        <span class="customer-count">0</span>
+                    </div>
+                `;
+                newItem.onclick = () => filterByCustomer(customerId, customerName);
+                
+                // Insert in alphabetical order
+                const existingItems = Array.from(customerList.querySelectorAll('.customer-item')).slice(1); // Skip "All Furniture"
+                let inserted = false;
+                for (let item of existingItems) {
+                    const itemName = item.querySelector('.customer-name').textContent;
+                    if (customerName.localeCompare(itemName) < 0) {
+                        customerList.insertBefore(newItem, item);
+                        inserted = true;
+                        break;
+                    }
+                }
+                if (!inserted) {
+                    customerList.appendChild(newItem);
+                }
+                
+                // Update customer count in sidebar
+                const currentCount = parseInt(document.getElementById('sidebarTotalCustomers').textContent) || 0;
+                document.getElementById('sidebarTotalCustomers').textContent = currentCount + 1;
+                
+                // Show success message
+                alert(`${customerName} added! Upload furniture and assign it to them.`);
+                
+            } catch (error) {
+                alert('Failed to add customer: ' + error.message);
+            }
+        }
+        
+        // Update the existing loadCustomers function to also update sidebar
+        const originalLoadCustomers = loadCustomers;
+        loadCustomers = async function() {
+            await originalLoadCustomers();
+            
+            // Also fetch for sidebar
+            try {
+                const response = await fetch('/api/customers');
+                if (response.ok) {
+                    const data = await response.json();
+                    updateSidebarCustomers(data.customers);
+                }
+            } catch (error) {
+                console.error('Error loading customers for sidebar:', error);
+            }
+        };
+        
+        // Update the existing loadModels function to also update sidebar stats
+        const originalLoadModels = loadModels;
+        loadModels = async function() {
+            await originalLoadModels();
+            
+            // Update sidebar stats
+            try {
+                const response = await fetch('/api/models');
+                if (response.ok) {
+                    const data = await response.json();
+                    document.getElementById('sidebarTotalModels').textContent = data.stats.totalModels || 0;
+                    document.getElementById('sidebarTotalViews').textContent = data.stats.totalViews || 0;
+                }
+            } catch (error) {
+                console.error('Error updating sidebar stats:', error);
+            }
+        };
+        
+        // Bulk Actions functionality
+        let selectMode = false;
+        let selectedModels = new Set();
+        
+        function toggleSelectMode() {
+            selectMode = !selectMode;
+            const toggle = document.getElementById('selectModeToggle');
+            const bulkActions = document.getElementById('bulkActions');
+            
+            if (selectMode) {
+                toggle.classList.add('active');
+                toggle.textContent = '✕ Exit Select';
+                bulkActions.classList.add('show');
+                
+                // Add selectable class to all model cards
+                document.querySelectorAll('.model-card').forEach(card => {
+                    card.classList.add('selectable');
+                    card.onclick = (e) => {
+                        // Prevent other click handlers
+                        e.stopPropagation();
+                        toggleModelSelection(card);
+                    };
+                });
+                
+                // Populate bulk move select with customers
+                updateBulkMoveSelect();
+                
+            } else {
+                exitSelectMode();
+            }
+        }
+        
+        function exitSelectMode() {
+            selectMode = false;
+            selectedModels.clear();
+            
+            const toggle = document.getElementById('selectModeToggle');
+            const bulkActions = document.getElementById('bulkActions');
+            
+            toggle.classList.remove('active');
+            toggle.textContent = '📋 Select Mode';
+            bulkActions.classList.remove('show');
+            
+            // Remove selectable class and onclick handlers
+            document.querySelectorAll('.model-card').forEach(card => {
+                card.classList.remove('selectable', 'selected');
+                card.onclick = null;
+            });
+            
+            updateSelectedCount();
+        }
+        
+        function toggleModelSelection(card) {
+            if (!selectMode) return;
+            
+            const modelId = card.querySelector('.model-id').textContent;
+            
+            if (selectedModels.has(modelId)) {
+                selectedModels.delete(modelId);
+                card.classList.remove('selected');
+            } else {
+                selectedModels.add(modelId);
+                card.classList.add('selected');
+            }
+            
+            updateSelectedCount();
+        }
+        
+        function updateSelectedCount() {
+            const count = selectedModels.size;
+            document.getElementById('selectedCount').textContent = `${count} selected`;
+            
+            // Show/hide bulk actions based on selection
+            const bulkActions = document.getElementById('bulkActions');
+            if (count > 0) {
+                bulkActions.classList.add('show');
+            } else if (!selectMode) {
+                bulkActions.classList.remove('show');
+            }
+        }
+        
+        function updateBulkMoveSelect() {
+            const select = document.getElementById('bulkMoveSelect');
+            select.innerHTML = '<option value="">Move to customer...</option>';
+            
+            // Add all customers from sidebar
+            allCustomers.forEach(customer => {
+                const option = document.createElement('option');
+                option.value = `${customer.id}:${customer.name}`;
+                option.textContent = customer.name;
+                select.appendChild(option);
+            });
+            
+            // Add option for new customer
+            const newOption = document.createElement('option');
+            newOption.value = 'new';
+            newOption.textContent = '+ Add New Customer';
+            select.appendChild(newOption);
+        }
+        
+        async function executeBulkMove() {
+            if (selectedModels.size === 0) {
+                alert('Please select furniture to move.');
+                return;
+            }
+            
+            const selectValue = document.getElementById('bulkMoveSelect').value;
+            if (!selectValue) {
+                alert('Please select a destination customer.');
+                return;
+            }
+            
+            let customerId, customerName;
+            
+            if (selectValue === 'new') {
+                customerName = prompt('Enter new customer name:');
+                if (!customerName) return;
+                customerId = customerName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
+            } else {
+                [customerId, customerName] = selectValue.split(':');
+            }
+            
+            try {
+                // For MVP, this is a simulation since we'd need backend API changes
+                const confirmed = confirm(`Move ${selectedModels.size} furniture pieces to ${customerName}?\n\nNote: This is a demo - actual implementation would require backend API updates.`);
+                
+                if (!confirmed) return;
+                
+                // Simulate the move by updating the UI
+                selectedModels.forEach(modelId => {
+                    const card = Array.from(document.querySelectorAll('.model-card')).find(c => 
+                        c.querySelector('.model-id').textContent === modelId
+                    );
+                    
+                    if (card) {
+                        // Find current customer group and move card
+                        const currentGroup = card.closest('.customer-group');
+                        let targetGroup = document.querySelector(`[data-customer="${customerId}"]`);
+                        
+                        // If target group doesn't exist, create it
+                        if (!targetGroup) {
+                            const groupsContainer = document.querySelector('.customer-groups');
+                            const newGroup = document.createElement('div');
+                            newGroup.className = 'customer-group';
+                            newGroup.setAttribute('data-customer', customerId);
+                            newGroup.innerHTML = `
+                                <div class="customer-header" onclick="toggleCustomerGroup('${customerId}')">
+                                    <div class="customer-name">
+                                        ${customerName}
+                                        <span class="customer-badge">0</span>
+                                    </div>
+                                    <div class="customer-stats">
+                                        0 views • 0 B
+                                        <span class="expand-icon">▼</span>
+                                    </div>
+                                </div>
+                                <div class="customer-content">
+                                    <div class="models-grid">
+                                    </div>
+                                </div>
+                            `;
+                            groupsContainer.appendChild(newGroup);
+                            targetGroup = newGroup;
+                        }
+                        
+                        // Move card to target group
+                        const targetGrid = targetGroup.querySelector('.models-grid');
+                        targetGrid.appendChild(card);
+                        
+                        // Update customer badges
+                        updateCustomerBadges();
+                    }
+                });
+                
+                alert(`Successfully moved ${selectedModels.size} furniture pieces to ${customerName}!`);
+                
+                // Exit select mode
+                exitSelectMode();
+                
+                // Refresh data
+                loadModels();
+                loadCustomers();
+                
+            } catch (error) {
+                alert('Failed to move furniture: ' + error.message);
+            }
+        }
+        
+        function cancelBulkMode() {
+            exitSelectMode();
+        }
+        
+        function updateCustomerBadges() {
+            document.querySelectorAll('.customer-group').forEach(group => {
+                const badge = group.querySelector('.customer-badge');
+                const cards = group.querySelectorAll('.model-card');
+                if (badge) {
+                    badge.textContent = cards.length;
+                }
+            });
+        }
     </script>
+    
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bulk Actions -->
+    <button class="select-mode-toggle" id="selectModeToggle" onclick="toggleSelectMode()">
+        📋 Select Mode
+    </button>
+    
+    <div class="bulk-actions" id="bulkActions">
+        <div class="bulk-actions-header">
+            <span class="bulk-actions-title">Bulk Actions</span>
+            <span class="bulk-actions-count" id="selectedCount">0 selected</span>
+        </div>
+        
+        <select class="bulk-move-select" id="bulkMoveSelect">
+            <option value="">Move to customer...</option>
+        </select>
+        
+        <button class="bulk-action-btn bulk-move-btn" onclick="executeBulkMove()">
+            📦 Move Selected
+        </button>
+        
+        <button class="bulk-action-btn bulk-cancel-btn" onclick="cancelBulkMode()">
+            ✕ Cancel
+        </button>
+    </div>
 </body>
 </html>/* Force deployment Fri Aug 29 15:30:14 IDT 2025 */
