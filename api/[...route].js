@@ -1,5 +1,5 @@
 import { uploadModel } from '../lib/cloudinary.js';
-import { saveModel, getModel, getAllModels, getModelsByCustomer, getCustomers, getStats, deleteModel, incrementViewCount } from '../lib/supabase.js';
+import { saveModel, getModel, getAllModels, getModelsByCustomer, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import multiparty from 'multiparty';
 
@@ -73,6 +73,9 @@ export default async function handler(req, res) {
       } else if (routeParts.length === 3 && routeParts[2] === 'view') {
         // /api/model/[id]/view
         return await handleModelView(req, res, modelId);
+      } else if (routeParts.length === 3 && routeParts[2] === 'assign') {
+        // /api/model/[id]/assign
+        return await handleModelAssign(req, res, modelId);
       }
     }
     
@@ -383,5 +386,38 @@ async function handleCustomerModels(req, res, customerId) {
   } catch (error) {
     console.error('Error fetching customer models:', error);
     res.status(500).json({ error: 'Failed to fetch customer models' });
+  }
+}
+
+/**
+ * Handle model customer assignment
+ */
+async function handleModelAssign(req, res, modelId) {
+  if (req.method !== 'PUT') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  try {
+    const { customerId, customerName } = req.body;
+    
+    if (!customerId || !customerName) {
+      return res.status(400).json({ error: 'Customer ID and name required' });
+    }
+    
+    const result = await updateModelCustomer(modelId, customerId, customerName);
+    
+    if (!result.success) {
+      return res.status(500).json({ error: result.error });
+    }
+    
+    res.status(200).json({ 
+      success: true, 
+      model: result.data,
+      message: 'Model assigned successfully' 
+    });
+    
+  } catch (error) {
+    console.error('Error assigning model:', error);
+    res.status(500).json({ error: 'Failed to assign model' });
   }
 }

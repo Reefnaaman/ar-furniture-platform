@@ -1158,155 +1158,7 @@
             color: #f85149;
         }
         
-        /* Bulk Actions */
-        .bulk-actions {
-            position: fixed;
-            bottom: 30px;
-            right: 30px;
-            background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(240, 246, 252, 0.15);
-            border-radius: 20px;
-            padding: 20px;
-            display: none;
-            flex-direction: column;
-            gap: 12px;
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
-            z-index: 1000;
-            min-width: 250px;
-        }
         
-        .bulk-actions.show {
-            display: flex;
-        }
-        
-        .bulk-actions-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .bulk-actions-title {
-            color: #e6edf3;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
-        
-        .bulk-actions-count {
-            background: rgba(88, 166, 255, 0.2);
-            color: #58a6ff;
-            padding: 4px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-        }
-        
-        .bulk-move-select {
-            width: 100%;
-            background: rgba(22, 27, 34, 0.8);
-            border: 1px solid rgba(240, 246, 252, 0.2);
-            border-radius: 8px;
-            color: #e6edf3;
-            padding: 8px 12px;
-            font-size: 0.85rem;
-            outline: none;
-        }
-        
-        .bulk-action-btn {
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-            font-weight: 500;
-        }
-        
-        .bulk-move-btn {
-            background: rgba(46, 160, 67, 0.2);
-            border: 1px solid rgba(46, 160, 67, 0.4);
-            color: #3fb950;
-        }
-        
-        .bulk-move-btn:hover {
-            background: rgba(46, 160, 67, 0.3);
-        }
-        
-        .bulk-cancel-btn {
-            background: rgba(248, 81, 73, 0.2);
-            border: 1px solid rgba(248, 81, 73, 0.4);
-            color: #f85149;
-        }
-        
-        .bulk-cancel-btn:hover {
-            background: rgba(248, 81, 73, 0.3);
-        }
-        
-        .select-mode-toggle {
-            position: fixed;
-            bottom: 30px;
-            left: 350px;
-            background: rgba(88, 166, 255, 0.1);
-            border: 1px solid rgba(88, 166, 255, 0.3);
-            color: #58a6ff;
-            padding: 12px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-size: 0.9rem;
-            font-weight: 500;
-            transition: all 0.2s ease;
-            z-index: 999;
-        }
-        
-        .select-mode-toggle:hover {
-            background: rgba(88, 166, 255, 0.2);
-        }
-        
-        .select-mode-toggle.active {
-            background: rgba(88, 166, 255, 0.3);
-            border-color: rgba(88, 166, 255, 0.5);
-        }
-        
-        .model-card.selectable {
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .model-card.selectable .select-checkbox {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            width: 20px;
-            height: 20px;
-            border: 2px solid rgba(240, 246, 252, 0.3);
-            border-radius: 4px;
-            background: rgba(22, 27, 34, 0.8);
-            transition: all 0.2s ease;
-            z-index: 10;
-            cursor: pointer;
-        }
-        
-        .model-card.selectable.selected .select-checkbox {
-            background: #58a6ff;
-            border-color: #58a6ff;
-        }
-        
-        .model-card.selectable.selected .select-checkbox::after {
-            content: '✓';
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-size: 12px;
-            font-weight: bold;
-            width: 100%;
-            height: 100%;
-        }
-        
-        .model-card.selectable:hover .select-checkbox {
-            border-color: rgba(88, 166, 255, 0.5);
-        }
         
         /* Assign Dropdown */
         .assign-dropdown {
@@ -1641,9 +1493,30 @@
         let adminPassword = localStorage.getItem('adminPassword') || '';
         let deleteTarget = null;
         
+        // Initialize customer data manager
+        customerManager.addListener((event, data) => {
+            switch(event) {
+                case 'customersLoaded':
+                case 'customerAdded':
+                case 'customerUpdated':
+                    // Update sidebar customer list
+                    updateSidebarCustomers(customerManager.getAllCustomers());
+                    // Update assign dropdowns
+                    refreshAssignDropdowns();
+                    // Update upload modal dropdown
+                    updateCustomerSelect(customerManager.getAllCustomers());
+                    break;
+                    
+                case 'customerCountUpdated':
+                    // Update sidebar counts
+                    updateSidebarCustomerCount(data.id, data.count);
+                    break;
+            }
+        });
+        
         // Load models on page load
         loadModels();
-        loadCustomers();
+        initializeCustomers();
         
         async function loadModels() {
             try {
@@ -1671,17 +1544,36 @@
             }
         }
         
+        // Initialize customers using centralized manager
+        async function initializeCustomers() {
+            await customerManager.loadFromAPI();
+        }
+        
+        // Legacy function for backward compatibility
         async function loadCustomers() {
-            try {
-                const response = await fetch('/api/customers');
-                if (!response.ok) throw new Error('Failed to load customers');
+            await customerManager.loadFromAPI();
+        }
+        
+        // Update sidebar customer count for specific customer
+        function updateSidebarCustomerCount(customerId, count) {
+            const customerItems = document.querySelectorAll('.customer-item');
+            customerItems.forEach(item => {
+                const customerName = item.querySelector('.customer-name').textContent.trim();
+                const customer = customerManager.getAllCustomers().find(c => c.name === customerName);
                 
-                const data = await response.json();
-                updateCustomerSelect(data.customers);
-                
-            } catch (error) {
-                console.error('Error loading customers:', error);
-            }
+                if (customer && customer.id === customerId) {
+                    const countBadge = item.querySelector('.customer-count');
+                    if (countBadge) {
+                        countBadge.textContent = count;
+                    }
+                }
+            });
+        }
+        
+        // Refresh all assign dropdowns with latest customer data
+        function refreshAssignDropdowns() {
+            // This will be called when assign dropdowns are opened
+            // No need to update all at once for performance
         }
         
         function updateCustomerSelect(customers) {
@@ -1818,9 +1710,6 @@
                                 <div class="stat-label">Size</div>
                             </div>
                         </div>
-                        
-                        <!-- Select checkbox (only visible in select mode) -->
-                        <div class="select-checkbox" style="display: none;"></div>
                         
                         <div class="model-actions">
                             <a href="/view?id=${model.id}" target="_blank" class="action-button">
@@ -2130,10 +2019,95 @@
         // Auto-refresh every 30 seconds
         setInterval(loadModels, 30000);
         
+        // Centralized Customer Data Management
+        class CustomerDataManager {
+            constructor() {
+                this.customers = new Map();
+                this.listeners = new Set();
+            }
+            
+            // Add or update customer
+            setCustomer(customer) {
+                const existed = this.customers.has(customer.id);
+                this.customers.set(customer.id, customer);
+                
+                if (existed) {
+                    this.notifyListeners('customerUpdated', customer);
+                } else {
+                    this.notifyListeners('customerAdded', customer);
+                }
+            }
+            
+            // Get customer by ID
+            getCustomer(customerId) {
+                return this.customers.get(customerId);
+            }
+            
+            // Get all customers as array
+            getAllCustomers() {
+                return Array.from(this.customers.values()).sort((a, b) => a.name.localeCompare(b.name));
+            }
+            
+            // Update customer count
+            updateCustomerCount(customerId, count) {
+                const customer = this.customers.get(customerId);
+                if (customer) {
+                    customer.count = count;
+                    this.notifyListeners('customerCountUpdated', customer);
+                }
+            }
+            
+            // Check if customer exists
+            hasCustomer(customerId) {
+                return this.customers.has(customerId);
+            }
+            
+            // Add event listener
+            addListener(callback) {
+                this.listeners.add(callback);
+            }
+            
+            // Remove event listener
+            removeListener(callback) {
+                this.listeners.delete(callback);
+            }
+            
+            // Notify all listeners of changes
+            notifyListeners(event, data) {
+                this.listeners.forEach(listener => {
+                    try {
+                        listener(event, data);
+                    } catch (error) {
+                        console.error('Customer data listener error:', error);
+                    }
+                });
+            }
+            
+            // Load customers from API
+            async loadFromAPI() {
+                try {
+                    const response = await fetch('/api/customers');
+                    if (!response.ok) throw new Error('Failed to load customers');
+                    
+                    const data = await response.json();
+                    data.customers.forEach(customer => {
+                        this.customers.set(customer.id, customer);
+                    });
+                    
+                    this.notifyListeners('customersLoaded', this.getAllCustomers());
+                } catch (error) {
+                    console.error('Error loading customers:', error);
+                }
+            }
+        }
+        
+        // Global customer manager instance
+        const customerManager = new CustomerDataManager();
+        
         // Sidebar functionality
         let currentCustomerFilter = null;
         let searchQuery = '';
-        let allCustomers = [];
+        let allCustomers = []; // Keep for backward compatibility
         
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -2282,55 +2256,18 @@
                 // Create customer ID from name (simple slug)
                 const customerId = customerName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
                 
-                // Add to customer select dropdown immediately
-                const customerSelect = document.getElementById('customerSelect');
-                
-                // Check if already exists
-                const existingOption = Array.from(customerSelect.options).find(option => 
-                    option.value.split(':')[1] === customerName
-                );
-                
-                if (existingOption) {
+                // Check if already exists in centralized manager
+                if (customerManager.hasCustomer(customerId)) {
                     alert('Customer already exists!');
                     return;
                 }
                 
-                // Add new option
-                const newOption = document.createElement('option');
-                newOption.value = `${customerId}:${customerName}`;
-                newOption.textContent = customerName;
-                customerSelect.appendChild(newOption);
-                
-                // Update sidebar immediately with 0 count
-                const customerList = document.getElementById('customerList');
-                const newItem = document.createElement('li');
-                newItem.className = 'customer-item';
-                newItem.innerHTML = `
-                    <div class="customer-item-content">
-                        <span class="customer-name">${customerName}</span>
-                        <span class="customer-count">0</span>
-                    </div>
-                `;
-                newItem.onclick = () => filterByCustomer(customerId, customerName);
-                
-                // Insert in alphabetical order
-                const existingItems = Array.from(customerList.querySelectorAll('.customer-item')).slice(1); // Skip "All Furniture"
-                let inserted = false;
-                for (let item of existingItems) {
-                    const itemName = item.querySelector('.customer-name').textContent;
-                    if (customerName.localeCompare(itemName) < 0) {
-                        customerList.insertBefore(newItem, item);
-                        inserted = true;
-                        break;
-                    }
-                }
-                if (!inserted) {
-                    customerList.appendChild(newItem);
-                }
-                
-                // Update customer count in sidebar
-                const currentCount = parseInt(document.getElementById('sidebarTotalCustomers').textContent) || 0;
-                document.getElementById('sidebarTotalCustomers').textContent = currentCount + 1;
+                // Add to centralized customer manager
+                customerManager.setCustomer({
+                    id: customerId,
+                    name: customerName,
+                    count: 0
+                });
                 
                 // Show success message
                 alert(`${customerName} added! Upload furniture and assign it to them.`);
@@ -2375,218 +2312,6 @@
             }
         };
         
-        // Bulk Actions functionality
-        let selectMode = false;
-        let selectedModels = new Set();
-        
-        function toggleSelectMode() {
-            selectMode = !selectMode;
-            const toggle = document.getElementById('selectModeToggle');
-            const bulkActions = document.getElementById('bulkActions');
-            
-            if (selectMode) {
-                toggle.classList.add('active');
-                toggle.textContent = '✕ Exit Select';
-                bulkActions.classList.add('show');
-                
-                // Add selectable class and show checkboxes
-                document.querySelectorAll('.model-card').forEach(card => {
-                    card.classList.add('selectable');
-                    
-                    // Show the checkbox
-                    const checkbox = card.querySelector('.select-checkbox');
-                    if (checkbox) {
-                        checkbox.style.display = 'block';
-                        checkbox.onclick = (e) => {
-                            e.stopPropagation();
-                            toggleModelSelection(card);
-                        };
-                    }
-                    
-                    // Also allow clicking the card itself
-                    card.onclick = (e) => {
-                        // Only if clicking on the card itself, not buttons
-                        if (!e.target.closest('.model-actions') && !e.target.closest('.assign-dropdown')) {
-                            e.stopPropagation();
-                            toggleModelSelection(card);
-                        }
-                    };
-                });
-                
-                // Populate bulk move select with customers
-                updateBulkMoveSelect();
-                
-            } else {
-                exitSelectMode();
-            }
-        }
-        
-        function exitSelectMode() {
-            selectMode = false;
-            selectedModels.clear();
-            
-            const toggle = document.getElementById('selectModeToggle');
-            const bulkActions = document.getElementById('bulkActions');
-            
-            toggle.classList.remove('active');
-            toggle.textContent = '📋 Select Mode';
-            bulkActions.classList.remove('show');
-            
-            // Remove selectable class, hide checkboxes, and remove handlers
-            document.querySelectorAll('.model-card').forEach(card => {
-                card.classList.remove('selectable', 'selected');
-                card.onclick = null;
-                
-                // Hide the checkbox
-                const checkbox = card.querySelector('.select-checkbox');
-                if (checkbox) {
-                    checkbox.style.display = 'none';
-                    checkbox.onclick = null;
-                }
-            });
-            
-            updateSelectedCount();
-        }
-        
-        function toggleModelSelection(card) {
-            if (!selectMode) return;
-            
-            const modelId = card.querySelector('.model-id').textContent;
-            
-            if (selectedModels.has(modelId)) {
-                selectedModels.delete(modelId);
-                card.classList.remove('selected');
-            } else {
-                selectedModels.add(modelId);
-                card.classList.add('selected');
-            }
-            
-            updateSelectedCount();
-        }
-        
-        function updateSelectedCount() {
-            const count = selectedModels.size;
-            document.getElementById('selectedCount').textContent = `${count} selected`;
-            
-            // Show/hide bulk actions based on selection
-            const bulkActions = document.getElementById('bulkActions');
-            if (count > 0) {
-                bulkActions.classList.add('show');
-            } else if (!selectMode) {
-                bulkActions.classList.remove('show');
-            }
-        }
-        
-        function updateBulkMoveSelect() {
-            const select = document.getElementById('bulkMoveSelect');
-            select.innerHTML = '<option value="">Move to customer...</option>';
-            
-            // Add all customers from sidebar
-            allCustomers.forEach(customer => {
-                const option = document.createElement('option');
-                option.value = `${customer.id}:${customer.name}`;
-                option.textContent = customer.name;
-                select.appendChild(option);
-            });
-            
-            // Add option for new customer
-            const newOption = document.createElement('option');
-            newOption.value = 'new';
-            newOption.textContent = '+ Add New Customer';
-            select.appendChild(newOption);
-        }
-        
-        async function executeBulkMove() {
-            if (selectedModels.size === 0) {
-                alert('Please select furniture to move.');
-                return;
-            }
-            
-            const selectValue = document.getElementById('bulkMoveSelect').value;
-            if (!selectValue) {
-                alert('Please select a destination customer.');
-                return;
-            }
-            
-            let customerId, customerName;
-            
-            if (selectValue === 'new') {
-                customerName = prompt('Enter new customer name:');
-                if (!customerName) return;
-                customerId = customerName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
-            } else {
-                [customerId, customerName] = selectValue.split(':');
-            }
-            
-            try {
-                // For MVP, this is a simulation since we'd need backend API changes
-                const confirmed = confirm(`Move ${selectedModels.size} furniture pieces to ${customerName}?\n\nNote: This is a demo - actual implementation would require backend API updates.`);
-                
-                if (!confirmed) return;
-                
-                // Simulate the move by updating the UI
-                selectedModels.forEach(modelId => {
-                    const card = Array.from(document.querySelectorAll('.model-card')).find(c => 
-                        c.querySelector('.model-id').textContent === modelId
-                    );
-                    
-                    if (card) {
-                        // Find current customer group and move card
-                        const currentGroup = card.closest('.customer-group');
-                        let targetGroup = document.querySelector(`[data-customer="${customerId}"]`);
-                        
-                        // If target group doesn't exist, create it
-                        if (!targetGroup) {
-                            const groupsContainer = document.querySelector('.customer-groups');
-                            const newGroup = document.createElement('div');
-                            newGroup.className = 'customer-group';
-                            newGroup.setAttribute('data-customer', customerId);
-                            newGroup.innerHTML = `
-                                <div class="customer-header" onclick="toggleCustomerGroup('${customerId}')">
-                                    <div class="customer-name">
-                                        ${customerName}
-                                        <span class="customer-badge">0</span>
-                                    </div>
-                                    <div class="customer-stats">
-                                        0 views • 0 B
-                                        <span class="expand-icon">▼</span>
-                                    </div>
-                                </div>
-                                <div class="customer-content">
-                                    <div class="models-grid">
-                                    </div>
-                                </div>
-                            `;
-                            groupsContainer.appendChild(newGroup);
-                            targetGroup = newGroup;
-                        }
-                        
-                        // Move card to target group
-                        const targetGrid = targetGroup.querySelector('.models-grid');
-                        targetGrid.appendChild(card);
-                        
-                        // Update customer badges
-                        updateCustomerBadges();
-                    }
-                });
-                
-                alert(`Successfully moved ${selectedModels.size} furniture pieces to ${customerName}!`);
-                
-                // Exit select mode
-                exitSelectMode();
-                
-                // Refresh data
-                loadModels();
-                loadCustomers();
-                
-            } catch (error) {
-                alert('Failed to move furniture: ' + error.message);
-            }
-        }
-        
-        function cancelBulkMode() {
-            exitSelectMode();
-        }
         
         function updateCustomerBadges() {
             document.querySelectorAll('.customer-group').forEach(group => {
@@ -2641,8 +2366,9 @@
                 content.appendChild(currentOption);
             }
             
-            // Add all customers
-            allCustomers.forEach(customer => {
+            // Add all customers from centralized manager
+            const customers = customerManager.getAllCustomers();
+            customers.forEach(customer => {
                 if (customer.id !== currentCustomerId) {
                     const option = document.createElement('div');
                     option.className = 'assign-option';
@@ -2667,72 +2393,25 @@
                     dropdown.classList.remove('show');
                 });
                 
-                // For MVP, this simulates the assignment by updating the UI
-                // In a full implementation, this would make an API call to update the database
-                
-                const confirmed = confirm(`Assign this furniture to ${customerName}?\n\nNote: This is a demo - actual implementation would require backend API updates to persist the change.`);
-                
+                const confirmed = confirm(`Assign this furniture to ${customerName}?`);
                 if (!confirmed) return;
                 
-                // Find the model card and move it to the correct customer group
-                const modelCard = Array.from(document.querySelectorAll('.model-card')).find(card => 
-                    card.querySelector('.model-id').textContent === modelId
-                );
+                // Update database via API
+                const response = await fetch(`/api/model/${modelId}/assign`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ customerId, customerName })
+                });
                 
-                if (modelCard) {
-                    // Find or create target customer group
-                    let targetGroup = document.querySelector(`[data-customer="${customerId}"]`);
-                    
-                    if (!targetGroup) {
-                        // Create new customer group
-                        const groupsContainer = document.querySelector('.customer-groups');
-                        targetGroup = document.createElement('div');
-                        targetGroup.className = 'customer-group';
-                        targetGroup.setAttribute('data-customer', customerId);
-                        targetGroup.innerHTML = `
-                            <div class="customer-header" onclick="toggleCustomerGroup('${customerId}')">
-                                <div class="customer-name">
-                                    ${customerName}
-                                    <span class="customer-badge">0</span>
-                                </div>
-                                <div class="customer-stats">
-                                    0 views • 0 B
-                                    <span class="expand-icon">▼</span>
-                                </div>
-                            </div>
-                            <div class="customer-content">
-                                <div class="models-grid">
-                                </div>
-                            </div>
-                        `;
-                        
-                        // Insert in alphabetical order
-                        const existingGroups = Array.from(groupsContainer.children);
-                        let inserted = false;
-                        for (let group of existingGroups) {
-                            const groupName = group.querySelector('.customer-name')?.textContent.trim() || '';
-                            if (customerName.localeCompare(groupName) < 0) {
-                                groupsContainer.insertBefore(targetGroup, group);
-                                inserted = true;
-                                break;
-                            }
-                        }
-                        if (!inserted) {
-                            groupsContainer.appendChild(targetGroup);
-                        }
-                    }
-                    
-                    // Move the card
-                    const targetGrid = targetGroup.querySelector('.models-grid');
-                    targetGrid.appendChild(modelCard);
-                    
-                    // Update customer badges
-                    updateCustomerBadges();
-                    
-                    // Update assign button to reflect new assignment
-                    const assignButton = modelCard.querySelector('.assign-button');
-                    assignButton.setAttribute('onclick', `toggleAssignDropdown(this, '${modelId}', '${customerId}', '${customerName}')`);
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Assignment failed');
                 }
+                
+                const result = await response.json();
+                
+                // Update UI immediately
+                updateModelCardAssignment(modelId, customerId, customerName);
                 
                 alert(`✅ Furniture assigned to ${customerName}!`);
                 
@@ -2741,8 +2420,71 @@
                 loadCustomers();
                 
             } catch (error) {
+                console.error('Assignment error:', error);
                 alert('Failed to assign furniture: ' + error.message);
             }
+        }
+        
+        function updateModelCardAssignment(modelId, customerId, customerName) {
+            // Find the model card
+            const modelCard = Array.from(document.querySelectorAll('.model-card')).find(card => 
+                card.querySelector('.model-id').textContent === modelId
+            );
+            
+            if (!modelCard) return;
+            
+            // Find or create target customer group
+            let targetGroup = document.querySelector(`[data-customer="${customerId}"]`);
+            
+            if (!targetGroup) {
+                // Create new customer group
+                const groupsContainer = document.querySelector('.customer-groups');
+                targetGroup = document.createElement('div');
+                targetGroup.className = 'customer-group';
+                targetGroup.setAttribute('data-customer', customerId);
+                targetGroup.innerHTML = `
+                    <div class="customer-header" onclick="toggleCustomerGroup('${customerId}')">
+                        <div class="customer-name">
+                            ${customerName}
+                            <span class="customer-badge">0</span>
+                        </div>
+                        <div class="customer-stats">
+                            0 views • 0 B
+                            <span class="expand-icon">▼</span>
+                        </div>
+                    </div>
+                    <div class="customer-content">
+                        <div class="models-grid">
+                        </div>
+                    </div>
+                `;
+                
+                // Insert in alphabetical order
+                const existingGroups = Array.from(groupsContainer.children);
+                let inserted = false;
+                for (let group of existingGroups) {
+                    const groupName = group.querySelector('.customer-name')?.textContent.trim() || '';
+                    if (customerName.localeCompare(groupName) < 0) {
+                        groupsContainer.insertBefore(targetGroup, group);
+                        inserted = true;
+                        break;
+                    }
+                }
+                if (!inserted) {
+                    groupsContainer.appendChild(targetGroup);
+                }
+            }
+            
+            // Move the card
+            const targetGrid = targetGroup.querySelector('.models-grid');
+            targetGrid.appendChild(modelCard);
+            
+            // Update assign button to reflect new assignment
+            const assignButton = modelCard.querySelector('.assign-button');
+            assignButton.setAttribute('onclick', `toggleAssignDropdown(this, '${modelId}', '${customerId}', '${customerName}')`);
+            
+            // Update customer badges
+            updateCustomerBadges();
         }
         
         async function assignToNewCustomer(modelId) {
@@ -2777,30 +2519,6 @@
     
             </div>
         </div>
-    </div>
-    
-    <!-- Bulk Actions -->
-    <button class="select-mode-toggle" id="selectModeToggle" onclick="toggleSelectMode()">
-        📋 Select Mode
-    </button>
-    
-    <div class="bulk-actions" id="bulkActions">
-        <div class="bulk-actions-header">
-            <span class="bulk-actions-title">Bulk Actions</span>
-            <span class="bulk-actions-count" id="selectedCount">0 selected</span>
-        </div>
-        
-        <select class="bulk-move-select" id="bulkMoveSelect">
-            <option value="">Move to customer...</option>
-        </select>
-        
-        <button class="bulk-action-btn bulk-move-btn" onclick="executeBulkMove()">
-            📦 Move Selected
-        </button>
-        
-        <button class="bulk-action-btn bulk-cancel-btn" onclick="cancelBulkMode()">
-            ✕ Cancel
-        </button>
     </div>
 </body>
 </html>/* Force deployment Fri Aug 29 15:30:14 IDT 2025 */
