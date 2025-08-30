@@ -38,6 +38,18 @@ export default async function handler(req, res) {
       method: req.method 
     });
     
+    // Additional debug for model routes
+    if (routePath?.startsWith('model/')) {
+      const routeParts = routePath.split('/');
+      console.log('Model route debug:', {
+        routePath,
+        routeParts,
+        modelId: routeParts[1],
+        action: routeParts[2],
+        partsLength: routeParts.length
+      });
+    }
+    
     // Route: /api/upload-simple
     if (routePath === 'upload-simple') {
       return await handleUpload(req, res);
