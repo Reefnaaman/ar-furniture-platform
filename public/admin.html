@@ -2428,10 +2428,10 @@
                 // No confirmation needed - just assign directly
                 
                 // Update database via API
-                const response = await fetch(`/api/model/${modelId}/assign`, {
+                const response = await fetch('/api/assign', {
                     method: 'PUT',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ customerId, customerName })
+                    body: JSON.stringify({ modelId, customerId, customerName })
                 });
                 
                 if (!response.ok) {
