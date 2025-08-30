@@ -208,8 +208,8 @@
         
         .models-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 20px;
             margin-top: 30px;
         }
         
@@ -251,7 +251,7 @@
         
         .model-preview {
             position: relative;
-            height: 250px;
+            height: 200px;
             background: linear-gradient(135deg, #0d1117 0%, #21262d 100%);
             border-bottom: 1px solid rgba(240, 246, 252, 0.1);
         }
@@ -262,7 +262,7 @@
         }
         
         .model-info {
-            padding: 20px;
+            padding: 16px;
         }
         
         .model-title {
@@ -323,21 +323,24 @@
         
         .model-actions {
             display: flex;
-            gap: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
         
         .action-button {
-            padding: 8px 16px;
+            padding: 6px 10px;
             border: 1px solid rgba(240, 246, 252, 0.2);
             background: rgba(240, 246, 252, 0.05);
-            border-radius: 8px;
+            border-radius: 6px;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.75rem;
             font-weight: 500;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
             color: #e6edf3;
             display: inline-block;
+            flex: 1;
+            text-align: center;
         }
         
         .action-button:hover {
@@ -1696,7 +1699,7 @@
                         <div class="model-description">${model.description || 'No description provided'}</div>
                         
                         <div class="model-meta">
-                            <span class="model-id">${model.id}</span>
+                            <span class="model-id" style="display: none;">${model.id}</span>
                             <span>${formatDate(model.upload_date)}</span>
                         </div>
                         
@@ -1704,10 +1707,6 @@
                             <div class="stat-item">
                                 <div class="stat-value">${model.view_count || 0}</div>
                                 <div class="stat-label">Views</div>
-                            </div>
-                            <div class="stat-item">
-                                <div class="stat-value">${formatFileSize(model.file_size)}</div>
-                                <div class="stat-label">Size</div>
                             </div>
                         </div>
                         
@@ -2493,24 +2492,18 @@
             
             const customerId = customerName.toLowerCase().replace(/[^a-z0-9]/g, '-').replace(/-+/g, '-');
             
-            // Add to customer dropdown in upload modal
-            const customerSelect = document.getElementById('customerSelect');
-            const existingOption = Array.from(customerSelect.options).find(option => 
-                option.value.split(':')[1] === customerName
-            );
-            
-            if (!existingOption) {
-                const newOption = document.createElement('option');
-                newOption.value = `${customerId}:${customerName}`;
-                newOption.textContent = customerName;
-                customerSelect.appendChild(newOption);
-                
-                // Add to allCustomers array
-                allCustomers.push({ id: customerId, name: customerName, count: 0 });
-                
-                // Update sidebar
-                loadCustomers();
+            // Check if already exists in centralized manager
+            if (customerManager.hasCustomer(customerId)) {
+                alert('Customer already exists!');
+                return;
             }
+            
+            // Add to centralized customer manager (this will trigger all UI updates)
+            customerManager.setCustomer({
+                id: customerId,
+                name: customerName,
+                count: 0
+            });
             
             // Now assign to this customer
             await assignFurnitureToCustomer(modelId, customerId, customerName);
