@@ -1583,10 +1583,14 @@
                 
                 const data = await response.json();
                 
-                // Update stats
+                // Update main stats
                 document.getElementById('totalModels').textContent = data.stats.totalModels || 0;
                 document.getElementById('totalViews').textContent = data.stats.totalViews || 0;
                 document.getElementById('totalSize').textContent = formatFileSize(data.stats.totalSize || 0);
+                
+                // Update sidebar stats
+                document.getElementById('sidebarTotalModels').textContent = data.stats.totalModels || 0;
+                document.getElementById('sidebarTotalViews').textContent = data.stats.totalViews || 0;
                 
                 // Group models by customer
                 displayGroupedModels(data.models);

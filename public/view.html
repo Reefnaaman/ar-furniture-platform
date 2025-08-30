@@ -291,9 +291,16 @@
         
         async function loadModel(id) {
             try {
+                console.log('Loading model with ID:', id);
+                console.log('Fetching from URL:', `/api/model/${id}/info`);
+                
                 // Fetch model info
                 const response = await fetch(`/api/model/${id}/info`);
+                console.log('Response status:', response.status);
+                
                 if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('API Error:', errorText);
                     throw new Error('Model not found');
                 }
                 
