@@ -292,10 +292,10 @@
         async function loadModel(id) {
             try {
                 console.log('Loading model with ID:', id);
-                console.log('Fetching from URL:', `/api/model/${id}/info`);
+                console.log('Fetching from URL:', `/api/model-info?id=${id}`);
                 
                 // Fetch model info
-                const response = await fetch(`/api/model/${id}/info`);
+                const response = await fetch(`/api/model-info?id=${id}`);
                 console.log('Response status:', response.status);
                 
                 if (!response.ok) {
@@ -318,7 +318,7 @@
                 document.getElementById('stats').style.display = 'flex';
                 
                 // Create model viewer
-                const modelUrl = `/api/model/${id}`;
+                const modelUrl = `/api/model-file?id=${id}`;
                 const viewerHTML = `
                     <model-viewer
                         id="modelViewer"
