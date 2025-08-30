@@ -2435,11 +2435,27 @@
                 });
                 
                 if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Assignment failed');
+                    const responseText = await response.text();
+                    console.error('Assignment API Error Response:', responseText);
+                    
+                    try {
+                        const error = JSON.parse(responseText);
+                        throw new Error(error.error || 'Assignment failed');
+                    } catch (jsonError) {
+                        throw new Error(`API returned non-JSON response: ${responseText.substring(0, 100)}...`);
+                    }
                 }
                 
-                const result = await response.json();
+                const responseText = await response.text();
+                console.log('Assignment API Success Response:', responseText);
+                
+                let result;
+                try {
+                    result = JSON.parse(responseText);
+                } catch (jsonError) {
+                    console.error('Success response is not valid JSON:', responseText);
+                    throw new Error(`API returned non-JSON success response: ${responseText.substring(0, 100)}...`);
+                }
                 
                 // Update UI immediately
                 updateModelCardAssignment(modelId, customerId, customerName);
