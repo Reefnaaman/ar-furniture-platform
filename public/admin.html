@@ -2133,8 +2133,21 @@
             allItem.onclick = () => filterByCustomer(null);
             customerList.appendChild(allItem);
             
-            // Add customer items
-            customers.forEach(customer => {
+            // Add "Unassigned" option
+            const unassignedCount = customers.find(c => c.id === 'unassigned')?.count || 0;
+            const unassignedItem = document.createElement('li');
+            unassignedItem.className = `customer-item ${currentCustomerFilter === 'unassigned' ? 'active' : ''}`;
+            unassignedItem.innerHTML = `
+                <div class="customer-item-content">
+                    <span class="customer-name">Unassigned</span>
+                    <span class="customer-count">${unassignedCount}</span>
+                </div>
+            `;
+            unassignedItem.onclick = () => filterByCustomer('unassigned', 'Unassigned');
+            customerList.appendChild(unassignedItem);
+            
+            // Add customer items (excluding unassigned which we show separately)
+            customers.filter(customer => customer.id !== 'unassigned').forEach(customer => {
                 const item = document.createElement('li');
                 item.className = `customer-item ${currentCustomerFilter === customer.id ? 'active' : ''}`;
                 item.innerHTML = `
@@ -2147,8 +2160,9 @@
                 customerList.appendChild(item);
             });
             
-            // Update sidebar stats
-            document.getElementById('sidebarTotalCustomers').textContent = customers.length;
+            // Update sidebar stats (excluding unassigned from customer count)
+            const actualCustomerCount = customers.filter(c => c.id !== 'unassigned').length;
+            document.getElementById('sidebarTotalCustomers').textContent = actualCustomerCount;
         }
         
         function filterByCustomer(customerId, customerName = null) {
@@ -2399,8 +2413,7 @@
                     dropdown.classList.remove('show');
                 });
                 
-                const confirmed = confirm(`Assign this furniture to ${customerName}?`);
-                if (!confirmed) return;
+                // No confirmation needed - just assign directly
                 
                 // Update database via API
                 const response = await fetch(`/api/model/${modelId}/assign`, {
