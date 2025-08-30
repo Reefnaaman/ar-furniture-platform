@@ -1352,6 +1352,7 @@
                     <h1>⚙️ Admin Dashboard</h1>
                     <div class="nav-buttons">
                         <button class="nav-button" onclick="toggleUploadModal()">📤 Upload Furniture</button>
+                        <button class="nav-button" onclick="toggleUserModal()">👥 Manage Users</button>
                         <button class="nav-button" onclick="location.reload()">🔄 Refresh</button>
                     </div>
                 </div>
@@ -1478,6 +1479,64 @@
                     <div class="progress-percentage" id="progressPercentage">0%</div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- User Management Modal -->
+    <div class="password-modal" id="userModal" style="display: none;">
+        <div class="modal-content futuristic-upload">
+            <div class="upload-header">
+                <div class="upload-icon-container">
+                    <div class="upload-icon-bg">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2M12.5 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM16 11l2 2 4-4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="upload-title">Create New User</h3>
+                <p class="upload-subtitle">Add customer or admin accounts</p>
+            </div>
+            
+            <form id="userForm">
+                <div class="input-group">
+                    <input type="text" id="newUsername" placeholder="Username" class="futuristic-input" required>
+                    <div class="input-line"></div>
+                </div>
+                
+                <div class="input-group">
+                    <input type="password" id="newPassword" placeholder="Password" class="futuristic-input" required>
+                    <div class="input-line"></div>
+                </div>
+                
+                <div class="input-group">
+                    <select id="newRole" class="futuristic-input" required>
+                        <option value="">Select Role</option>
+                        <option value="customer">Customer</option>
+                        <option value="admin">Administrator</option>
+                    </select>
+                    <div class="input-line"></div>
+                </div>
+                
+                <div id="customerFields" style="display: none;">
+                    <div class="input-group">
+                        <input type="text" id="newCustomerId" placeholder="Customer ID (e.g., napo)" class="futuristic-input">
+                        <div class="input-line"></div>
+                    </div>
+                    
+                    <div class="input-group">
+                        <input type="text" id="newCustomerName" placeholder="Customer Display Name (e.g., Napo)" class="futuristic-input">
+                        <div class="input-line"></div>
+                    </div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="modal-button secondary" onclick="closeUserModal()">Cancel</button>
+                    <button type="submit" class="modal-button primary futuristic-primary" id="createUserButton">
+                        <span class="button-text">Create User</span>
+                        <div class="button-glow"></div>
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
     
@@ -2537,6 +2596,88 @@
             // Now assign to this customer
             await assignFurnitureToCustomer(modelId, customerId, customerName);
         }
+
+        // User Management Functions
+        function toggleUserModal() {
+            document.getElementById('userModal').style.display = 'flex';
+        }
+
+        function closeUserModal() {
+            document.getElementById('userModal').style.display = 'none';
+            document.getElementById('userForm').reset();
+            document.getElementById('customerFields').style.display = 'none';
+        }
+
+        // Show/hide customer fields based on role selection
+        document.getElementById('newRole').addEventListener('change', function() {
+            const customerFields = document.getElementById('customerFields');
+            if (this.value === 'customer') {
+                customerFields.style.display = 'block';
+                document.getElementById('newCustomerId').required = true;
+                document.getElementById('newCustomerName').required = true;
+            } else {
+                customerFields.style.display = 'none';
+                document.getElementById('newCustomerId').required = false;
+                document.getElementById('newCustomerName').required = false;
+            }
+        });
+
+        // Handle user creation form submission
+        document.getElementById('userForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const button = document.getElementById('createUserButton');
+            const buttonText = button.querySelector('.button-text');
+            
+            // Get form data
+            const formData = new FormData(e.target);
+            const userData = {
+                username: document.getElementById('newUsername').value,
+                password: document.getElementById('newPassword').value,
+                role: document.getElementById('newRole').value
+            };
+
+            // Add customer fields if role is customer
+            if (userData.role === 'customer') {
+                userData.customerId = document.getElementById('newCustomerId').value;
+                userData.customerName = document.getElementById('newCustomerName').value;
+            }
+
+            // Show loading state
+            button.disabled = true;
+            buttonText.textContent = 'Creating User...';
+
+            try {
+                const response = await fetch('/api/create-user', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(userData)
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    alert(`User "${userData.username}" created successfully!\n\nLogin credentials:\nUsername: ${userData.username}\nPassword: ${userData.password}\nRole: ${userData.role}${userData.role === 'customer' ? `\nCustomer: ${userData.customerName}` : ''}`);
+                    closeUserModal();
+                    
+                    // Refresh customer data if needed
+                    if (typeof customerDataManager !== 'undefined') {
+                        await customerDataManager.loadCustomers();
+                    }
+                } else {
+                    alert('Failed to create user: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error creating user:', error);
+                alert('Error creating user: ' + error.message);
+            } finally {
+                // Reset button state
+                button.disabled = false;
+                buttonText.textContent = 'Create User';
+            }
+        });
     </script>
     
             </div>
