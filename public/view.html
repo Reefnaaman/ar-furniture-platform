@@ -306,18 +306,13 @@
                 
                 const modelInfo = await response.json();
                 
-                // Update page title and description
-                document.getElementById('modelTitle').textContent = modelInfo.title || 'AR Furniture';
-                document.getElementById('modelDescription').textContent = modelInfo.description || 'View this furniture in your space';
-                document.title = `${modelInfo.title} - AR Viewer`;
+                // Set page title and hide UI (going straight to AR)
+                document.title = `${modelInfo.title} - AR View`;
                 
-                // Update stats
-                document.getElementById('viewCount').textContent = modelInfo.view_count || 0;
-                document.getElementById('fileSize').textContent = formatFileSize(modelInfo.file_size);
-                document.getElementById('uploadDate').textContent = formatDate(modelInfo.upload_date);
-                document.getElementById('stats').style.display = 'flex';
+                // Hide the UI container since we're going directly to AR
+                document.querySelector('.container').style.display = 'none';
                 
-                // Create model viewer
+                // Create model viewer and immediately trigger AR
                 const modelUrl = `/api/model-file?id=${id}`;
                 const viewerHTML = `
                     <model-viewer
@@ -325,23 +320,29 @@
                         src="${modelUrl}"
                         ar
                         ar-modes="webxr scene-viewer quick-look"
-                        camera-controls
-                        auto-rotate
-                        shadow-intensity="1"
-                        camera-orbit="45deg 55deg 2.5m"
-                        touch-action="pan-y"
-                        alt="${modelInfo.title}">
-                        <button slot="ar-button" class="ar-button">
-                            📱 View in Your Space
-                        </button>
+                        alt="${modelInfo.title}"
+                        style="display: none;">
                     </model-viewer>
                 `;
                 
-                document.getElementById('viewerContainer').innerHTML = viewerHTML;
-                document.getElementById('arButton').style.display = 'block';
+                // Add model viewer directly to body
+                document.body.innerHTML += viewerHTML;
+                
+                // Wait for model to load, then immediately trigger AR
+                const modelViewer = document.getElementById('modelViewer');
+                modelViewer.addEventListener('load', () => {
+                    console.log('Model loaded, triggering AR...');
+                    // Trigger AR immediately
+                    if (modelViewer.canActivateAR) {
+                        modelViewer.activateAR();
+                    } else {
+                        // If AR not available, show error
+                        showError('AR not supported on this device. Please use a mobile device with AR capabilities.');
+                    }
+                });
                 
                 // Track view
-                fetch(`/api/model/${id}/view`, { method: 'POST' }).catch(() => {});
+                fetch(`/api/model-view?id=${id}`, { method: 'POST' }).catch(() => {});
                 
             } catch (error) {
                 showError(error.message);
