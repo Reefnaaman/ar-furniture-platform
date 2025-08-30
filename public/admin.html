@@ -1723,47 +1723,24 @@
         function deleteModel(id, cloudinaryPublicId) {
             deleteTarget = { id, cloudinaryPublicId };
             
-            if (!adminPassword) {
-                document.getElementById('passwordModal').classList.add('show');
-                document.getElementById('passwordInput').focus();
-            } else {
+            if (confirm('Are you sure you want to delete this model?')) {
                 confirmDelete();
             }
         }
         
         async function confirmDelete() {
-            const password = adminPassword || document.getElementById('passwordInput').value;
-            
-            if (!password) {
-                alert('Please enter the admin password');
-                return;
-            }
-            
             try {
                 const response = await fetch('/api/models', {
                     method: 'DELETE',
                     headers: {
-                        'Content-Type': 'application/json',
-                        'X-Admin-Password': password
+                        'Content-Type': 'application/json'
                     },
                     body: JSON.stringify(deleteTarget)
                 });
                 
-                if (response.status === 401) {
-                    alert('Invalid password');
-                    adminPassword = '';
-                    localStorage.removeItem('adminPassword');
-                    return;
-                }
-                
                 if (!response.ok) throw new Error('Failed to delete model');
                 
-                // Save password for session
-                adminPassword = password;
-                localStorage.setItem('adminPassword', password);
-                
                 // Reload models
-                closePasswordModal();
                 loadModels();
                 alert('Model deleted successfully');
                 
