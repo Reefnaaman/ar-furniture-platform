@@ -1273,8 +1273,7 @@
             position: relative;
         }
         
-        .model-card.selectable::after {
-            content: '';
+        .model-card.selectable .select-checkbox {
             position: absolute;
             top: 15px;
             right: 15px;
@@ -1284,11 +1283,16 @@
             border-radius: 4px;
             background: rgba(22, 27, 34, 0.8);
             transition: all 0.2s ease;
+            z-index: 10;
+            cursor: pointer;
         }
         
-        .model-card.selectable.selected::after {
+        .model-card.selectable.selected .select-checkbox {
             background: #58a6ff;
             border-color: #58a6ff;
+        }
+        
+        .model-card.selectable.selected .select-checkbox::after {
             content: '✓';
             display: flex;
             align-items: center;
@@ -1296,9 +1300,11 @@
             color: white;
             font-size: 12px;
             font-weight: bold;
+            width: 100%;
+            height: 100%;
         }
         
-        .model-card.selectable:hover::after {
+        .model-card.selectable:hover .select-checkbox {
             border-color: rgba(88, 166, 255, 0.5);
         }
         
@@ -1812,6 +1818,9 @@
                                 <div class="stat-label">Size</div>
                             </div>
                         </div>
+                        
+                        <!-- Select checkbox (only visible in select mode) -->
+                        <div class="select-checkbox" style="display: none;"></div>
                         
                         <div class="model-actions">
                             <a href="/view?id=${model.id}" target="_blank" class="action-button">
@@ -2380,13 +2389,27 @@
                 toggle.textContent = '✕ Exit Select';
                 bulkActions.classList.add('show');
                 
-                // Add selectable class to all model cards
+                // Add selectable class and show checkboxes
                 document.querySelectorAll('.model-card').forEach(card => {
                     card.classList.add('selectable');
+                    
+                    // Show the checkbox
+                    const checkbox = card.querySelector('.select-checkbox');
+                    if (checkbox) {
+                        checkbox.style.display = 'block';
+                        checkbox.onclick = (e) => {
+                            e.stopPropagation();
+                            toggleModelSelection(card);
+                        };
+                    }
+                    
+                    // Also allow clicking the card itself
                     card.onclick = (e) => {
-                        // Prevent other click handlers
-                        e.stopPropagation();
-                        toggleModelSelection(card);
+                        // Only if clicking on the card itself, not buttons
+                        if (!e.target.closest('.model-actions') && !e.target.closest('.assign-dropdown')) {
+                            e.stopPropagation();
+                            toggleModelSelection(card);
+                        }
                     };
                 });
                 
@@ -2409,10 +2432,17 @@
             toggle.textContent = '📋 Select Mode';
             bulkActions.classList.remove('show');
             
-            // Remove selectable class and onclick handlers
+            // Remove selectable class, hide checkboxes, and remove handlers
             document.querySelectorAll('.model-card').forEach(card => {
                 card.classList.remove('selectable', 'selected');
                 card.onclick = null;
+                
+                // Hide the checkbox
+                const checkbox = card.querySelector('.select-checkbox');
+                if (checkbox) {
+                    checkbox.style.display = 'none';
+                    checkbox.onclick = null;
+                }
             });
             
             updateSelectedCount();
