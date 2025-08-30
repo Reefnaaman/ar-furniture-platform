@@ -1498,7 +1498,9 @@
         
         // Load models on page load
         loadModels();
-        initializeCustomers();
+        
+        // Initialize customers after customerManager is defined
+        // This will be called after the CustomerDataManager class is instantiated
         
         async function loadModels() {
             try {
@@ -2082,7 +2084,7 @@
         // Global customer manager instance
         const customerManager = new CustomerDataManager();
         
-        // Initialize customer data manager listeners
+        // Initialize customer data manager listeners and start initialization
         customerManager.addListener((event, data) => {
             switch(event) {
                 case 'customersLoaded':
@@ -2102,6 +2104,9 @@
                     break;
             }
         });
+        
+        // Now initialize customers (after customerManager is ready)
+        initializeCustomers();
         
         // Sidebar functionality
         let currentCustomerFilter = null;
