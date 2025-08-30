@@ -7,14 +7,18 @@
   "rewrites": [
     {
       "source": "/",
-      "destination": "/admin.html"
+      "destination": "/login.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/login.html"
     },
     {
       "source": "/admin",
       "destination": "/admin.html"
     },
     {
-      "source": "/customer/(.*)",
+      "source": "/customer",
       "destination": "/customer.html"
     },
     {
