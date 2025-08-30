@@ -243,12 +243,6 @@ async function handleModels(req, res) {
   
   // Delete a model
   else if (req.method === 'DELETE') {
-    // Check admin password
-    const password = req.headers['x-admin-password'];
-    if (password !== process.env.ADMIN_PASSWORD) {
-      return res.status(401).json({ error: 'Unauthorized' });
-    }
-    
     const { id, cloudinaryPublicId } = req.body;
     
     if (!id) {
