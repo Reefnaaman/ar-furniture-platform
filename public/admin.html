@@ -1333,7 +1333,7 @@
                 
                 <!-- Add Customer Form -->
                 <div class="add-customer-form" id="addCustomerForm">
-                    <input type="text" class="add-customer-input" placeholder="Customer name" id="newCustomerName" />
+                    <input type="text" class="add-customer-input" placeholder="Customer name" id="newCustomerName" onkeydown="handleCustomerNameKeydown(event)" />
                     <div class="add-customer-actions">
                         <button class="add-customer-save" onclick="saveNewCustomer()">Save</button>
                         <button class="add-customer-cancel" onclick="hideAddCustomerForm()">Cancel</button>
@@ -2245,6 +2245,16 @@
             document.getElementById('newCustomerName').value = '';
         }
         
+        function handleCustomerNameKeydown(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                saveNewCustomer();
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                hideAddCustomerForm();
+            }
+        }
+        
         async function saveNewCustomer() {
             const customerName = document.getElementById('newCustomerName').value.trim();
             if (!customerName) return;
@@ -2267,9 +2277,6 @@
                     name: customerName,
                     count: 0
                 });
-                
-                // Show success message
-                alert(`${customerName} added! Upload furniture and assign it to them.`);
                 
             } catch (error) {
                 alert('Failed to add customer: ' + error.message);
