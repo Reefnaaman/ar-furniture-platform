@@ -220,24 +220,6 @@
             opacity: 1;
         }
         
-        /* Hide container immediately on mobile to prevent flash */
-        @media only screen and (max-width: 768px) {
-            .container {
-                display: none !important;
-            }
-            body {
-                background: #000;
-                color: white;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            }
-            body::before {
-                content: "Opening AR...";
-                font-size: 1.2rem;
-            }
-        }
     </style>
 </head>
 <body>
@@ -310,18 +292,7 @@
         
         async function loadModel(id) {
             try {
-                // Skip the entire UI - go directly to AR on mobile
-                if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                    // Go straight to Scene Viewer for AR without waiting for model info
-                    const modelUrl = `/api/model-file?id=${id}`;
-                    window.location.href = `intent://arvr.google.com/scene-viewer/1.0?file=${encodeURIComponent(modelUrl)}&mode=ar_only#Intent;scheme=https;package=com.google.ar.core;action=android.intent.action.VIEW;S.browser_fallback_url=https://developers.google.com/ar;end;`;
-                    
-                    // Track view (fire and forget)
-                    fetch(`/api/model-view?id=${id}`, { method: 'POST' }).catch(() => {});
-                    return;
-                }
-                
-                // Desktop only - fetch model info and show 3D viewer
+                // Fetch model info first
                 const response = await fetch(`/api/model-info?id=${id}`);
                 
                 if (!response.ok) {
@@ -330,22 +301,73 @@
                 
                 const modelInfo = await response.json();
                 
-                document.title = `${modelInfo.title} - 3D View`;
-                document.getElementById('modelTitle').textContent = modelInfo.title;
-                document.getElementById('modelDescription').textContent = modelInfo.description || 'Interactive 3D model viewer';
-                
-                const modelUrl = `/api/model-file?id=${id}`;
-                const viewerHTML = `
-                    <model-viewer
-                        src="${modelUrl}"
-                        alt="${modelInfo.title}"
-                        camera-controls
-                        auto-rotate
-                        style="width: 100%; height: 450px; background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);">
-                    </model-viewer>
-                `;
-                
-                document.getElementById('viewerContainer').innerHTML = viewerHTML;
+                // For mobile - show minimal UI and auto-click AR button
+                if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                    // Show minimal AR-focused UI
+                    document.title = `${modelInfo.title} - AR Ready`;
+                    document.getElementById('modelTitle').textContent = modelInfo.title;
+                    document.getElementById('modelDescription').textContent = 'Tap below to open AR';
+                    
+                    // Create model viewer with AR enabled
+                    const modelUrl = `/api/model-file?id=${id}`;
+                    const viewerHTML = `
+                        <model-viewer
+                            id="modelViewer"
+                            src="${modelUrl}"
+                            ar
+                            ar-modes="webxr scene-viewer quick-look"
+                            alt="${modelInfo.title}"
+                            style="width: 100%; height: 300px; background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);">
+                        </model-viewer>
+                    `;
+                    
+                    document.getElementById('viewerContainer').innerHTML = viewerHTML;
+                    
+                    // Show prominent AR button
+                    const arButton = document.getElementById('arButton');
+                    arButton.style.display = 'block';
+                    arButton.textContent = '📱 Open AR Camera';
+                    arButton.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)';
+                    arButton.style.fontSize = '1.4rem';
+                    arButton.style.padding = '20px';
+                    
+                    // Auto-click the AR button after model loads
+                    const modelViewer = document.getElementById('modelViewer');
+                    modelViewer.addEventListener('load', () => {
+                        setTimeout(() => {
+                            if (modelViewer.canActivateAR) {
+                                arButton.click(); // Programmatically click the AR button
+                            }
+                        }, 1000);
+                    });
+                    
+                    // AR button functionality
+                    arButton.onclick = () => {
+                        const mv = document.getElementById('modelViewer');
+                        if (mv && mv.canActivateAR) {
+                            mv.activateAR();
+                        }
+                    };
+                    
+                } else {
+                    // Desktop - normal 3D viewer
+                    document.title = `${modelInfo.title} - 3D View`;
+                    document.getElementById('modelTitle').textContent = modelInfo.title;
+                    document.getElementById('modelDescription').textContent = modelInfo.description || 'Interactive 3D model viewer';
+                    
+                    const modelUrl = `/api/model-file?id=${id}`;
+                    const viewerHTML = `
+                        <model-viewer
+                            src="${modelUrl}"
+                            alt="${modelInfo.title}"
+                            camera-controls
+                            auto-rotate
+                            style="width: 100%; height: 450px; background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);">
+                        </model-viewer>
+                    `;
+                    
+                    document.getElementById('viewerContainer').innerHTML = viewerHTML;
+                }
                 
                 // Track view
                 fetch(`/api/model-view?id=${id}`, { method: 'POST' }).catch(() => {});
