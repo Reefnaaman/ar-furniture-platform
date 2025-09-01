@@ -21,12 +21,13 @@
         @media (max-width: 768px) {
             body {
                 visibility: hidden;
+                background: #000 !important;
             }
         }
         
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #000;
             min-height: 100vh;
             display: flex;
             flex-direction: column;
@@ -306,32 +307,52 @@
             try {
                 // For mobile - go straight to AR without showing anything
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                    // Keep body hidden
-                    document.body.style.visibility = 'hidden';
+                    // Keep body completely black and hidden
+                    document.body.style.cssText = 'visibility: hidden; background: #000 !important; margin: 0; padding: 0;';
+                    
+                    // Clear any existing content
+                    document.body.innerHTML = '';
                     
                     // Create invisible model-viewer
                     const modelUrl = `/api/model-file?id=${id}`;
                     
-                    // Create invisible model-viewer
                     const modelViewer = document.createElement('model-viewer');
                     modelViewer.setAttribute('id', 'modelViewer');
                     modelViewer.setAttribute('src', modelUrl);
                     modelViewer.setAttribute('ar', '');
                     modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
-                    modelViewer.style.display = 'none';
+                    modelViewer.setAttribute('auto-rotate', '');
+                    modelViewer.setAttribute('camera-controls', '');
+                    modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
                     document.body.appendChild(modelViewer);
                     
-                    // As soon as model loads, trigger AR immediately
+                    // Try multiple AR activation methods
+                    let arActivated = false;
+                    
                     modelViewer.addEventListener('load', () => {
-                        // Immediate AR activation - no delay
-                        if (modelViewer.canActivateAR) {
+                        if (!arActivated && modelViewer.canActivateAR) {
+                            arActivated = true;
                             modelViewer.activateAR();
-                        } else {
-                            // Fallback if AR not available
-                            document.body.style.visibility = 'visible';
-                            showError('AR not available on this device');
                         }
                     });
+                    
+                    // Backup: Try AR after a short delay
+                    setTimeout(() => {
+                        if (!arActivated && modelViewer.canActivateAR) {
+                            arActivated = true;
+                            modelViewer.activateAR();
+                        } else if (!arActivated) {
+                            // If still no AR, show a button as last resort
+                            document.body.style.visibility = 'visible';
+                            document.body.innerHTML = `
+                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; color: white;">
+                                    <h2 style="margin-bottom: 20px;">Tap to view in AR</h2>
+                                    <button onclick="document.getElementById('hiddenViewer').activateAR()" style="padding: 20px 40px; font-size: 1.2rem; background: #58a6ff; color: white; border: none; border-radius: 10px;">Open AR Camera</button>
+                                    <model-viewer id="hiddenViewer" src="${modelUrl}" ar ar-modes="webxr scene-viewer quick-look" style="width: 1px; height: 1px; opacity: 0;"></model-viewer>
+                                </div>
+                            `;
+                        }
+                    }, 2000);
                     
                     // Track view
                     fetch(`/api/model-view?id=${id}`, { method: 'POST' }).catch(() => {});
