@@ -934,33 +934,6 @@
             flex-direction: column;
         }
         
-        .sidebar.collapsed {
-            transform: translateX(-280px);
-        }
-        
-        .sidebar-toggle {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            width: 40px;
-            height: 40px;
-            background: rgba(22, 27, 34, 0.9);
-            border: 1px solid rgba(240, 246, 252, 0.2);
-            border-radius: 12px;
-            color: #e6edf3;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
-            z-index: 1001;
-            transition: all 0.2s ease;
-        }
-        
-        .sidebar-toggle:hover {
-            background: rgba(58, 166, 255, 0.1);
-            border-color: rgba(88, 166, 255, 0.3);
-        }
         
         .sidebar-header {
             padding: 25px 20px;
@@ -1125,11 +1098,6 @@
         .main-content {
             margin-left: 320px;
             flex: 1;
-            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-        
-        .main-content.expanded {
-            margin-left: 40px;
         }
         
         .add-customer-form {
@@ -1365,26 +1333,40 @@
         }
         
         .user-action-btn {
-            padding: 4px 8px;
-            font-size: 0.7rem;
-            border: 1px solid rgba(240, 246, 252, 0.2);
-            background: rgba(22, 27, 34, 0.5);
-            color: #7d8590;
-            border-radius: 4px;
+            padding: 6px 10px;
+            font-size: 0.9rem;
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(88, 166, 255, 0.15);
+            color: #58a6ff;
             cursor: pointer;
             transition: all 0.2s ease;
         }
         
         .user-action-btn:hover {
-            background: rgba(88, 166, 255, 0.1);
-            border-color: rgba(88, 166, 255, 0.3);
-            color: #58a6ff;
+            background: rgba(88, 166, 255, 0.25);
+            border-color: rgba(88, 166, 255, 0.5);
+            transform: translateY(-1px);
         }
         
-        .user-action-btn.danger:hover {
-            background: rgba(248, 81, 73, 0.1);
-            border-color: rgba(248, 81, 73, 0.3);
-            color: #f85149;
+        .edit-section {
+            padding: 20px;
+            margin-bottom: 15px;
+            background: rgba(22, 27, 34, 0.6);
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 12px;
+        }
+        
+        .section-title {
+            color: #e6edf3;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+        
+        .user-edit-sections {
+            max-height: 400px;
+            overflow-y: auto;
         }
         
         /* Logout Section */
@@ -1434,8 +1416,6 @@
     </style>
 </head>
 <body>
-    <!-- Sidebar Toggle -->
-    <button class="sidebar-toggle" onclick="toggleSidebar()">☰</button>
     
     <!-- Admin Layout -->
     <div class="admin-layout">
@@ -1468,8 +1448,8 @@
                 <!-- Expandable User Management Section -->
                 <div id="userManagementSection" style="margin-top: 10px;">
                     <!-- Add User Button -->
-                    <div style="padding: 15px; border-bottom: 1px solid rgba(240, 246, 252, 0.1);">
-                        <button onclick="toggleUserModal()" class="modal-button primary" style="width: 100%; padding: 10px; font-size: 0.9rem;">
+                    <div id="addUserButtonContainer" style="padding: 15px; border-bottom: 1px solid rgba(240, 246, 252, 0.1); max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
+                        <button onclick="toggleUserModal()" class="modal-button primary" style="width: 100%; padding: 12px; font-size: 0.9rem; background: rgba(88, 166, 255, 0.15); border: 1px solid rgba(88, 166, 255, 0.3); color: #58a6ff; border-radius: 12px; transition: all 0.2s ease;">
                             + Add New User
                         </button>
                     </div>
@@ -1658,6 +1638,69 @@
                     </div>
                     <div class="progress-percentage" id="progressPercentage">0%</div>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- User Edit Modal -->
+    <div class="password-modal" id="userEditModal" style="display: none;">
+        <div class="modal-content futuristic-upload">
+            <div class="upload-header">
+                <div class="upload-icon-container">
+                    <div class="upload-icon-bg">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="upload-title" id="editModalTitle">⚙️ Manage User</h3>
+                <p class="upload-subtitle" id="editModalSubtitle">Edit user settings and permissions</p>
+            </div>
+            
+            <div class="user-edit-sections">
+                <!-- Password Reset Section -->
+                <div class="edit-section">
+                    <h4 class="section-title">🔑 Password Reset</h4>
+                    <div class="input-group">
+                        <input type="password" id="editNewPassword" placeholder="New Password" class="futuristic-input">
+                        <div class="input-line"></div>
+                    </div>
+                    <button type="button" class="modal-button secondary" onclick="resetUserPassword()" style="width: 100%; margin-top: 10px;">
+                        Generate Random Password
+                    </button>
+                </div>
+                
+                <!-- Customer Info Section (only for customer role) -->
+                <div class="edit-section" id="customerInfoSection" style="display: none;">
+                    <h4 class="section-title">👤 Customer Information</h4>
+                    <div class="input-group">
+                        <input type="text" id="editCustomerId" placeholder="Customer ID (e.g., napo)" class="futuristic-input">
+                        <div class="input-line"></div>
+                    </div>
+                    <div class="input-group">
+                        <input type="text" id="editCustomerName" placeholder="Customer Display Name" class="futuristic-input">
+                        <div class="input-line"></div>
+                    </div>
+                </div>
+                
+                <!-- Account Status Section -->
+                <div class="edit-section">
+                    <h4 class="section-title">🔄 Account Status</h4>
+                    <button type="button" id="toggleStatusBtn" class="modal-button danger" onclick="toggleUserStatus()" style="width: 100%;">
+                        Deactivate Account
+                    </button>
+                    <p id="protectedUserNote" style="display: none; color: #7d8590; font-size: 0.8rem; text-align: center; margin-top: 10px;">
+                        Admin users are protected and cannot be deactivated.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="modal-buttons">
+                <button type="button" class="modal-button secondary" onclick="closeUserEditModal()">Cancel</button>
+                <button type="button" class="modal-button primary futuristic-primary" onclick="saveUserChanges()">
+                    <span class="button-text">Save Changes</span>
+                    <div class="button-glow"></div>
+                </button>
             </div>
         </div>
     </div>
@@ -2332,13 +2375,6 @@
         let searchQuery = '';
         let allCustomers = []; // Keep for backward compatibility
         
-        function toggleSidebar() {
-            const sidebar = document.getElementById('sidebar');
-            const mainContent = document.getElementById('mainContent');
-            
-            sidebar.classList.toggle('collapsed');
-            mainContent.classList.toggle('expanded');
-        }
         
         function updateSidebarCustomers(customers) {
             allCustomers = customers;
@@ -2785,13 +2821,16 @@
         function toggleUserManagement() {
             const section = document.getElementById('userManagementSection');
             const userList = document.getElementById('userList');
+            const addUserButton = document.getElementById('addUserButtonContainer');
             const toggle = document.getElementById('userManagementToggle');
             
             if (userList.classList.contains('expanded')) {
                 userList.classList.remove('expanded');
+                addUserButton.style.maxHeight = '0';
                 toggle.style.transform = 'rotate(0deg)';
             } else {
                 userList.classList.add('expanded');
+                addUserButton.style.maxHeight = '80px';
                 toggle.style.transform = 'rotate(180deg)';
                 loadUsers(); // Load users when expanding
             }
@@ -2840,17 +2879,9 @@
                             ${user.total_views ? `• Views: ${user.total_views}` : ''}
                         </div>
                         <div class="user-actions">
-                            <button class="user-action-btn" onclick="editUser('${user.id}')">Edit</button>
-                            <button class="user-action-btn" onclick="resetPassword('${user.id}')">Reset Password</button>
-                            ${!isAdmin ? `
-                                <button class="user-action-btn danger" onclick="deactivateUser('${user.id}', '${user.username}')">
-                                    ${user.is_active ? 'Deactivate' : 'Activate'}
-                                </button>
-                            ` : `
-                                <button class="user-action-btn" disabled title="Cannot deactivate admin user" style="opacity: 0.5; cursor: not-allowed;">
-                                    Protected
-                                </button>
-                            `}
+                            <button class="user-action-btn" onclick="openUserEditModal('${user.id}', '${user.username}', '${user.role}', '${user.customer_id || ''}', '${user.customer_name || ''}', ${user.is_active}, ${isAdmin})" title="Manage User">
+                                ⚙️
+                            </button>
                         </div>
                     </div>
                 `;
@@ -2859,49 +2890,155 @@
             userList.innerHTML = userHTML;
         }
         
-        async function editUser(userId) {
-            // TODO: Implement edit user modal
-            alert('Edit user functionality coming soon...');
-        }
+        // Global variables for user edit modal
+        let currentEditUserId = null;
+        let currentEditUserData = {};
         
-        async function resetPassword(userId) {
-            const newPassword = prompt('Enter new password:');
-            if (!newPassword) return;
+        function openUserEditModal(userId, username, role, customerId, customerName, isActive, isAdmin) {
+            currentEditUserId = userId;
+            currentEditUserData = {
+                username,
+                role,
+                customerId,
+                customerName,
+                isActive,
+                isAdmin
+            };
             
-            try {
-                const response = await fetch(`/api/users/${userId}/password`, {
-                    method: 'PUT',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ password: newPassword })
-                });
-                
-                if (response.ok) {
-                    alert('Password updated successfully');
-                } else {
-                    alert('Failed to update password');
-                }
-            } catch (error) {
-                console.error('Error updating password:', error);
-                alert('Error updating password');
+            // Update modal title
+            document.getElementById('editModalTitle').textContent = `⚙️ Manage User: ${username}`;
+            
+            // Show/hide customer info section
+            const customerSection = document.getElementById('customerInfoSection');
+            if (role === 'customer') {
+                customerSection.style.display = 'block';
+                document.getElementById('editCustomerId').value = customerId || '';
+                document.getElementById('editCustomerName').value = customerName || '';
+            } else {
+                customerSection.style.display = 'none';
             }
+            
+            // Update status button
+            const statusBtn = document.getElementById('toggleStatusBtn');
+            const protectedNote = document.getElementById('protectedUserNote');
+            
+            if (isAdmin) {
+                statusBtn.style.display = 'none';
+                protectedNote.style.display = 'block';
+            } else {
+                statusBtn.style.display = 'block';
+                protectedNote.style.display = 'none';
+                statusBtn.textContent = isActive ? 'Deactivate Account' : 'Activate Account';
+                statusBtn.className = isActive ? 'modal-button danger' : 'modal-button primary';
+            }
+            
+            // Clear password field
+            document.getElementById('editNewPassword').value = '';
+            
+            // Show modal
+            document.getElementById('userEditModal').style.display = 'flex';
         }
         
-        async function deactivateUser(userId, username) {
-            if (!confirm(`Are you sure you want to deactivate user "${username}"?`)) return;
+        function closeUserEditModal() {
+            document.getElementById('userEditModal').style.display = 'none';
+            currentEditUserId = null;
+            currentEditUserData = {};
+        }
+        
+        function resetUserPassword() {
+            const chars = 'ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            let password = '';
+            for (let i = 0; i < 8; i++) {
+                password += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('editNewPassword').value = password;
+        }
+        
+        async function toggleUserStatus() {
+            if (!currentEditUserId) return;
+            
+            const action = currentEditUserData.isActive ? 'deactivate' : 'activate';
+            if (!confirm(`Are you sure you want to ${action} user "${currentEditUserData.username}"?`)) return;
             
             try {
-                const response = await fetch(`/api/users/${userId}/toggle`, {
+                const response = await fetch(`/api/users/${currentEditUserId}/toggle`, {
                     method: 'PUT'
                 });
                 
                 if (response.ok) {
+                    currentEditUserData.isActive = !currentEditUserData.isActive;
+                    const statusBtn = document.getElementById('toggleStatusBtn');
+                    statusBtn.textContent = currentEditUserData.isActive ? 'Deactivate Account' : 'Activate Account';
+                    statusBtn.className = currentEditUserData.isActive ? 'modal-button danger' : 'modal-button primary';
+                    
                     loadUsers(); // Refresh the list
+                    alert(`User ${action}d successfully`);
                 } else {
                     alert('Failed to update user status');
                 }
             } catch (error) {
-                console.error('Error updating user:', error);
-                alert('Error updating user');
+                console.error('Error updating user status:', error);
+                alert('Error updating user status');
+            }
+        }
+        
+        async function saveUserChanges() {
+            if (!currentEditUserId) return;
+            
+            const newPassword = document.getElementById('editNewPassword').value.trim();
+            const customerId = document.getElementById('editCustomerId').value.trim();
+            const customerName = document.getElementById('editCustomerName').value.trim();
+            
+            try {
+                let hasChanges = false;
+                
+                // Update password if provided
+                if (newPassword) {
+                    const passwordResponse = await fetch(`/api/users/${currentEditUserId}/password`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ password: newPassword })
+                    });
+                    
+                    if (!passwordResponse.ok) {
+                        alert('Failed to update password');
+                        return;
+                    }
+                    hasChanges = true;
+                }
+                
+                // Update customer info if role is customer and fields have changed
+                if (currentEditUserData.role === 'customer' && 
+                    (customerId !== currentEditUserData.customerId || customerName !== currentEditUserData.customerName)) {
+                    
+                    const customerResponse = await fetch(`/api/users/${currentEditUserId}/customer`, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            customerId: customerId || currentEditUserData.customerId,
+                            customerName: customerName || currentEditUserData.customerName
+                        })
+                    });
+                    
+                    if (!customerResponse.ok) {
+                        alert('Failed to update customer information');
+                        return;
+                    }
+                    hasChanges = true;
+                }
+                
+                if (hasChanges) {
+                    alert('User updated successfully!');
+                    loadUsers(); // Refresh the list
+                    closeUserEditModal();
+                } else {
+                    alert('No changes made');
+                    closeUserEditModal();
+                }
+                
+            } catch (error) {
+                console.error('Error saving user changes:', error);
+                alert('Error saving changes');
             }
         }
 
