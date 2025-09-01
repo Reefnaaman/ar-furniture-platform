@@ -12,6 +12,13 @@
             box-sizing: border-box;
         }
         
+        /* Hide everything on mobile initially */
+        @media (max-width: 768px) {
+            body {
+                visibility: hidden;
+            }
+        }
+        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -292,7 +299,42 @@
         
         async function loadModel(id) {
             try {
-                // Fetch model info first
+                // For mobile - go straight to AR without showing anything
+                if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                    // Keep body hidden
+                    document.body.style.visibility = 'hidden';
+                    
+                    // Create invisible model-viewer
+                    const modelUrl = `/api/model-file?id=${id}`;
+                    
+                    // Create invisible model-viewer
+                    const modelViewer = document.createElement('model-viewer');
+                    modelViewer.setAttribute('id', 'modelViewer');
+                    modelViewer.setAttribute('src', modelUrl);
+                    modelViewer.setAttribute('ar', '');
+                    modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+                    modelViewer.style.display = 'none';
+                    document.body.appendChild(modelViewer);
+                    
+                    // As soon as model loads, trigger AR immediately
+                    modelViewer.addEventListener('load', () => {
+                        // Immediate AR activation - no delay
+                        if (modelViewer.canActivateAR) {
+                            modelViewer.activateAR();
+                        } else {
+                            // Fallback if AR not available
+                            document.body.style.visibility = 'visible';
+                            showError('AR not available on this device');
+                        }
+                    });
+                    
+                    // Track view
+                    fetch(`/api/model-view?id=${id}`, { method: 'POST' }).catch(() => {});
+                    return;
+                    
+                }
+                
+                // Desktop - fetch model info and show preview with QR
                 const response = await fetch(`/api/model-info?id=${id}`);
                 
                 if (!response.ok) {
@@ -301,73 +343,39 @@
                 
                 const modelInfo = await response.json();
                 
-                // For mobile - show minimal UI and auto-click AR button
-                if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                    // Show minimal AR-focused UI
-                    document.title = `${modelInfo.title} - AR Ready`;
-                    document.getElementById('modelTitle').textContent = modelInfo.title;
-                    document.getElementById('modelDescription').textContent = 'Tap below to open AR';
-                    
-                    // Create model viewer with AR enabled
-                    const modelUrl = `/api/model-file?id=${id}`;
-                    const viewerHTML = `
-                        <model-viewer
-                            id="modelViewer"
-                            src="${modelUrl}"
-                            ar
-                            ar-modes="webxr scene-viewer quick-look"
-                            alt="${modelInfo.title}"
-                            style="width: 100%; height: 300px; background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);">
-                        </model-viewer>
-                    `;
-                    
-                    document.getElementById('viewerContainer').innerHTML = viewerHTML;
-                    
-                    // Show prominent AR button
-                    const arButton = document.getElementById('arButton');
-                    arButton.style.display = 'block';
-                    arButton.textContent = '📱 Open AR Camera';
-                    arButton.style.background = 'linear-gradient(135deg, #ff6b6b 0%, #ee5a52 100%)';
-                    arButton.style.fontSize = '1.4rem';
-                    arButton.style.padding = '20px';
-                    
-                    // Auto-click the AR button after model loads
-                    const modelViewer = document.getElementById('modelViewer');
-                    modelViewer.addEventListener('load', () => {
-                        setTimeout(() => {
-                            if (modelViewer.canActivateAR) {
-                                arButton.click(); // Programmatically click the AR button
-                            }
-                        }, 1000);
-                    });
-                    
-                    // AR button functionality
-                    arButton.onclick = () => {
-                        const mv = document.getElementById('modelViewer');
-                        if (mv && mv.canActivateAR) {
-                            mv.activateAR();
-                        }
-                    };
-                    
-                } else {
-                    // Desktop - normal 3D viewer
-                    document.title = `${modelInfo.title} - 3D View`;
-                    document.getElementById('modelTitle').textContent = modelInfo.title;
-                    document.getElementById('modelDescription').textContent = modelInfo.description || 'Interactive 3D model viewer';
-                    
-                    const modelUrl = `/api/model-file?id=${id}`;
-                    const viewerHTML = `
-                        <model-viewer
-                            src="${modelUrl}"
-                            alt="${modelInfo.title}"
-                            camera-controls
-                            auto-rotate
-                            style="width: 100%; height: 450px; background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);">
-                        </model-viewer>
-                    `;
-                    
-                    document.getElementById('viewerContainer').innerHTML = viewerHTML;
-                }
+                // Desktop - show 3D viewer with QR code
+                document.title = `${modelInfo.title} - 3D View`;
+                
+                // Hide the old container and create new layout
+                document.querySelector('.container').style.display = 'none';
+                
+                // Create new desktop layout
+                const desktopHTML = `
+                    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                        <div style="display: flex; gap: 40px; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 1200px;">
+                            <div style="flex: 1;">
+                                <h2 style="margin-bottom: 20px; color: #333;">${modelInfo.title}</h2>
+                                <model-viewer
+                                    src="/api/model-file?id=${id}"
+                                    alt="${modelInfo.title}"
+                                    camera-controls
+                                    auto-rotate
+                                    style="width: 500px; height: 500px; background: linear-gradient(to bottom, #f5f5f5, #e0e0e0); border-radius: 10px;">
+                                </model-viewer>
+                            </div>
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                                <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}" 
+                                     style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 10px; background: white;">
+                                <p style="margin-top: 20px; text-align: center; color: #666; font-size: 1.1rem;">
+                                    <strong>Scan for AR View</strong><br>
+                                    <span style="font-size: 0.9rem;">Use your phone camera</span>
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                document.body.innerHTML = desktopHTML;
                 
                 // Track view
                 fetch(`/api/model-view?id=${id}`, { method: 'POST' }).catch(() => {});
@@ -378,83 +386,21 @@
         }
         
         function showError(message) {
-            document.getElementById('viewerContainer').innerHTML = `
-                <div class="error">
-                    <h3>Oops!</h3>
-                    <p>${message}</p>
-                    <p style="margin-top: 10px;">
-                        <a href="/" style="color: #667eea;">Upload a new model</a>
-                    </p>
+            // Show error in a clean way
+            document.body.style.visibility = 'visible';
+            document.body.innerHTML = `
+                <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                    <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; max-width: 500px;">
+                        <h3 style="color: #cc0000; margin-bottom: 20px;">Oops!</h3>
+                        <p style="color: #666; margin-bottom: 30px;">${message}</p>
+                        <a href="/" style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px;">
+                            Upload a new model
+                        </a>
+                    </div>
                 </div>
             `;
         }
         
-        function copyLink() {
-            const url = window.location.href;
-            navigator.clipboard.writeText(url).then(() => {
-                showToast('Link copied to clipboard!');
-            });
-        }
-        
-        function shareModel() {
-            const url = window.location.href;
-            const title = document.getElementById('modelTitle').textContent;
-            
-            if (navigator.share) {
-                navigator.share({
-                    title: title,
-                    text: `Check out this AR furniture: ${title}`,
-                    url: url
-                });
-            } else {
-                copyLink();
-            }
-        }
-        
-        function showQR() {
-            const url = window.location.href;
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(url)}`;
-            
-            const qrWindow = window.open('', 'QR Code', 'width=350,height=400');
-            qrWindow.document.write(`
-                <html>
-                <head><title>QR Code</title></head>
-                <body style="text-align: center; font-family: sans-serif; padding: 20px;">
-                    <h3>Scan with your phone</h3>
-                    <img src="${qrUrl}" style="max-width: 100%;">
-                    <p style="margin-top: 20px; color: #666;">Open in Safari (iOS) or Chrome (Android)</p>
-                </body>
-                </html>
-            `);
-        }
-        
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => {
-                toast.classList.remove('show');
-            }, 3000);
-        }
-        
-        function formatFileSize(bytes) {
-            if (!bytes) return '0 MB';
-            const mb = bytes / (1024 * 1024);
-            return mb.toFixed(1) + ' MB';
-        }
-        
-        function formatDate(dateString) {
-            if (!dateString) return 'Today';
-            const date = new Date(dateString);
-            const now = new Date();
-            const diffTime = Math.abs(now - date);
-            const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            
-            if (diffDays === 0) return 'Today';
-            if (diffDays === 1) return 'Yesterday';
-            if (diffDays < 7) return `${diffDays} days ago`;
-            return date.toLocaleDateString();
-        }
     </script>
 </body>
 </html>
