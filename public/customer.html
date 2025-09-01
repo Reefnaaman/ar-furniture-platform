@@ -372,9 +372,6 @@
     <div class="header">
         <div class="header-content">
             <h1 id="customerName">🪑 Furniture Collection</h1>
-            <div class="nav-buttons">
-                <button class="nav-button" onclick="location.reload()">🔄 Refresh</button>
-            </div>
         </div>
     </div>
     
@@ -410,19 +407,63 @@
     </div>
     
     <script>
-        // Get customer ID from URL path
-        const pathParts = window.location.pathname.split('/');
-        const customerId = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+        // Get customer ID from URL path or session/auth
+        async function getCurrentCustomerId() {
+            try {
+                // Try to get from URL path first
+                const pathParts = window.location.pathname.split('/');
+                let customerId = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+                
+                // If URL doesn't have customer ID, try to get from session
+                if (!customerId || customerId === 'customer.html' || customerId === '') {
+                    // Check if we have a logged-in customer user
+                    const response = await fetch('/api/auth/session');
+                    if (response.ok) {
+                        const session = await response.json();
+                        if (session.user && session.user.role === 'customer') {
+                            customerId = session.user.customer_id;
+                        }
+                    }
+                }
+                
+                console.log('Customer ID resolved to:', customerId);
+                return customerId;
+            } catch (error) {
+                console.error('Error getting customer ID:', error);
+                return 'napo'; // fallback for testing
+            }
+        }
         
-        // Load furniture on page load
-        loadFurniture();
+        let customerId;
+        
+        // Initialize customer ID and load furniture
+        getCurrentCustomerId().then(id => {
+            customerId = id;
+            loadFurniture();
+        });
         
         async function loadFurniture() {
+            if (!customerId) {
+                document.getElementById('furnitureContainer').innerHTML = `
+                    <div class="empty-state">
+                        <h3>Unable to identify customer</h3>
+                        <p>Please make sure you're logged in properly.</p>
+                    </div>
+                `;
+                return;
+            }
+            
             try {
+                console.log(`Loading furniture for customer: ${customerId}`);
                 const response = await fetch(`/api/customer/${customerId}`);
-                if (!response.ok) throw new Error('Failed to load furniture collection');
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}: Failed to load furniture collection`);
+                }
                 
                 const data = await response.json();
+                console.log('Furniture data received:', data);
                 
                 // Update customer branding
                 updateCustomerBranding(customerId, data.models);
@@ -440,7 +481,9 @@
                 document.getElementById('furnitureContainer').innerHTML = `
                     <div class="empty-state">
                         <h3>Error Loading Collection</h3>
-                        <p>${error.message}</p>
+                        <p>Customer: ${customerId}</p>
+                        <p>Error: ${error.message}</p>
+                        <button class="refresh-button" onclick="loadFurniture()">Try Again</button>
                     </div>
                 `;
             }
