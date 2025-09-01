@@ -1332,21 +1332,57 @@
             gap: 8px;
         }
         
-        .user-action-btn {
-            padding: 6px 10px;
+        .user-item-content {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .user-info {
+            flex: 1;
+        }
+        
+        .user-name {
+            color: #e6edf3;
+            font-weight: 500;
             font-size: 0.9rem;
+            margin-bottom: 4px;
+        }
+        
+        .user-role-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .user-role {
+            color: #7d8590;
+            font-size: 0.75rem;
+            text-transform: capitalize;
+        }
+        
+        .user-settings-btn {
+            padding: 2px 4px;
+            font-size: 0.7rem;
             border: 1px solid rgba(88, 166, 255, 0.3);
-            border-radius: 8px;
+            border-radius: 4px;
             background: rgba(88, 166, 255, 0.15);
             color: #58a6ff;
             cursor: pointer;
             transition: all 0.2s ease;
         }
         
-        .user-action-btn:hover {
+        .user-settings-btn:hover {
             background: rgba(88, 166, 255, 0.25);
             border-color: rgba(88, 166, 255, 0.5);
-            transform: translateY(-1px);
+            transform: scale(1.1);
+        }
+        
+        .user-views {
+            color: #7d8590;
+            font-size: 0.75rem;
+            margin-top: 4px;
         }
         
         .edit-section {
@@ -1448,10 +1484,12 @@
                 <!-- Expandable User Management Section -->
                 <div id="userManagementSection" style="margin-top: 10px;">
                     <!-- Add User Button -->
-                    <div id="addUserButtonContainer" style="padding: 15px; border-bottom: 1px solid rgba(240, 246, 252, 0.1); max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
-                        <button onclick="toggleUserModal()" class="modal-button primary" style="width: 100%; padding: 12px; font-size: 0.9rem; background: rgba(88, 166, 255, 0.15); border: 1px solid rgba(88, 166, 255, 0.3); color: #58a6ff; border-radius: 12px; transition: all 0.2s ease;">
-                            + Add New User
-                        </button>
+                    <div id="addUserButtonContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
+                        <div style="padding: 15px; border-bottom: 1px solid rgba(240, 246, 252, 0.1);">
+                            <button onclick="toggleUserModal()" class="modal-button primary" style="width: 100%; padding: 12px; font-size: 0.9rem; background: rgba(88, 166, 255, 0.15); border: 1px solid rgba(88, 166, 255, 0.3); color: #58a6ff; border-radius: 12px; transition: all 0.2s ease;">
+                                + Add New User
+                            </button>
+                        </div>
                     </div>
                     
                     <!-- User List -->
@@ -2870,18 +2908,17 @@
                 const isAdmin = user.username === 'admin' || user.role === 'admin';
                 return `
                     <div class="user-item">
-                        <div class="user-item-header">
-                            <span class="user-name">${user.username}</span>
-                            <span class="user-role">${user.role}</span>
-                        </div>
-                        <div class="user-details">
-                            ${user.customer_name ? `Customer: ${user.customer_name}` : ''}
-                            ${user.total_views ? `• Views: ${user.total_views}` : ''}
-                        </div>
-                        <div class="user-actions">
-                            <button class="user-action-btn" onclick="openUserEditModal('${user.id}', '${user.username}', '${user.role}', '${user.customer_id || ''}', '${user.customer_name || ''}', ${user.is_active}, ${isAdmin})" title="Manage User">
-                                ⚙️
-                            </button>
+                        <div class="user-item-content">
+                            <div class="user-info">
+                                <div class="user-name">${user.username}</div>
+                                <div class="user-role-container">
+                                    <span class="user-role">${user.role}</span>
+                                    <button class="user-settings-btn" onclick="openUserEditModal('${user.id}', '${user.username}', '${user.role}', '${user.customer_id || ''}', '${user.customer_name || ''}', ${user.is_active}, ${isAdmin})" title="Manage User">
+                                        ⚙️
+                                    </button>
+                                </div>
+                            </div>
+                            ${user.total_views ? `<div class="user-views">Views: ${user.total_views}</div>` : ''}
                         </div>
                     </div>
                 `;
