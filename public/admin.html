@@ -1466,7 +1466,7 @@
                 </div>
             </div>
             
-            <div class="sidebar-customers">
+            <div class="sidebar-customers" style="margin-top: 5px;">
                 <div class="sidebar-customers-header">
                     <span class="sidebar-customers-title">Customers</span>
                     <button class="add-customer-btn" onclick="showAddCustomerForm()">+ Add</button>
@@ -2812,25 +2812,34 @@
                 return;
             }
             
-            const userHTML = users.map(user => `
-                <div class="user-item">
-                    <div class="user-item-header">
-                        <span class="user-name">${user.username}</span>
-                        <span class="user-role">${user.role}</span>
+            const userHTML = users.map(user => {
+                const isAdmin = user.username === 'admin' || user.role === 'admin';
+                return `
+                    <div class="user-item">
+                        <div class="user-item-header">
+                            <span class="user-name">${user.username}</span>
+                            <span class="user-role">${user.role}</span>
+                        </div>
+                        <div class="user-details">
+                            ${user.customer_name ? `Customer: ${user.customer_name}` : ''}
+                            ${user.total_views ? `• Views: ${user.total_views}` : ''}
+                        </div>
+                        <div class="user-actions">
+                            <button class="user-action-btn" onclick="editUser('${user.id}')">Edit</button>
+                            <button class="user-action-btn" onclick="resetPassword('${user.id}')">Reset Password</button>
+                            ${!isAdmin ? `
+                                <button class="user-action-btn danger" onclick="deactivateUser('${user.id}', '${user.username}')">
+                                    ${user.is_active ? 'Deactivate' : 'Activate'}
+                                </button>
+                            ` : `
+                                <button class="user-action-btn" disabled title="Cannot deactivate admin user" style="opacity: 0.5; cursor: not-allowed;">
+                                    Protected
+                                </button>
+                            `}
+                        </div>
                     </div>
-                    <div class="user-details">
-                        ${user.customer_name ? `Customer: ${user.customer_name}` : ''}
-                        ${user.total_views ? `• Views: ${user.total_views}` : ''}
-                    </div>
-                    <div class="user-actions">
-                        <button class="user-action-btn" onclick="editUser('${user.id}')">Edit</button>
-                        <button class="user-action-btn" onclick="resetPassword('${user.id}')">Reset Password</button>
-                        <button class="user-action-btn danger" onclick="deactivateUser('${user.id}', '${user.username}')">
-                            ${user.is_active ? 'Deactivate' : 'Activate'}
-                        </button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+            }).join('');
             
             userList.innerHTML = userHTML;
         }
