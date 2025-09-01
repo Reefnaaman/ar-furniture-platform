@@ -247,6 +247,15 @@
                 if (response.ok) {
                     showSuccess('Login successful! Redirecting...');
                     
+                    // Store user info for customer dashboard
+                    if (result.user) {
+                        if (result.user.customerId) {
+                            localStorage.setItem('customer_id', result.user.customerId);
+                        }
+                        localStorage.setItem('user_role', result.user.role);
+                        localStorage.setItem('username', result.user.username);
+                    }
+                    
                     // Redirect based on user role
                     setTimeout(() => {
                         window.location.href = result.redirectUrl;

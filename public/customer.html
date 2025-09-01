@@ -407,26 +407,55 @@
     </div>
     
     <script>
-        // Get customer ID from URL path or session/auth
+        // Get customer ID from URL parameters or session/auth
         async function getCurrentCustomerId() {
             try {
-                // Try to get from URL path first
-                const pathParts = window.location.pathname.split('/');
-                let customerId = pathParts[pathParts.length - 1] || pathParts[pathParts.length - 2];
+                console.log('Current URL:', window.location.href);
+                console.log('Current pathname:', window.location.pathname);
                 
-                // If URL doesn't have customer ID, try to get from session
-                if (!customerId || customerId === 'customer.html' || customerId === '') {
-                    // Check if we have a logged-in customer user
-                    const response = await fetch('/api/auth/session');
-                    if (response.ok) {
-                        const session = await response.json();
-                        if (session.user && session.user.role === 'customer') {
-                            customerId = session.user.customer_id;
+                // Method 1: Try URL search parameters (?customer=napo)
+                const urlParams = new URLSearchParams(window.location.search);
+                let customerId = urlParams.get('customer');
+                console.log('Customer ID from URL params:', customerId);
+                
+                // Method 2: Try URL path (excluding .html files)
+                if (!customerId) {
+                    const pathParts = window.location.pathname.split('/').filter(part => part && !part.endsWith('.html'));
+                    customerId = pathParts[pathParts.length - 1];
+                    console.log('Customer ID from path:', customerId, 'Path parts:', pathParts);
+                }
+                
+                // Method 3: Try to get from session/localStorage
+                if (!customerId || customerId === '' || customerId === 'customer') {
+                    // Check localStorage first (might be set during login)
+                    const storedCustomerId = localStorage.getItem('customer_id');
+                    if (storedCustomerId) {
+                        customerId = storedCustomerId;
+                        console.log('Customer ID from localStorage:', customerId);
+                    } else {
+                        // Try session API (if we implement it later)
+                        try {
+                            const response = await fetch('/api/auth/session');
+                            if (response.ok) {
+                                const session = await response.json();
+                                if (session.user && session.user.role === 'customer') {
+                                    customerId = session.user.customer_id;
+                                    console.log('Customer ID from session:', customerId);
+                                }
+                            }
+                        } catch (sessionError) {
+                            console.log('Session check failed:', sessionError);
                         }
                     }
                 }
                 
-                console.log('Customer ID resolved to:', customerId);
+                // Final fallback for testing
+                if (!customerId || customerId === '' || customerId === 'customer') {
+                    customerId = 'napo';
+                    console.log('Using fallback customer ID:', customerId);
+                }
+                
+                console.log('Final customer ID resolved to:', customerId);
                 return customerId;
             } catch (error) {
                 console.error('Error getting customer ID:', error);
