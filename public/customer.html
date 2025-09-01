@@ -274,6 +274,203 @@
             }
         }
         
+        .copy-link-btn {
+            background: rgba(255, 255, 180, 0.15) !important;
+            border: 1px solid rgba(255, 255, 120, 0.3) !important;
+            color: #fff5c4 !important;
+        }
+        
+        .copy-link-btn:hover {
+            background: rgba(255, 255, 180, 0.25) !important;
+            border-color: rgba(255, 255, 120, 0.5) !important;
+            transform: translateY(-1px);
+        }
+        
+        .video-btn {
+            background: rgba(255, 100, 100, 0.15) !important;
+            border: 1px solid rgba(255, 120, 120, 0.3) !important;
+            color: #ffb3b3 !important;
+        }
+        
+        .video-btn:hover {
+            background: rgba(255, 100, 100, 0.25) !important;
+            border-color: rgba(255, 120, 120, 0.5) !important;
+            transform: translateY(-1px);
+        }
+        
+        /* Video Modal Styles */
+        .video-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2000;
+        }
+        
+        .video-modal-content {
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.95), rgba(30, 35, 42, 0.95));
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            max-height: 90vh;
+            overflow-y: auto;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
+            padding-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            color: #e6edf3;
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+        
+        .close-btn {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            color: #f85149;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .video-preview-section {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .video-preview-container {
+            background: rgba(22, 27, 34, 0.8);
+            border-radius: 12px;
+            padding: 20px;
+            height: 400px;
+        }
+        
+        .video-preview-model {
+            width: 100%;
+            height: 100%;
+            border-radius: 8px;
+        }
+        
+        .video-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 25px;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .control-group label {
+            color: #e6edf3;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .color-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .color-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid rgba(240, 246, 252, 0.2);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .color-btn:hover {
+            transform: scale(1.1);
+            border-color: rgba(88, 166, 255, 0.5);
+        }
+        
+        .color-btn.active {
+            border-color: #58a6ff !important;
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3);
+        }
+        
+        .custom-color {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(45deg, #ff6b6b, #4ecdc4, #45b7d1, #96ceb4);
+            font-size: 16px;
+        }
+        
+        #speedSlider, #durationSelect {
+            background: rgba(22, 27, 34, 0.8);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 8px;
+            color: #e6edf3;
+            padding: 8px 12px;
+        }
+        
+        #speedValue {
+            color: #58a6ff;
+            font-weight: 600;
+            text-align: center;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: flex-end;
+            border-top: 1px solid rgba(240, 246, 252, 0.1);
+            padding-top: 20px;
+        }
+        
+        .modal-btn {
+            padding: 12px 24px;
+            border-radius: 10px;
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+        
+        .modal-btn.secondary {
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            color: #f85149;
+        }
+        
+        .modal-btn.primary {
+            background: linear-gradient(135deg, #58a6ff, #79c0ff);
+            color: white;
+            border: none;
+        }
+        
+        .modal-btn:hover {
+            transform: translateY(-1px);
+        }
+        
         .models-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -463,9 +660,36 @@
                 <h2 class="section-title" id="sectionTitle">Furniture Collection</h2>
                 <div class="section-controls">
                     <div class="grid-controls">
-                        <button class="grid-btn" onclick="setGridColumns(2)" title="2 per row">⚏⚏</button>
-                        <button class="grid-btn active" onclick="setGridColumns(3)" title="3 per row">⚏⚏⚏</button>
-                        <button class="grid-btn" onclick="setGridColumns(4)" title="4 per row">⚏⚏⚏⚏</button>
+                        <button class="grid-btn" onclick="setGridColumns(2)" title="2 per row">
+                            <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
+                                <rect x="0" y="0" width="7" height="5" rx="1"/>
+                                <rect x="9" y="0" width="7" height="5" rx="1"/>
+                                <rect x="0" y="7" width="7" height="5" rx="1"/>
+                                <rect x="9" y="7" width="7" height="5" rx="1"/>
+                            </svg>
+                        </button>
+                        <button class="grid-btn active" onclick="setGridColumns(3)" title="3 per row">
+                            <svg width="20" height="12" viewBox="0 0 20 12" fill="currentColor">
+                                <rect x="0" y="0" width="5" height="5" rx="1"/>
+                                <rect x="7" y="0" width="5" height="5" rx="1"/>
+                                <rect x="14" y="0" width="5" height="5" rx="1"/>
+                                <rect x="0" y="7" width="5" height="5" rx="1"/>
+                                <rect x="7" y="7" width="5" height="5" rx="1"/>
+                                <rect x="14" y="7" width="5" height="5" rx="1"/>
+                            </svg>
+                        </button>
+                        <button class="grid-btn" onclick="setGridColumns(4)" title="4 per row">
+                            <svg width="24" height="12" viewBox="0 0 24 12" fill="currentColor">
+                                <rect x="0" y="0" width="4" height="5" rx="1"/>
+                                <rect x="6" y="0" width="4" height="5" rx="1"/>
+                                <rect x="12" y="0" width="4" height="5" rx="1"/>
+                                <rect x="18" y="0" width="4" height="5" rx="1"/>
+                                <rect x="0" y="7" width="4" height="5" rx="1"/>
+                                <rect x="6" y="7" width="4" height="5" rx="1"/>
+                                <rect x="12" y="7" width="4" height="5" rx="1"/>
+                                <rect x="18" y="7" width="4" height="5" rx="1"/>
+                            </svg>
+                        </button>
                     </div>
                     <button class="refresh-button" onclick="loadFurniture()">Refresh</button>
                 </div>
@@ -473,6 +697,71 @@
             
             <div id="furnitureContainer">
                 <div class="loading">Loading furniture collection...</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Video Generation Modal -->
+    <div id="videoModal" class="video-modal" style="display: none;">
+        <div class="modal-content video-modal-content">
+            <div class="modal-header">
+                <h3>🎥 Generate Spinning Video</h3>
+                <button class="close-btn" onclick="closeVideoModal()">×</button>
+            </div>
+            
+            <div class="video-preview-section">
+                <div class="video-preview-container">
+                    <model-viewer
+                        id="videoPreviewModel"
+                        class="video-preview-model"
+                        camera-controls
+                        auto-rotate
+                        auto-rotate-delay="0"
+                        rotation-per-second="30deg"
+                        shadow-intensity="1"
+                        camera-orbit="45deg 55deg auto"
+                        environment-image="neutral"
+                        exposure="1">
+                    </model-viewer>
+                </div>
+                
+                <div class="video-controls">
+                    <div class="control-group">
+                        <label>Background Color:</label>
+                        <div class="color-options">
+                            <button class="color-btn active" data-color="#ffffff" style="background: #ffffff; border: 2px solid #333;"></button>
+                            <button class="color-btn" data-color="#000000" style="background: #000000;"></button>
+                            <button class="color-btn" data-color="#f0f8ff" style="background: #f0f8ff;"></button>
+                            <button class="color-btn" data-color="#2a2a2a" style="background: #2a2a2a;"></button>
+                            <button class="color-btn" data-color="#e6f3ff" style="background: #e6f3ff;"></button>
+                            <button class="color-btn custom-color" onclick="openColorPicker()">🎨</button>
+                        </div>
+                        <input type="color" id="customColorPicker" style="display: none;" onchange="setCustomColor(this.value)">
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Rotation Speed:</label>
+                        <input type="range" id="speedSlider" min="10" max="60" value="30" oninput="updateRotationSpeed(this.value)">
+                        <span id="speedValue">30°/s</span>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label>Video Duration:</label>
+                        <select id="durationSelect">
+                            <option value="3">3 seconds</option>
+                            <option value="5" selected>5 seconds</option>
+                            <option value="8">8 seconds</option>
+                            <option value="10">10 seconds</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="modal-actions">
+                <button class="modal-btn secondary" onclick="closeVideoModal()">Cancel</button>
+                <button class="modal-btn primary" onclick="generateVideo()" id="generateBtn">
+                    🎬 Generate Video
+                </button>
             </div>
         </div>
     </div>
@@ -657,8 +946,11 @@
                                 <a href="/view?id=${model.id}" target="_blank" class="action-button">
                                     👁️ View in AR
                                 </a>
-                                <button class="action-button" onclick="copyToClipboard('${viewUrl}', this)">
-                                    📋 Share Link
+                                <button class="action-button copy-link-btn" onclick="copyToClipboard('${viewUrl}', this)">
+                                    📋 Copy Link
+                                </button>
+                                <button class="action-button video-btn" onclick="openVideoModal('${model.id}', '${modelUrl}')">
+                                    🎥 Download Video
                                 </button>
                             </div>
                         </div>
@@ -783,6 +1075,104 @@
                 currentEditElement = null;
             }
         }
+        
+        // Video modal functions
+        let currentModelForVideo = null;
+        let currentVideoBackground = '#ffffff';
+        
+        function openVideoModal(modelId, modelUrl) {
+            currentModelForVideo = { id: modelId, url: modelUrl };
+            const modal = document.getElementById('videoModal');
+            const previewModel = document.getElementById('videoPreviewModel');
+            
+            // Set the model source
+            previewModel.src = modelUrl;
+            
+            // Show modal
+            modal.style.display = 'flex';
+            
+            // Reset to defaults
+            setBackgroundColor('#ffffff');
+            document.getElementById('speedSlider').value = 30;
+            document.getElementById('speedValue').textContent = '30°/s';
+            updateRotationSpeed(30);
+        }
+        
+        function closeVideoModal() {
+            document.getElementById('videoModal').style.display = 'none';
+            currentModelForVideo = null;
+        }
+        
+        function setBackgroundColor(color) {
+            currentVideoBackground = color;
+            const previewModel = document.getElementById('videoPreviewModel');
+            previewModel.style.backgroundColor = color;
+            
+            // Update active color button
+            document.querySelectorAll('.color-btn').forEach(btn => {
+                btn.classList.remove('active');
+                if (btn.getAttribute('data-color') === color) {
+                    btn.classList.add('active');
+                }
+            });
+        }
+        
+        function openColorPicker() {
+            document.getElementById('customColorPicker').click();
+        }
+        
+        function setCustomColor(color) {
+            setBackgroundColor(color);
+        }
+        
+        function updateRotationSpeed(speed) {
+            const previewModel = document.getElementById('videoPreviewModel');
+            previewModel.rotationPerSecond = speed + 'deg';
+            document.getElementById('speedValue').textContent = speed + '°/s';
+        }
+        
+        async function generateVideo() {
+            if (!currentModelForVideo) return;
+            
+            const generateBtn = document.getElementById('generateBtn');
+            const originalText = generateBtn.innerHTML;
+            
+            try {
+                // Show loading state
+                generateBtn.innerHTML = '⏳ Generating...';
+                generateBtn.disabled = true;
+                
+                const duration = document.getElementById('durationSelect').value;
+                const speed = document.getElementById('speedSlider').value;
+                
+                // Simulate video generation (in a real implementation, this would call an API)
+                await new Promise(resolve => setTimeout(resolve, 3000));
+                
+                // For now, show success message
+                alert(`✅ Video generation would start with:\n• Duration: ${duration}s\n• Speed: ${speed}°/s\n• Background: ${currentVideoBackground}\n\nThis feature requires backend video processing implementation.`);
+                
+                closeVideoModal();
+                
+            } catch (error) {
+                console.error('Video generation error:', error);
+                alert('❌ Video generation failed. Please try again.');
+            } finally {
+                generateBtn.innerHTML = originalText;
+                generateBtn.disabled = false;
+            }
+        }
+        
+        // Color button event listeners
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click listeners to color buttons
+            setTimeout(() => {
+                document.querySelectorAll('.color-btn[data-color]').forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        setBackgroundColor(btn.getAttribute('data-color'));
+                    });
+                });
+            }, 1000);
+        });
         
         // Auto-refresh every 30 seconds
         setInterval(loadFurniture, 30000);
