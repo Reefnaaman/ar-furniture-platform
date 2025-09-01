@@ -699,6 +699,18 @@
             transform: translateY(-1px);
         }
         
+        .feedback-item-btn {
+            background: rgba(88, 166, 255, 0.15) !important;
+            border: 1px solid rgba(88, 166, 255, 0.3) !important;
+            color: #58a6ff !important;
+        }
+        
+        .feedback-item-btn:hover {
+            background: rgba(88, 166, 255, 0.25) !important;
+            border-color: rgba(88, 166, 255, 0.5) !important;
+            transform: translateY(-1px);
+        }
+        
         /* Video Modal Styles */
         .video-modal {
             position: fixed;
@@ -1048,12 +1060,7 @@
         </div>
         
         <div class="sidebar-content">
-            <div class="sidebar-section">
-                <h4>Actions</h4>
-                <button class="feedback-btn" onclick="openFeedbackModal()">
-                    💬 Give Feedback
-                </button>
-            </div>
+            <!-- Clean sidebar - no clutter -->
         </div>
         
         <div class="sidebar-footer">
@@ -1126,13 +1133,15 @@
                             </svg>
                         </button>
                     </div>
-                    <button class="color-guide-btn" onclick="openColorGuide()" title="Customize background color">
+                    <button class="color-guide-btn" onclick="openColorGuide()" title="Change furniture preview background color">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.91-1.93 3.12-3.12c.39-.39.39-1.02 0-1.41zM6.92 19L5 17.08l8.06-8.06 1.92 1.92L6.92 19z"/>
+                            <rect x="2" y="2" width="20" height="20" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                            <circle cx="8" cy="8" r="2" fill="currentColor"/>
+                            <path d="M14 14l6-6M8 16l2-2"/>
                         </svg>
                         <div class="color-preview" id="colorPreview"></div>
-                        <span>Theme</span>
-                        <input type="color" class="color-picker-input" id="backgroundColorPicker" onchange="updateBackgroundColor(this.value)">
+                        <span>Furniture Background</span>
+                        <input type="color" class="color-picker-input" id="backgroundColorPicker" onchange="updateFurnitureBackground(this.value)">
                     </button>
                     <button class="refresh-button" onclick="loadFurniture()">Refresh</button>
                 </div>
@@ -1215,8 +1224,8 @@
     <div id="feedbackModal" class="feedback-modal" style="display: none;">
         <div class="feedback-modal-content">
             <div class="feedback-header">
-                <h3>💬 Share Your Feedback</h3>
-                <p class="feedback-subtitle">Help us improve your furniture browsing experience</p>
+                <h3 id="feedbackTitle">💬 Share Your Feedback</h3>
+                <p class="feedback-subtitle" id="feedbackSubtitle">Help us improve your furniture browsing experience</p>
             </div>
             
             <div class="feedback-options">
@@ -1459,6 +1468,9 @@
                                 <button class="action-button video-btn" onclick="openVideoModal('${model.id}', '${modelUrl}')">
                                     🎥 Download Video
                                 </button>
+                                <button class="action-button feedback-item-btn" onclick="openItemFeedbackModal('${model.id}', '${model.title || 'Untitled'}')">
+                                    💬 Feedback
+                                </button>
                             </div>
                         </div>
                     </div>
@@ -1468,9 +1480,10 @@
             html += '</div>';
             document.getElementById('furnitureContainer').innerHTML = html;
             
-            // Apply saved background color to newly loaded model cards
-            if (currentBackgroundColor && currentBackgroundColor !== '#0a0c10') {
-                applyBackgroundColor(currentBackgroundColor);
+            // Apply saved furniture background color to newly loaded model cards
+            const savedColor = localStorage.getItem('furniture_background_color');
+            if (savedColor) {
+                applyFurnitureBackgroundColor(savedColor);
             }
         }
         
@@ -1702,61 +1715,41 @@
             colorPicker.click();
         }
         
-        function updateBackgroundColor(color) {
+        function updateFurnitureBackground(color) {
             currentBackgroundColor = color;
             
             // Update color preview
             const colorPreview = document.getElementById('colorPreview');
             colorPreview.style.backgroundColor = color;
             
-            // Apply color globally to body background
-            applyBackgroundColor(color);
+            // Apply color only to furniture preview cards
+            applyFurnitureBackgroundColor(color);
             
             // Store color preference in localStorage
-            localStorage.setItem('customer_background_color', color);
+            localStorage.setItem('furniture_background_color', color);
             
             // Mark color guide button as active
             document.querySelector('.color-guide-btn').classList.add('active');
         }
         
-        function applyBackgroundColor(color) {
+        function applyFurnitureBackgroundColor(color) {
             // Convert hex to RGB for transparency effects
             const hex = color.replace('#', '');
             const r = parseInt(hex.substr(0, 2), 16);
             const g = parseInt(hex.substr(2, 2), 16);
             const b = parseInt(hex.substr(4, 2), 16);
             
-            // Create a custom background gradient using the selected color
-            const customBackground = `
-                radial-gradient(circle at 20% 80%, rgba(${r}, ${g}, ${b}, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(${Math.min(r + 30, 255)}, ${Math.min(g + 30, 255)}, ${Math.min(b + 30, 255)}, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(${r}, ${g}, ${b}, 0.08) 0%, transparent 50%),
-                linear-gradient(135deg, ${color} 0%, rgba(${r}, ${g}, ${b}, 0.8) 50%, rgba(${Math.max(r - 20, 0)}, ${Math.max(g - 20, 0)}, ${Math.max(b - 20, 0)}, 0.9) 100%)
-            `;
-            
-            // Apply the background to body
-            document.body.style.background = customBackground;
-            
-            // Also update the model preview backgrounds to match
+            // Apply color only to furniture preview backgrounds
             const modelPreviews = document.querySelectorAll('.model-preview');
             modelPreviews.forEach(preview => {
-                preview.style.background = `linear-gradient(135deg, rgba(${r}, ${g}, ${b}, 0.3) 0%, rgba(${r}, ${g}, ${b}, 0.1) 100%)`;
+                preview.style.background = `linear-gradient(135deg, rgba(${r}, ${g}, ${b}, 0.4) 0%, rgba(${r}, ${g}, ${b}, 0.2) 100%)`;
             });
         }
         
-        function resetBackgroundColor() {
-            const defaultColor = '#0a0c10';
-            currentBackgroundColor = defaultColor;
+        function resetFurnitureBackground() {
+            currentBackgroundColor = '#0d1117';
             
-            // Reset to original background
-            document.body.style.background = `
-                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(120, 119, 255, 0.05) 0%, transparent 50%),
-                linear-gradient(135deg, #0a0c10 0%, #0d1117 50%, #111418 100%)
-            `;
-            
-            // Reset model previews
+            // Reset model previews to default
             const modelPreviews = document.querySelectorAll('.model-preview');
             modelPreviews.forEach(preview => {
                 preview.style.background = 'linear-gradient(135deg, #0d1117 0%, #21262d 100%)';
@@ -1764,39 +1757,43 @@
             
             // Update color preview and picker
             document.getElementById('colorPreview').style.backgroundColor = '#ffffff';
-            document.getElementById('backgroundColorPicker').value = defaultColor;
+            document.getElementById('backgroundColorPicker').value = '#ffffff';
             
             // Remove active state
             document.querySelector('.color-guide-btn').classList.remove('active');
             
             // Remove from localStorage
-            localStorage.removeItem('customer_background_color');
+            localStorage.removeItem('furniture_background_color');
         }
         
-        // Load saved background color on page load
-        function loadSavedBackgroundColor() {
-            const savedColor = localStorage.getItem('customer_background_color');
+        // Load saved furniture background color on page load
+        function loadSavedFurnitureBackground() {
+            const savedColor = localStorage.getItem('furniture_background_color');
             if (savedColor) {
                 document.getElementById('backgroundColorPicker').value = savedColor;
-                updateBackgroundColor(savedColor);
+                updateFurnitureBackground(savedColor);
             }
         }
         
-        // Initialize background color on page load
+        // Initialize furniture background color on page load
         document.addEventListener('DOMContentLoaded', function() {
-            setTimeout(loadSavedBackgroundColor, 500);
+            setTimeout(loadSavedFurnitureBackground, 500);
         });
         
-        // Feedback system
+        // Individual Item Feedback system
         let selectedFeedbackType = null;
         let selectedCategories = [];
+        let currentFeedbackItem = null;
         
-        const feedbackCategories = {
-            positive: ['Easy to use', 'Fast loading', 'Great design', 'AR works well', 'Love the features'],
-            negative: ['Too slow', 'Confusing layout', 'AR not working', 'Missing features', 'Hard to navigate']
+        const itemFeedbackCategories = {
+            positive: ['Looks great', 'AR works well', 'Good quality', 'Perfect size', 'Love the design'],
+            negative: ['AR not working', 'Poor quality', 'Wrong size', 'Bad design', 'Loading issues']
         };
         
-        function openFeedbackModal() {
+        function openItemFeedbackModal(itemId, itemName) {
+            currentFeedbackItem = { id: itemId, name: itemName };
+            document.getElementById('feedbackTitle').textContent = `💬 Feedback: ${itemName}`;
+            document.getElementById('feedbackSubtitle').textContent = `Share your thoughts about this specific furniture piece`;
             document.getElementById('feedbackModal').style.display = 'flex';
             resetFeedbackForm();
         }
@@ -1845,7 +1842,7 @@
             selectedCategories = [];
             
             // Add category tags
-            feedbackCategories[type].forEach(category => {
+            itemFeedbackCategories[type].forEach(category => {
                 const tag = document.createElement('div');
                 tag.className = 'category-tag';
                 tag.textContent = category;
@@ -1867,13 +1864,15 @@
         }
         
         async function submitFeedback() {
-            if (!selectedFeedbackType) return;
+            if (!selectedFeedbackType || !currentFeedbackItem) return;
             
             const feedback = {
                 type: selectedFeedbackType,
                 categories: selectedCategories,
                 comment: document.getElementById('feedbackComment').value.trim(),
                 customerId: customerId,
+                itemId: currentFeedbackItem.id,
+                itemName: currentFeedbackItem.name,
                 timestamp: new Date().toISOString(),
                 userAgent: navigator.userAgent
             };
@@ -1892,11 +1891,11 @@
                 await new Promise(resolve => setTimeout(resolve, 1000));
                 
                 // Show success message
-                alert('🎉 Thank you for your feedback! We really appreciate it.');
+                alert(`🎉 Thank you for feedback on "${currentFeedbackItem.name}"! This helps us improve.`);
                 closeFeedbackModal();
                 
-                // Store feedback timestamp to avoid spam
-                localStorage.setItem('last_feedback_time', Date.now().toString());
+                // Store feedback timestamp per item to avoid spam
+                localStorage.setItem(`feedback_${currentFeedbackItem.id}`, Date.now().toString());
                 
             } catch (error) {
                 console.error('Error submitting feedback:', error);
@@ -1907,31 +1906,16 @@
             }
         }
         
-        // Check if user can give feedback (prevent spam)
-        function canGiveFeedback() {
-            const lastFeedback = localStorage.getItem('last_feedback_time');
+        // Check if user can give feedback on specific item (prevent spam)
+        function canGiveFeedbackOnItem(itemId) {
+            const lastFeedback = localStorage.getItem(`feedback_${itemId}`);
             if (!lastFeedback) return true;
             
             const timeSinceLastFeedback = Date.now() - parseInt(lastFeedback);
-            const minInterval = 24 * 60 * 60 * 1000; // 24 hours
+            const minInterval = 24 * 60 * 60 * 1000; // 24 hours per item
             
             return timeSinceLastFeedback > minInterval;
         }
-        
-        // Update feedback button if recently used
-        function updateFeedbackButton() {
-            const feedbackBtn = document.querySelector('.feedback-btn');
-            if (!canGiveFeedback()) {
-                feedbackBtn.innerHTML = '✅ Feedback Sent';
-                feedbackBtn.style.opacity = '0.7';
-                feedbackBtn.onclick = () => {
-                    alert('Thank you! You can send feedback again tomorrow.');
-                };
-            }
-        }
-        
-        // Initialize feedback system
-        setTimeout(updateFeedbackButton, 1000);
         
         // Auto-refresh every 30 seconds
         setInterval(loadFurniture, 30000);
