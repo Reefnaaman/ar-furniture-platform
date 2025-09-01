@@ -77,6 +77,11 @@ export default async function handler(req, res) {
       return await handleCleanupVariants(req, res);
     }
     
+    // Route: /api/update-color
+    if (routePath === 'update-color') {
+      return await handleUpdateColor(req, res);
+    }
+    
     // Route: /api/customer/[id]
     if (routePath?.startsWith('customer/')) {
       const customerId = routePath.split('/')[1];
@@ -178,6 +183,7 @@ async function handleUpload(req, res) {
       fileSize: cloudinaryResult.size,
       customerId: fields.customerId?.[0] || 'unassigned',
       customerName: fields.customerName?.[0] || 'Unassigned',
+      dominantColor: '#6b7280', // Will be updated by frontend after color extraction
       metadata: {
         mimetype: uploadedFile.headers['content-type'],
         uploadedAt: new Date().toISOString()
@@ -271,32 +277,67 @@ async function handleModels(req, res) {
     }
   }
   
-  // Delete a model
+  // Delete a model or variant
   else if (req.method === 'DELETE') {
-    const { id, cloudinaryPublicId } = req.body;
+    const { id, cloudinaryPublicId, type } = req.body;
     
     if (!id) {
-      return res.status(400).json({ error: 'Model ID required' });
+      return res.status(400).json({ error: 'ID required' });
     }
     
     try {
-      // Delete from Cloudinary if public ID provided
-      if (cloudinaryPublicId) {
-        await deleteFromCloudinary(cloudinaryPublicId);
+      if (type === 'variant') {
+        // Delete variant
+        console.log('Deleting variant:', id);
+        
+        // Get variant info first to delete from Cloudinary
+        const { data: variant, error: fetchError } = await supabase
+          .from('model_variants')
+          .select('cloudinary_public_id')
+          .eq('id', id)
+          .single();
+          
+        if (fetchError) {
+          console.warn('Could not fetch variant for cleanup:', fetchError);
+        }
+        
+        // Delete from Cloudinary if public ID available
+        if (variant?.cloudinary_public_id) {
+          await deleteFromCloudinary(variant.cloudinary_public_id);
+        }
+        
+        // Delete from database
+        const { error: deleteError } = await supabase
+          .from('model_variants')
+          .delete()
+          .eq('id', id);
+          
+        if (deleteError) {
+          throw new Error('Failed to delete variant from database');
+        }
+        
+        res.status(200).json({ success: true, message: 'Variant deleted successfully' });
+        
+      } else {
+        // Delete model (original logic)
+        // Delete from Cloudinary if public ID provided
+        if (cloudinaryPublicId) {
+          await deleteFromCloudinary(cloudinaryPublicId);
+        }
+        
+        // Delete from database
+        const result = await deleteModel(id);
+        
+        if (!result.success) {
+          throw new Error('Failed to delete from database');
+        }
+        
+        res.status(200).json({ success: true, message: 'Model deleted successfully' });
       }
-      
-      // Delete from database
-      const result = await deleteModel(id);
-      
-      if (!result.success) {
-        throw new Error('Failed to delete from database');
-      }
-      
-      res.status(200).json({ success: true, message: 'Model deleted successfully' });
       
     } catch (error) {
-      console.error('Error deleting model:', error);
-      res.status(500).json({ error: 'Failed to delete model' });
+      console.error('Error deleting:', error);
+      res.status(500).json({ error: `Failed to delete ${type || 'model'}` });
     }
   }
   
@@ -514,6 +555,59 @@ async function handleCleanupVariants(req, res) {
       error: error.message,
       instructions: 'Run this SQL manually in your Supabase SQL editor:',
       manualSql: "DELETE FROM model_variants WHERE variant_type = 'color';"
+    });
+  }
+}
+
+/**
+ * Handle updating dominant color for a model
+ */
+async function handleUpdateColor(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { modelId, dominantColor } = req.body;
+    
+    if (!modelId || !dominantColor) {
+      return res.status(400).json({ error: 'Model ID and dominant color required' });
+    }
+    
+    // Validate hex color format
+    if (!/^#[0-9A-Fa-f]{6}$/.test(dominantColor)) {
+      return res.status(400).json({ error: 'Invalid hex color format' });
+    }
+
+    // Update model dominant color in database
+    const { error } = await supabase
+      .from('models')
+      .update({ dominant_color: dominantColor })
+      .eq('id', modelId);
+
+    if (error) {
+      console.error('Error updating model color:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update model color',
+        details: error.message
+      });
+    }
+    
+    console.log(`✅ Updated dominant color for model ${modelId}: ${dominantColor}`);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Model color updated successfully',
+      modelId,
+      dominantColor
+    });
+
+  } catch (error) {
+    console.error('💥 Update color error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message
     });
   }
 }
