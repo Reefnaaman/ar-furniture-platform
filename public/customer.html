@@ -1141,7 +1141,7 @@
                         </svg>
                         <div class="color-preview" id="colorPreview"></div>
                         <span>Furniture Background</span>
-                        <input type="color" class="color-picker-input" id="backgroundColorPicker" onchange="updateFurnitureBackground(this.value)">
+                        <input type="color" class="color-picker-input" id="backgroundColorPicker" oninput="updateFurnitureBackground(this.value)" onchange="updateFurnitureBackground(this.value)">
                     </button>
                     <button class="refresh-button" onclick="loadFurniture()">Refresh</button>
                 </div>
