@@ -3929,18 +3929,15 @@
                                         
                                         materials.forEach((material, index) => {
                                             if (material.pbrMetallicRoughness) {
-                                                // Detect material type automatically
-                                                const materialType = detectMaterialType(material);
-                                                console.log(`Material ${index} detected as:`, materialType);
-                                                
-                                                // Only color fabric materials, skip wood/metal/leather
-                                                if (shouldColorMaterial(materialType)) {
+                                                // Simple heuristic: Only color the first material (usually fabric/upholstery)
+                                                // Skip other materials (usually wood/metal structural parts)
+                                                if (index === 0) {
                                                     const originalColor = material.pbrMetallicRoughness.baseColorFactor;
                                                     const remappedColor = intelligentColorRemap(originalColor, targetRgba);
                                                     material.pbrMetallicRoughness.setBaseColorFactor(remappedColor);
-                                                    console.log(`✓ Colored ${materialType} material ${index}`);
+                                                    console.log(`✓ Colored material ${index} (primary/fabric)`);
                                                 } else {
-                                                    console.log(`✗ Skipped ${materialType} material ${index} (should not be colored)`);
+                                                    console.log(`✗ Skipped material ${index} (structural/wood/metal)`);
                                                 }
                                             }
                                         });
