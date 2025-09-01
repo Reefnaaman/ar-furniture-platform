@@ -1,5 +1,5 @@
 import { uploadModel } from '../lib/cloudinary.js';
-import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer } from '../lib/supabase.js';
+import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import multiparty from 'multiparty';
 
@@ -238,6 +238,31 @@ async function handleModels(req, res) {
     } catch (error) {
       console.error('Error fetching models:', error);
       res.status(500).json({ error: 'Failed to fetch models' });
+    }
+  }
+  
+  // Update a model
+  else if (req.method === 'PUT') {
+    const { id, title } = req.body;
+    
+    if (!id) {
+      return res.status(400).json({ error: 'Model ID required' });
+    }
+    
+    try {
+      // Update model title in database
+      const { error } = await supabase
+        .from('models')
+        .update({ title })
+        .eq('id', id);
+
+      if (error) throw error;
+      
+      res.status(200).json({ success: true, message: 'Model updated successfully' });
+      
+    } catch (error) {
+      console.error('Error updating model:', error);
+      res.status(500).json({ error: 'Failed to update model' });
     }
   }
   

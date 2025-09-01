@@ -154,6 +154,12 @@
             opacity: 0.4;
         }
         
+        .main-content {
+            margin-left: 320px;
+            padding: 40px;
+            flex: 1;
+        }
+
         .models-section {
             background: linear-gradient(135deg, rgba(22, 27, 34, 0.9) 0%, rgba(30, 35, 42, 0.8) 100%);
             backdrop-filter: blur(20px);
@@ -1714,7 +1720,7 @@
             <div class="sidebar-customers" style="margin-top: 5px;">
                 <div class="sidebar-customers-header">
                     <span class="sidebar-customers-title">Customers</span>
-                    <button class="add-customer-btn" onclick="showAddCustomerForm()">+ Add</button>
+                    <button class="add-customer-btn" onclick="openUserModalForCustomer()">+ Add</button>
                 </div>
                 
                 <!-- Add Customer Form -->
@@ -1785,7 +1791,9 @@
             </div>
         </div>
         
-        <div class="models-section">
+        <!-- Main Content Area -->
+        <div class="main-content">
+            <div class="models-section">
             <div class="section-header">
                 <h2 class="section-title">Uploaded Furniture</h2>
                 <button class="refresh-button" onclick="loadModels()">Refresh</button>
@@ -2899,6 +2907,19 @@
             }
         }
         
+        // Open user modal with customer role pre-selected
+        function openUserModalForCustomer() {
+            toggleUserModal();
+            // Pre-select customer role
+            document.getElementById('newRole').value = 'customer';
+            // Trigger change event to show customer fields
+            document.getElementById('newRole').dispatchEvent(new Event('change'));
+            // Focus on username field
+            setTimeout(() => {
+                document.getElementById('newUsername').focus();
+            }, 100);
+        }
+
         function showAddCustomerForm() {
             document.getElementById('addCustomerForm').style.display = 'block';
             document.getElementById('addCustomerNameInput').focus();
@@ -3488,15 +3509,35 @@
             }
             
             try {
-                // TODO: Add API call to update title
-                // For now, just update the display
+                // Show loading state
+                input.disabled = true;
+                input.style.opacity = '0.7';
+                
+                // API call to update title
+                const response = await fetch('/api/models', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: modelId,
+                        title: newTitle
+                    })
+                });
+
+                if (!response.ok) {
+                    throw new Error('Failed to update title');
+                }
+                
+                // Update the display
                 currentEditElement.textContent = newTitle;
-                console.log(`Would update model ${modelId} title to: ${newTitle}`);
+                console.log(`Updated model ${modelId} title to: ${newTitle}`);
                 
                 currentEditElement = null;
                 
             } catch (error) {
                 console.error('Error updating title:', error);
+                alert('Failed to save title. Please try again.');
                 cancelEdit();
             }
         }
@@ -3794,5 +3835,8 @@
             });
         }
     </script>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

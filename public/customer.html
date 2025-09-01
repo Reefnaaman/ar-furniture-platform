@@ -1044,6 +1044,29 @@
             margin-bottom: 10px;
             color: #666;
         }
+        
+        /* Search Input */
+        .search-input {
+            width: 200px;
+            background: rgba(22, 27, 34, 0.8);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 12px;
+            color: #e6edf3;
+            padding: 8px 12px;
+            font-size: 0.85rem;
+            outline: none;
+            transition: all 0.2s ease;
+            margin-right: 15px;
+        }
+        
+        .search-input:focus {
+            border-color: rgba(88, 166, 255, 0.5);
+            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
+        }
+        
+        .search-input::placeholder {
+            color: #7d8590;
+        }
     </style>
 </head>
 <body>
@@ -1101,6 +1124,7 @@
             <div class="section-header">
                 <h2 class="section-title" id="sectionTitle">Furniture Collection</h2>
                 <div class="section-controls">
+                    <input type="text" class="search-input" placeholder="Search furniture..." oninput="handleSearch(this.value)" />
                     <div class="grid-controls">
                         <button class="grid-btn" onclick="setGridColumns(2)" title="2 per row">
                             <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor">
@@ -1919,6 +1943,46 @@
         
         // Auto-refresh every 30 seconds
         setInterval(loadFurniture, 30000);
+
+        // Search functionality
+        function handleSearch(query) {
+            const searchQuery = query.toLowerCase().trim();
+            const modelCards = document.querySelectorAll('.model-card');
+            
+            let hasResults = false;
+            modelCards.forEach(card => {
+                const title = card.querySelector('.model-title')?.textContent?.toLowerCase() || '';
+                const description = card.querySelector('.model-description')?.textContent?.toLowerCase() || '';
+                
+                const matches = searchQuery === '' || 
+                               title.includes(searchQuery) || 
+                               description.includes(searchQuery);
+                
+                if (matches) {
+                    hasResults = true;
+                    card.style.display = 'block';
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+            
+            // Show/hide empty state
+            const furnitureGrid = document.getElementById('furnitureContainer').querySelector('.furniture-grid');
+            if (furnitureGrid && !hasResults && searchQuery) {
+                const existingNoResults = furnitureGrid.querySelector('.no-results');
+                if (!existingNoResults) {
+                    const noResultsDiv = document.createElement('div');
+                    noResultsDiv.className = 'no-results empty-state';
+                    noResultsDiv.innerHTML = '<h3>No Results Found</h3><p>Try different search terms</p>';
+                    furnitureGrid.appendChild(noResultsDiv);
+                }
+            } else {
+                const existingNoResults = furnitureGrid?.querySelector('.no-results');
+                if (existingNoResults) {
+                    existingNoResults.remove();
+                }
+            }
+        }
     </script>
 </body>
 </html>
