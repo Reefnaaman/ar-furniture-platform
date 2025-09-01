@@ -154,13 +154,11 @@
             opacity: 0.4;
         }
         
-        .main-content {
-            margin-left: 320px;
-            padding: 40px;
-            flex: 1;
-        }
-
         .models-section {
+            margin-left: 320px;
+            margin-right: 40px;
+            margin-top: 40px;
+            margin-bottom: 40px;
             background: linear-gradient(135deg, rgba(22, 27, 34, 0.9) 0%, rgba(30, 35, 42, 0.8) 100%);
             backdrop-filter: blur(20px);
             border: 1px solid rgba(240, 246, 252, 0.15);
@@ -1791,9 +1789,7 @@
             </div>
         </div>
         
-        <!-- Main Content Area -->
-        <div class="main-content">
-            <div class="models-section">
+        <div class="models-section">
             <div class="section-header">
                 <h2 class="section-title">Uploaded Furniture</h2>
                 <button class="refresh-button" onclick="loadModels()">Refresh</button>
@@ -2327,26 +2323,28 @@
                             </div>
                         </div>
                         
+                        ${model.variants && model.variants.length > 0 ? `
                         <div class="model-variants">
                             <div class="variants-label">Available Colors:</div>
                             <div class="variants-circles">
                                 <!-- Always show original as first variant -->
-                                <div class="variant-circle ${!model.variants || model.variants.length === 0 ? 'primary' : ''}" 
+                                <div class="variant-circle" 
                                      style="background: linear-gradient(45deg, #6b7280, #9ca3af);" 
                                      title="Original"
                                      onclick="switchToVariant('${model.id}', 'original', '${modelUrl}')">
-                                     ${!model.variants || model.variants.length === 0 ? '★' : 'O'}
+                                     O
                                 </div>
-                                ${model.variants && model.variants.length > 0 ? model.variants.map(variant => `
+                                ${model.variants.map(variant => `
                                     <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
                                          style="background-color: ${variant.hex_color};" 
                                          title="${variant.variant_name} ${variant.variant_type === 'color' ? '(Color Change)' : '(Custom GLB)'}"
                                          onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}', '${variant.variant_type || 'upload'}')">
                                          ${variant.is_primary ? '★' : ''}
                                     </div>
-                                `).join('') : ''}
+                                `).join('')}
                             </div>
                         </div>
+                        ` : ''}
                         
                         <div class="model-actions">
                             <a href="/view?id=${model.id}" target="_blank" class="action-button">
@@ -3797,45 +3795,52 @@
                 const hiddenModelId = card.querySelector('.model-id');
                 
                 if (hiddenModelId && hiddenModelId.textContent === modelId) {
-                    // Always update the src first
-                    modelViewer.src = variantUrl;
-                    
                     if (variantType === 'color' && hexColor) {
-                        // Wait for model to load, then apply color change
-                        modelViewer.addEventListener('load', function colorChangeHandler() {
+                        // For color variants, wait for model to load then apply color
+                        console.log('Applying color change to existing model:', hexColor);
+                        
+                        const applyColor = () => {
                             try {
-                                console.log('Applying color change:', hexColor);
-                                
-                                // Get the model and materials
-                                if (modelViewer.model && modelViewer.model.materials) {
-                                    const materials = modelViewer.model.materials;
-                                    const rgba = hexToRGBA(hexColor);
-                                    
-                                    // Apply color to all materials
-                                    materials.forEach((material, index) => {
-                                        if (material.pbrMetallicRoughness) {
-                                            material.pbrMetallicRoughness.setBaseColorFactor(rgba);
-                                            console.log(`Applied color to material ${index}:`, rgba);
-                                        }
-                                    });
-                                } else {
-                                    console.warn('Model or materials not available yet');
-                                }
+                                // Wait a bit for model to be ready
+                                setTimeout(() => {
+                                    if (modelViewer.model && modelViewer.model.materials) {
+                                        const materials = modelViewer.model.materials;
+                                        const rgba = hexToRGBA(hexColor);
+                                        console.log('Converting hex to RGBA:', hexColor, '->', rgba);
+                                        
+                                        // Apply color to all materials
+                                        materials.forEach((material, index) => {
+                                            if (material.pbrMetallicRoughness) {
+                                                material.pbrMetallicRoughness.setBaseColorFactor(rgba);
+                                                console.log(`Applied color to material ${index}:`, rgba);
+                                            }
+                                        });
+                                    } else {
+                                        console.warn('Model or materials not available:', {
+                                            hasModel: !!modelViewer.model,
+                                            materials: modelViewer.model?.materials?.length || 0
+                                        });
+                                    }
+                                }, 500);
                             } catch (error) {
                                 console.error('Error applying color change:', error);
                             }
-                            
-                            // Remove event listener after first use
-                            modelViewer.removeEventListener('load', colorChangeHandler);
-                        }, { once: true });
+                        };
+                        
+                        if (modelViewer.loaded) {
+                            applyColor();
+                        } else {
+                            modelViewer.addEventListener('load', applyColor, { once: true });
+                        }
+                    } else {
+                        // For upload variants, change the src
+                        modelViewer.src = variantUrl;
+                        console.log('Updated model viewer src to:', variantUrl);
                     }
-                    
-                    console.log('Updated model viewer src to:', variantUrl);
                 }
             });
         }
     </script>
-            </div>
         </div>
     </div>
 </body>
