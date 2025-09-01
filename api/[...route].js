@@ -1,5 +1,5 @@
 import { uploadModel } from '../lib/cloudinary.js';
-import { saveModel, getModel, getAllModels, getModelsByCustomer, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer } from '../lib/supabase.js';
+import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import multiparty from 'multiparty';
 
@@ -226,7 +226,7 @@ async function handleModels(req, res) {
       const limit = parseInt(req.query.limit) || 100;
       const offset = parseInt(req.query.offset) || 0;
       
-      const models = await getAllModels(limit, offset);
+      const models = await getModelsWithVariants(limit, offset);
       const stats = await getStats();
       
       res.status(200).json({
