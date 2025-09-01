@@ -2250,21 +2250,26 @@
                             </div>
                         </div>
                         
-                        ${model.variants && model.variants.length > 0 ? `
                         <div class="model-variants">
-                            <div class="variants-label">Color Variants:</div>
+                            <div class="variants-label">Available Colors:</div>
                             <div class="variants-circles">
-                                ${model.variants.map(variant => `
+                                <!-- Always show original as first variant -->
+                                <div class="variant-circle ${!model.variants || model.variants.length === 0 ? 'primary' : ''}" 
+                                     style="background: linear-gradient(45deg, #6b7280, #9ca3af);" 
+                                     title="Original"
+                                     onclick="switchToVariant('${model.id}', 'original', '${modelUrl}')">
+                                     ${!model.variants || model.variants.length === 0 ? '★' : 'O'}
+                                </div>
+                                ${model.variants && model.variants.length > 0 ? model.variants.map(variant => `
                                     <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
                                          style="background-color: ${variant.hex_color};" 
                                          title="${variant.variant_name}"
                                          onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}')">
                                          ${variant.is_primary ? '★' : ''}
                                     </div>
-                                `).join('')}
+                                `).join('') : ''}
                             </div>
                         </div>
-                        ` : ''}
                         
                         <div class="model-actions">
                             <a href="/view?id=${model.id}" target="_blank" class="action-button">
