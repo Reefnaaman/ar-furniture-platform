@@ -1614,7 +1614,7 @@
                 
                 <!-- Add Customer Form -->
                 <div class="add-customer-form" id="addCustomerForm">
-                    <input type="text" class="add-customer-input" placeholder="Customer name" id="newCustomerName" onkeydown="handleCustomerNameKeydown(event)" />
+                    <input type="text" class="add-customer-input" placeholder="Customer name" id="addCustomerNameInput" onkeydown="handleCustomerNameKeydown(event)" />
                     <div class="add-customer-actions">
                         <button class="add-customer-save" onclick="saveNewCustomer()">Save</button>
                         <button class="add-customer-cancel" onclick="hideAddCustomerForm()">Cancel</button>
@@ -1921,7 +1921,7 @@
                 <p class="upload-subtitle" id="variantModalSubtitle">Create a new color variant for this furniture piece</p>
             </div>
             
-            <form id="variantForm" onsubmit="uploadVariant(event)">
+            <form id="variantForm">
                 <div class="form-section">
                     <h4 class="section-title">✨ Variant Details</h4>
                     
@@ -2757,12 +2757,12 @@
         
         function showAddCustomerForm() {
             document.getElementById('addCustomerForm').style.display = 'block';
-            document.getElementById('newCustomerName').focus();
+            document.getElementById('addCustomerNameInput').focus();
         }
         
         function hideAddCustomerForm() {
             document.getElementById('addCustomerForm').style.display = 'none';
-            document.getElementById('newCustomerName').value = '';
+            document.getElementById('addCustomerNameInput').value = '';
         }
         
         function handleCustomerNameKeydown(event) {
@@ -2776,7 +2776,7 @@
         }
         
         async function saveNewCustomer() {
-            const customerName = document.getElementById('newCustomerName').value.trim();
+            const customerName = document.getElementById('addCustomerNameInput').value.trim();
             if (!customerName) return;
             
             try {
