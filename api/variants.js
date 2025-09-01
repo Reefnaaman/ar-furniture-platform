@@ -79,6 +79,14 @@ async function handleCreateVariant(req, res, modelId) {
   }
 
   try {
+    // Get parent model data first
+    const { getModelById } = await import('../lib/supabase.js');
+    const parentModel = await getModelById(modelId);
+    
+    if (!parentModel) {
+      return res.status(404).json({ error: 'Parent model not found' });
+    }
+
     // Parse multipart form data
     const form = new multiparty.Form();
     
@@ -89,12 +97,8 @@ async function handleCreateVariant(req, res, modelId) {
       });
     });
 
-    // Get file and variant data
+    // Get variant data
     const uploadedFile = files.file?.[0];
-    if (!uploadedFile) {
-      return res.status(400).json({ error: 'GLB file is required' });
-    }
-
     const variantName = fields.variantName?.[0];
     const hexColor = fields.hexColor?.[0];
     const isPrimary = fields.isPrimary?.[0] === 'true';
@@ -103,23 +107,35 @@ async function handleCreateVariant(req, res, modelId) {
       return res.status(400).json({ error: 'Variant name and color are required' });
     }
 
-    // Validate file type
-    if (!uploadedFile.originalFilename?.match(/\.(glb|gltf)$/i)) {
-      return res.status(400).json({ error: 'Only GLB and GLTF files are allowed' });
+    let cloudinaryResult;
+    
+    if (uploadedFile) {
+      // Validate file type if new file provided
+      if (!uploadedFile.originalFilename?.match(/\.(glb|gltf)$/i)) {
+        return res.status(400).json({ error: 'Only GLB and GLTF files are allowed' });
+      }
+
+      // Check file size (100MB)
+      if (uploadedFile.size > 100 * 1024 * 1024) {
+        return res.status(400).json({ error: 'File too large. Maximum size is 100MB' });
+      }
+
+      // Read and upload new file
+      const fs = await import('fs');
+      const fileBuffer = fs.readFileSync(uploadedFile.path);
+      const cloudinaryFileName = `${modelId}_${variantName.toLowerCase().replace(/\s+/g, '_')}_${uploadedFile.originalFilename}`;
+      cloudinaryResult = await uploadModel(fileBuffer, cloudinaryFileName);
+      
+      // Clean up temp file
+      fs.unlinkSync(uploadedFile.path);
+    } else {
+      // Use parent model's Cloudinary data
+      cloudinaryResult = {
+        url: parentModel.cloudinary_url,
+        publicId: parentModel.cloudinary_public_id,
+        size: parentModel.file_size
+      };
     }
-
-    // Check file size (100MB)
-    if (uploadedFile.size > 100 * 1024 * 1024) {
-      return res.status(400).json({ error: 'File too large. Maximum size is 100MB' });
-    }
-
-    // Read file
-    const fs = await import('fs');
-    const fileBuffer = fs.readFileSync(uploadedFile.path);
-
-    // Upload to Cloudinary with variant naming
-    const cloudinaryFileName = `${modelId}_${variantName.toLowerCase().replace(/\s+/g, '_')}_${uploadedFile.originalFilename}`;
-    const cloudinaryResult = await uploadModel(fileBuffer, cloudinaryFileName);
 
     // Save variant to database
     const variantResult = await saveModelVariant({
@@ -131,9 +147,6 @@ async function handleCreateVariant(req, res, modelId) {
       fileSize: cloudinaryResult.size,
       isPrimary
     });
-
-    // Clean up temp file
-    fs.unlinkSync(uploadedFile.path);
 
     if (!variantResult.success) {
       return res.status(500).json({ 

@@ -1851,12 +1851,13 @@
                 </div>
                 
                 <div class="form-section">
-                    <h4 class="section-title">📁 GLB File</h4>
+                    <h4 class="section-title">📁 GLB File (Optional)</h4>
+                    <p style="color: #7d8590; font-size: 0.85rem; margin-bottom: 15px;">Leave empty to use the same GLB file as the original model</p>
                     <div class="file-upload-area" onclick="document.getElementById('variantFile').click()">
                         <div class="upload-icon">📤</div>
                         <div class="upload-text">
-                            <strong>Click to select GLB file</strong>
-                            <span>or drag and drop</span>
+                            <strong>Click to select new GLB file</strong>
+                            <span>or drag and drop (optional)</span>
                         </div>
                     </div>
                     <input type="file" id="variantFile" accept=".glb,.gltf" style="display: none;" onchange="updateVariantFileName()">
@@ -3393,11 +3394,6 @@
             
             if (!variantName) {
                 alert('Please enter a variant name');
-                return;
-            }
-            
-            if (!fileInput.files.length) {
-                alert('Please select a GLB file');
                 return;
             }
 
