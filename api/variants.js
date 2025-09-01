@@ -101,6 +101,7 @@ async function handleCreateVariant(req, res, modelId) {
     const uploadedFile = files.file?.[0];
     const variantName = fields.variantName?.[0];
     const hexColor = fields.hexColor?.[0];
+    const variantType = fields.variantType?.[0] || 'upload';
     const isPrimary = fields.isPrimary?.[0] === 'true';
 
     if (!variantName || !hexColor) {
@@ -109,7 +110,7 @@ async function handleCreateVariant(req, res, modelId) {
 
     let cloudinaryResult;
     
-    if (uploadedFile) {
+    if (variantType === 'upload' && uploadedFile) {
       // Validate file type if new file provided
       if (!uploadedFile.originalFilename?.match(/\.(glb|gltf)$/i)) {
         return res.status(400).json({ error: 'Only GLB and GLTF files are allowed' });
@@ -129,7 +130,7 @@ async function handleCreateVariant(req, res, modelId) {
       // Clean up temp file
       fs.unlinkSync(uploadedFile.path);
     } else {
-      // Use parent model's Cloudinary data
+      // Use parent model's Cloudinary data for color-only variants
       cloudinaryResult = {
         url: parentModel.cloudinary_url,
         publicId: parentModel.cloudinary_public_id,
@@ -145,7 +146,8 @@ async function handleCreateVariant(req, res, modelId) {
       cloudinaryUrl: cloudinaryResult.url,
       cloudinaryPublicId: cloudinaryResult.publicId,
       fileSize: cloudinaryResult.size,
-      isPrimary
+      isPrimary,
+      variantType
     });
 
     if (!variantResult.success) {

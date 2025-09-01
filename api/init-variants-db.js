@@ -30,6 +30,7 @@ export default async function handler(req, res) {
         cloudinary_public_id TEXT NOT NULL,
         file_size BIGINT,
         is_primary BOOLEAN DEFAULT false,
+        variant_type VARCHAR(20) DEFAULT 'upload',
         created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
         FOREIGN KEY (parent_model_id) REFERENCES models(id) ON DELETE CASCADE
       );
