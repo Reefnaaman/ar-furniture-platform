@@ -3745,29 +3745,84 @@
             return [r, g, b, 1.0];
         }
         
-        // Extract dominant color from GLB model materials
-        function extractDominantColor(modelViewer) {
+        // Extract dominant color from rendered GLB using model-viewer screenshot
+        async function extractDominantColor(modelViewer) {
             try {
-                if (!modelViewer.model || !modelViewer.model.materials) {
-                    return '#6b7280'; // Default gray if no materials
-                }
+                // Use model-viewer's toDataURL method to get a screenshot
+                const dataURL = await modelViewer.toDataURL('image/png', 0.8);
                 
-                const materials = modelViewer.model.materials;
-                let dominantColor = [0.5, 0.5, 0.5, 1]; // Default gray
+                // Create an image and canvas to analyze pixels
+                return new Promise((resolve) => {
+                    const img = new Image();
+                    img.onload = () => {
+                        const canvas = document.createElement('canvas');
+                        const ctx = canvas.getContext('2d');
+                        
+                        // Set canvas size to sample area
+                        const sampleSize = 100;
+                        canvas.width = sampleSize;
+                        canvas.height = sampleSize;
+                        
+                        // Draw the image scaled down to sample size
+                        ctx.drawImage(img, 0, 0, sampleSize, sampleSize);
+                        
+                        // Get pixel data from center area (avoid background)
+                        const centerSize = 60;
+                        const centerOffset = (sampleSize - centerSize) / 2;
+                        const imageData = ctx.getImageData(centerOffset, centerOffset, centerSize, centerSize);
+                        const pixels = imageData.data;
+                        
+                        // Calculate dominant color
+                        const colorCounts = {};
+                        const threshold = 15; // Group similar colors
+                        
+                        for (let i = 0; i < pixels.length; i += 4) {
+                            const r = pixels[i];
+                            const g = pixels[i + 1];
+                            const b = pixels[i + 2];
+                            const a = pixels[i + 3];
+                            
+                            // Skip transparent or very dark/light pixels (likely background)
+                            if (a < 200 || (r + g + b) < 60 || (r + g + b) > 700) continue;
+                            
+                            // Group similar colors to find dominant shade
+                            const groupedR = Math.floor(r / threshold) * threshold;
+                            const groupedG = Math.floor(g / threshold) * threshold;
+                            const groupedB = Math.floor(b / threshold) * threshold;
+                            
+                            const colorKey = `${groupedR},${groupedG},${groupedB}`;
+                            colorCounts[colorKey] = (colorCounts[colorKey] || 0) + 1;
+                        }
+                        
+                        // Find the most common color
+                        let dominantColor = '#6b7280';
+                        let maxCount = 0;
+                        
+                        for (const [colorKey, count] of Object.entries(colorCounts)) {
+                            if (count > maxCount) {
+                                maxCount = count;
+                                const [r, g, b] = colorKey.split(',').map(Number);
+                                const hexR = Math.max(0, Math.min(255, r)).toString(16).padStart(2, '0');
+                                const hexG = Math.max(0, Math.min(255, g)).toString(16).padStart(2, '0');
+                                const hexB = Math.max(0, Math.min(255, b)).toString(16).padStart(2, '0');
+                                dominantColor = `#${hexR}${hexG}${hexB}`;
+                            }
+                        }
+                        
+                        console.log('Extracted dominant color:', dominantColor, 'from', Object.keys(colorCounts).length, 'color groups');
+                        resolve(dominantColor);
+                    };
+                    
+                    img.onerror = () => {
+                        console.warn('Failed to load model screenshot');
+                        resolve('#6b7280');
+                    };
+                    
+                    img.src = dataURL;
+                });
                 
-                // Get the first material's base color (usually the primary/fabric material)
-                if (materials.length > 0 && materials[0].pbrMetallicRoughness) {
-                    dominantColor = materials[0].pbrMetallicRoughness.baseColorFactor || dominantColor;
-                }
-                
-                // Convert RGBA to hex
-                const r = Math.round(dominantColor[0] * 255).toString(16).padStart(2, '0');
-                const g = Math.round(dominantColor[1] * 255).toString(16).padStart(2, '0');
-                const b = Math.round(dominantColor[2] * 255).toString(16).padStart(2, '0');
-                
-                return `#${r}${g}${b}`;
             } catch (error) {
-                console.warn('Failed to extract dominant color:', error);
+                console.warn('Failed to extract visual dominant color:', error);
                 return '#6b7280'; // Fallback gray
             }
         }
@@ -3908,10 +3963,13 @@
                 const originalVariant = card.querySelector('.original-variant');
                 
                 if (modelViewer && originalVariant) {
-                    const updateColor = () => {
-                        const dominantColor = extractDominantColor(modelViewer);
-                        console.log('Extracted dominant color for model:', dominantColor);
-                        originalVariant.style.background = dominantColor;
+                    const updateColor = async () => {
+                        // Add a small delay to ensure the model is fully rendered
+                        setTimeout(async () => {
+                            const dominantColor = await extractDominantColor(modelViewer);
+                            console.log('Extracted dominant color for model:', dominantColor);
+                            originalVariant.style.background = dominantColor;
+                        }, 1000); // Wait 1 second after model loads
                     };
                     
                     if (modelViewer.loaded) {
@@ -3925,7 +3983,7 @@
         
         // Update colors when page loads and when new models are added
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(updateOriginalVariantColors, 2000); // Give models time to load
+            setTimeout(updateOriginalVariantColors, 3000); // Give models time to load and render
         });
     </script>
         </div>
