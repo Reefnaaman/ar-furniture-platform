@@ -2035,28 +2035,14 @@
                             <input type="text" id="variantName" placeholder="Variant name (e.g., Red Leather)" required class="futuristic-input">
                             <div class="input-line"></div>
                         </div>
-                        <div class="input-group" style="width: 120px;">
-                            <input type="color" id="variantColor" value="#FF0000" required class="futuristic-input" style="height: 45px; border-radius: 8px; cursor: pointer;">
-                            <div class="input-line"></div>
-                        </div>
                     </div>
                     
-                    <!-- Variant Type Selection -->
-                    <div class="variant-type-selection" style="margin-bottom: 20px;">
-                        <div class="variant-type-options">
-                            <label class="variant-type-option active" onclick="selectVariantType('color')">
-                                <input type="radio" name="variantType" value="color" checked style="display: none;">
-                                <div class="type-icon">🎨</div>
-                                <div class="type-label">Color Change</div>
-                                <div class="type-desc">Use original GLB with new color</div>
-                            </label>
-                            <label class="variant-type-option" onclick="selectVariantType('upload')">
-                                <input type="radio" name="variantType" value="upload" style="display: none;">
-                                <div class="type-icon">📁</div>
-                                <div class="type-label">Upload GLB</div>
-                                <div class="type-desc">Upload different GLB file</div>
-                            </label>
-                        </div>
+                    <!-- Only GLB Upload Variants Supported -->
+                    <div class="variant-info" style="background: rgba(88, 166, 255, 0.1); border: 1px solid rgba(88, 166, 255, 0.3); padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
+                        <div style="font-size: 20px; margin-bottom: 8px;">📁</div>
+                        <div style="font-weight: 600; margin-bottom: 4px;">Upload GLB Variant</div>
+                        <div style="font-size: 0.85rem; color: #7d8590;">Upload a different GLB file as a variant</div>
+                        <input type="hidden" name="variantType" value="upload">
                     </div>
                     
                     <div class="input-group">
@@ -2322,17 +2308,18 @@
                         <div class="model-variants">
                             <div class="variants-label">Available Colors:</div>
                             <div class="variants-circles">
-                                <!-- Always show original as first variant -->
-                                <div class="variant-circle" 
+                                <!-- Always show original as first variant with extracted color -->
+                                <div class="variant-circle original-variant" 
                                      style="background: linear-gradient(45deg, #6b7280, #9ca3af);" 
                                      title="Original"
+                                     data-model-id="${model.id}"
                                      onclick="switchToVariant('${model.id}', 'original', '${modelUrl}')">
                                      O
                                 </div>
                                 ${model.variants.map(variant => `
                                     <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
                                          style="background-color: ${variant.hex_color};" 
-                                         title="${variant.variant_name} ${variant.variant_type === 'color' ? '(Color Change)' : '(Custom GLB)'}"
+                                         title="${variant.variant_name}"
                                          onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}', '${variant.variant_type || 'upload'}')">
                                          ${variant.is_primary ? '★' : ''}
                                     </div>
@@ -3637,32 +3624,11 @@
             const uploadArea = document.getElementById('fileUploadArea');
             uploadArea.style.borderColor = 'rgba(88, 166, 255, 0.3)';
             uploadArea.style.background = 'rgba(13, 17, 23, 0.5)';
-            // Reset variant type selection
-            selectVariantType('color');
+            // Variant type is always upload now
             currentModelId = null;
         }
 
-        // Handle variant type selection
-        function selectVariantType(type) {
-            // Update radio buttons
-            document.querySelectorAll('input[name="variantType"]').forEach(radio => {
-                radio.checked = radio.value === type;
-            });
-            
-            // Update visual selection
-            document.querySelectorAll('.variant-type-option').forEach(option => {
-                option.classList.remove('active');
-            });
-            document.querySelector(`input[value="${type}"]`).parentElement.classList.add('active');
-            
-            // Show/hide upload section
-            const uploadSection = document.getElementById('uploadSection');
-            if (type === 'color') {
-                uploadSection.style.display = 'none';
-            } else {
-                uploadSection.style.display = 'block';
-            }
-        }
+        // Variant type selection removed - always upload GLB files now
 
         function updateVariantFileName() {
             const fileInput = document.getElementById('variantFile');
@@ -3717,17 +3683,17 @@
             
             // Validate required fields
             const variantName = document.getElementById('variantName').value.trim();
-            const hexColor = document.getElementById('variantColor').value;
-            const variantType = document.querySelector('input[name="variantType"]:checked').value;
+            const hexColor = '#000000'; // Default color since we don't use color picker anymore
+            const variantType = 'upload'; // Always upload type now
             
             if (!variantName) {
                 alert('Please enter a variant name');
                 return;
             }
             
-            // Validate file upload if upload type selected
-            if (variantType === 'upload' && !fileInput.files.length) {
-                alert('Please select a GLB file for upload variant');
+            // Always require file upload now
+            if (!fileInput.files.length) {
+                alert('Please select a GLB file for the variant');
                 return;
             }
 
@@ -3777,6 +3743,33 @@
             const g = parseInt(hex.slice(3, 5), 16) / 255;
             const b = parseInt(hex.slice(5, 7), 16) / 255;
             return [r, g, b, 1.0];
+        }
+        
+        // Extract dominant color from GLB model materials
+        function extractDominantColor(modelViewer) {
+            try {
+                if (!modelViewer.model || !modelViewer.model.materials) {
+                    return '#6b7280'; // Default gray if no materials
+                }
+                
+                const materials = modelViewer.model.materials;
+                let dominantColor = [0.5, 0.5, 0.5, 1]; // Default gray
+                
+                // Get the first material's base color (usually the primary/fabric material)
+                if (materials.length > 0 && materials[0].pbrMetallicRoughness) {
+                    dominantColor = materials[0].pbrMetallicRoughness.baseColorFactor || dominantColor;
+                }
+                
+                // Convert RGBA to hex
+                const r = Math.round(dominantColor[0] * 255).toString(16).padStart(2, '0');
+                const g = Math.round(dominantColor[1] * 255).toString(16).padStart(2, '0');
+                const b = Math.round(dominantColor[2] * 255).toString(16).padStart(2, '0');
+                
+                return `#${r}${g}${b}`;
+            } catch (error) {
+                console.warn('Failed to extract dominant color:', error);
+                return '#6b7280'; // Fallback gray
+            }
         }
         
         function rgbToHsl(r, g, b) {
@@ -3900,74 +3893,40 @@
                 const hiddenModelId = card.querySelector('.model-id');
                 
                 if (hiddenModelId && hiddenModelId.textContent === modelId) {
-                    if (variantType === 'color' && hexColor) {
-                        // For color variants, wait for model to load then apply color
-                        console.log('Applying color change to existing model:', hexColor);
-                        
-                        const applyColor = () => {
-                            try {
-                                // First check if GLB has built-in material variants
-                                console.log('Available variants:', modelViewer.availableVariants);
-                                
-                                if (modelViewer.availableVariants && modelViewer.availableVariants.length > 0) {
-                                    // Use built-in variants if available
-                                    const variantName = hexColor.replace('#', '') + '_variant';
-                                    if (modelViewer.availableVariants.includes(variantName)) {
-                                        modelViewer.variantName = variantName;
-                                        console.log('Applied material variant:', variantName);
-                                        return;
-                                    }
-                                }
-                                
-                                // Fallback to color manipulation if no variants
-                                setTimeout(() => {
-                                    if (modelViewer.model && modelViewer.model.materials) {
-                                        const materials = modelViewer.model.materials;
-                                        console.log('Converting hex to color:', hexColor);
-                                        
-                                        const targetRgba = hexToRGBA(hexColor);
-                                        
-                                        materials.forEach((material, index) => {
-                                            if (material.pbrMetallicRoughness) {
-                                                // Simple heuristic: Only color the first material (usually fabric/upholstery)
-                                                // Skip other materials (usually wood/metal structural parts)
-                                                if (index === 0) {
-                                                    // Only color material 0 with a much gentler approach
-                                                    const originalColor = material.pbrMetallicRoughness.baseColorFactor;
-                                                    console.log('Original color:', originalColor);
-                                                    console.log('Target color:', targetRgba);
-                                                    
-                                                    // Simple color replacement - just use target color directly but preserve alpha
-                                                    const newColor = [targetRgba[0], targetRgba[1], targetRgba[2], originalColor[3]];
-                                                    material.pbrMetallicRoughness.setBaseColorFactor(newColor);
-                                                    console.log(`✓ Colored material ${index} (primary/fabric)`, newColor);
-                                                } else {
-                                                    console.log(`✗ Skipped material ${index} (structural/wood/metal)`);
-                                                }
-                                            }
-                                        });
-                                    } else {
-                                        console.warn('No materials available for color change');
-                                    }
-                                }, 500);
-                            } catch (error) {
-                                console.error('Error applying color change:', error);
-                            }
-                        };
-                        
-                        if (modelViewer.loaded) {
-                            applyColor();
-                        } else {
-                            modelViewer.addEventListener('load', applyColor, { once: true });
-                        }
+                    // All variants are GLB file variants now - no color changing
+                    console.log('Loading GLB variant:', variantUrl);
+                    modelViewer.src = variantUrl;
+                }
+            });
+        }
+        
+        // Update original variant colors after models load
+        function updateOriginalVariantColors() {
+            const modelCards = document.querySelectorAll('.model-card');
+            modelCards.forEach(card => {
+                const modelViewer = card.querySelector('model-viewer');
+                const originalVariant = card.querySelector('.original-variant');
+                
+                if (modelViewer && originalVariant) {
+                    const updateColor = () => {
+                        const dominantColor = extractDominantColor(modelViewer);
+                        console.log('Extracted dominant color for model:', dominantColor);
+                        originalVariant.style.background = dominantColor;
+                    };
+                    
+                    if (modelViewer.loaded) {
+                        updateColor();
                     } else {
-                        // For upload variants, change the src
-                        modelViewer.src = variantUrl;
-                        console.log('Updated model viewer src to:', variantUrl);
+                        modelViewer.addEventListener('load', updateColor, { once: true });
                     }
                 }
             });
         }
+        
+        // Update colors when page loads and when new models are added
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(updateOriginalVariantColors, 2000); // Give models time to load
+        });
     </script>
         </div>
     </div>
