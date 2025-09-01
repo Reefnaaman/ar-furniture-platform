@@ -1988,7 +1988,7 @@
                     </div>
                     
                     <div class="model-info">
-                        <div class="model-title">${model.title || 'Untitled'}</div>
+                        <div class="model-title editable-title" data-model-id="${model.id}" ondblclick="startEditTitle(this)">${model.title || 'Untitled'}</div>
                         <div class="model-description">${model.description || 'No description provided'}</div>
                         
                         <div class="model-meta">
@@ -3090,6 +3090,82 @@
                         // Even if logout API fails, redirect anyway
                         window.location.href = '/';
                     });
+            }
+        }
+        
+        // Title editing functions (same as customer view)
+        let currentEditElement = null;
+        
+        function startEditTitle(element) {
+            if (currentEditElement) {
+                cancelEdit();
+            }
+            
+            currentEditElement = element;
+            const currentTitle = element.textContent;
+            
+            element.innerHTML = `
+                <input type="text" 
+                       class="title-edit-input" 
+                       value="${currentTitle}" 
+                       onblur="saveTitle(this)"
+                       onkeydown="handleTitleKeydown(event, this)"
+                       style="
+                           background: rgba(22, 27, 34, 0.8);
+                           border: 1px solid rgba(88, 166, 255, 0.5);
+                           border-radius: 4px;
+                           color: #e6edf3;
+                           padding: 4px 8px;
+                           font-size: inherit;
+                           font-weight: inherit;
+                           width: 100%;
+                           outline: none;
+                       ">
+            `;
+            
+            const input = element.querySelector('.title-edit-input');
+            input.focus();
+            input.select();
+        }
+        
+        function handleTitleKeydown(event, input) {
+            if (event.key === 'Enter') {
+                saveTitle(input);
+            } else if (event.key === 'Escape') {
+                cancelEdit();
+            }
+        }
+        
+        async function saveTitle(input) {
+            if (!currentEditElement) return;
+            
+            const newTitle = input.value.trim();
+            const modelId = currentEditElement.getAttribute('data-model-id');
+            
+            if (!newTitle) {
+                cancelEdit();
+                return;
+            }
+            
+            try {
+                // TODO: Add API call to update title
+                // For now, just update the display
+                currentEditElement.textContent = newTitle;
+                console.log(`Would update model ${modelId} title to: ${newTitle}`);
+                
+                currentEditElement = null;
+                
+            } catch (error) {
+                console.error('Error updating title:', error);
+                cancelEdit();
+            }
+        }
+        
+        function cancelEdit() {
+            if (currentEditElement) {
+                const originalTitle = currentEditElement.getAttribute('data-original-title') || currentEditElement.textContent;
+                currentEditElement.textContent = originalTitle;
+                currentEditElement = null;
             }
         }
 

@@ -210,6 +210,70 @@
             box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
         }
         
+        .section-controls {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .grid-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .grid-btn {
+            padding: 8px 12px;
+            background: rgba(22, 27, 34, 0.8);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            color: #7d8590;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+        }
+        
+        .grid-btn:hover {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: rgba(88, 166, 255, 0.3);
+            color: #58a6ff;
+        }
+        
+        .grid-btn.active {
+            background: rgba(88, 166, 255, 0.2);
+            border-color: rgba(88, 166, 255, 0.4);
+            color: #58a6ff;
+        }
+        
+        .models-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-top: 30px;
+            transition: all 0.3s ease;
+        }
+        
+        .models-grid.cols-2 {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .models-grid.cols-4 {
+            grid-template-columns: repeat(4, 1fr);
+        }
+        
+        @media (max-width: 1200px) {
+            .models-grid.cols-4 {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .models-grid,
+            .models-grid.cols-2,
+            .models-grid.cols-4 {
+                grid-template-columns: 1fr;
+            }
+        }
+        
         .models-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
@@ -397,7 +461,14 @@
         <div class="furniture-section">
             <div class="section-header">
                 <h2 class="section-title" id="sectionTitle">Furniture Collection</h2>
-                <button class="refresh-button" onclick="loadFurniture()">Refresh</button>
+                <div class="section-controls">
+                    <div class="grid-controls">
+                        <button class="grid-btn" onclick="setGridColumns(2)" title="2 per row">⚏⚏</button>
+                        <button class="grid-btn active" onclick="setGridColumns(3)" title="3 per row">⚏⚏⚏</button>
+                        <button class="grid-btn" onclick="setGridColumns(4)" title="4 per row">⚏⚏⚏⚏</button>
+                    </div>
+                    <button class="refresh-button" onclick="loadFurniture()">Refresh</button>
+                </div>
             </div>
             
             <div id="furnitureContainer">
@@ -540,7 +611,7 @@
                 return;
             }
             
-            let html = '<div class="models-grid">';
+            let html = '<div class="models-grid" id="modelsGrid">';
             
             models.forEach(model => {
                 const viewUrl = `https://newfurniture.live/view?id=${model.id}`;
@@ -568,13 +639,8 @@
                         </div>
                         
                         <div class="model-info">
-                            <div class="model-title">${model.title || 'Untitled'}</div>
-                            <div class="model-description">${model.description || 'Explore this furniture piece in AR'}</div>
-                            
-                            <div class="model-meta">
-                                <span class="model-id">${model.id}</span>
-                                <span>${formatDate(model.upload_date)}</span>
-                            </div>
+                            <div class="model-title editable-title" data-model-id="${model.id}" ondblclick="startEditTitle(this)">${model.title || 'Untitled'}</div>
+                            ${model.description ? `<div class="model-description">${model.description}</div>` : ''}
                             
                             <div class="model-stats">
                                 <div class="stat-item">
@@ -628,6 +694,94 @@
             if (!dateString) return 'Unknown';
             const date = new Date(dateString);
             return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+        }
+        
+        // Grid control functions
+        function setGridColumns(cols) {
+            const grid = document.getElementById('modelsGrid');
+            if (grid) {
+                grid.className = `models-grid cols-${cols}`;
+            }
+            
+            // Update active button
+            document.querySelectorAll('.grid-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        
+        // Title editing functions
+        let currentEditElement = null;
+        
+        function startEditTitle(element) {
+            if (currentEditElement) {
+                cancelEdit();
+            }
+            
+            currentEditElement = element;
+            const currentTitle = element.textContent;
+            
+            element.innerHTML = `
+                <input type="text" 
+                       class="title-edit-input" 
+                       value="${currentTitle}" 
+                       onblur="saveTitle(this)"
+                       onkeydown="handleTitleKeydown(event, this)"
+                       style="
+                           background: rgba(22, 27, 34, 0.8);
+                           border: 1px solid rgba(88, 166, 255, 0.5);
+                           border-radius: 4px;
+                           color: #e6edf3;
+                           padding: 4px 8px;
+                           font-size: inherit;
+                           font-weight: inherit;
+                           width: 100%;
+                           outline: none;
+                       ">
+            `;
+            
+            const input = element.querySelector('.title-edit-input');
+            input.focus();
+            input.select();
+        }
+        
+        function handleTitleKeydown(event, input) {
+            if (event.key === 'Enter') {
+                saveTitle(input);
+            } else if (event.key === 'Escape') {
+                cancelEdit();
+            }
+        }
+        
+        async function saveTitle(input) {
+            if (!currentEditElement) return;
+            
+            const newTitle = input.value.trim();
+            const modelId = currentEditElement.getAttribute('data-model-id');
+            
+            if (!newTitle) {
+                cancelEdit();
+                return;
+            }
+            
+            try {
+                // TODO: Add API call to update title
+                // For now, just update the display
+                currentEditElement.textContent = newTitle;
+                console.log(`Would update model ${modelId} title to: ${newTitle}`);
+                
+                currentEditElement = null;
+                
+            } catch (error) {
+                console.error('Error updating title:', error);
+                cancelEdit();
+            }
+        }
+        
+        function cancelEdit() {
+            if (currentEditElement) {
+                const originalTitle = currentEditElement.getAttribute('data-original-title') || currentEditElement.textContent;
+                currentEditElement.textContent = originalTitle;
+                currentEditElement = null;
+            }
         }
         
         // Auto-refresh every 30 seconds
