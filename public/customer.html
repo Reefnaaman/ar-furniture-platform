@@ -484,7 +484,7 @@
             
             try {
                 console.log(`Loading furniture for customer: ${customerId}`);
-                const response = await fetch(`/api/customer/${customerId}`);
+                const response = await fetch(`/api/customer?customer=${customerId}`);
                 
                 if (!response.ok) {
                     const errorData = await response.json().catch(() => ({}));

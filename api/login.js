@@ -87,7 +87,7 @@ export default async function handler(req, res) {
         customerId: user.customer_id,
         customerName: user.customer_name
       },
-      redirectUrl: user.role === 'admin' ? '/admin.html' : '/customer.html'
+      redirectUrl: user.role === 'admin' ? '/admin.html' : `/customer.html?customer=${user.customer_id}`
     });
     
   } catch (error) {
