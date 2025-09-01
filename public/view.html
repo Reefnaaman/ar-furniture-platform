@@ -354,27 +354,37 @@
                 // Hide the old container and create new layout
                 document.querySelector('.container').style.display = 'none';
                 
-                // Create new desktop layout
+                // Create new desktop layout with friendly messaging
                 const desktopHTML = `
                     <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                         <div style="display: flex; gap: 40px; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); max-width: 1200px;">
                             <div style="flex: 1;">
-                                <h2 style="margin-bottom: 20px; color: #333;">${modelInfo.title}</h2>
+                                <h2 style="margin-bottom: 10px; color: #333; font-size: 2rem;">${modelInfo.title}</h2>
+                                <p style="color: #888; margin-bottom: 20px; font-size: 1.1rem;">Preview in 3D 👀</p>
                                 <model-viewer
                                     src="/api/model-file?id=${id}"
                                     alt="${modelInfo.title}"
                                     camera-controls
                                     auto-rotate
-                                    style="width: 500px; height: 500px; background: linear-gradient(to bottom, #f5f5f5, #e0e0e0); border-radius: 10px;">
+                                    style="width: 500px; height: 450px; background: linear-gradient(to bottom, #f5f5f5, #e0e0e0); border-radius: 10px;">
                                 </model-viewer>
                             </div>
-                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+                                <h3 style="color: #667eea; margin-bottom: 15px; font-size: 1.4rem;">Almost there! 🎉</h3>
                                 <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}" 
-                                     style="border: 2px solid #e0e0e0; border-radius: 10px; padding: 10px; background: white;">
-                                <p style="margin-top: 20px; text-align: center; color: #666; font-size: 1.1rem;">
-                                    <strong>Scan for AR View</strong><br>
-                                    <span style="font-size: 0.9rem;">Use your phone camera</span>
+                                     style="border: 3px solid #667eea; border-radius: 15px; padding: 12px; background: white; box-shadow: 0 5px 20px rgba(102, 126, 234, 0.2);">
+                                <p style="margin-top: 25px; text-align: center; color: #333; font-size: 1.2rem; line-height: 1.6;">
+                                    <strong style="color: #667eea;">Scan me</strong> with your phone<br>
+                                    to see <strong>${modelInfo.title}</strong><br>
+                                    in your space! 😊
                                 </p>
+                                <div style="margin-top: 20px; padding: 15px; background: #f8f9ff; border-radius: 10px; border-left: 3px solid #667eea;">
+                                    <p style="color: #666; font-size: 0.9rem; margin: 0;">
+                                        📱 Open your camera app<br>
+                                        👆 Point at the QR code<br>
+                                        ✨ See the magic happen!
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
