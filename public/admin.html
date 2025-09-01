@@ -1301,6 +1301,79 @@
         .customer-group:not(.collapsed) .customer-content {
             display: block;
         }
+        
+        /* User Management Styles */
+        .user-management-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .user-item {
+            padding: 12px 15px;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.05);
+            transition: background 0.2s ease;
+        }
+        
+        .user-item:hover {
+            background: rgba(240, 246, 252, 0.03);
+        }
+        
+        .user-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        
+        .user-name {
+            color: #e6edf3;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+        
+        .user-role {
+            background: linear-gradient(135deg, #58a6ff, #79c0ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 0.8rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .user-details {
+            font-size: 0.8rem;
+            color: #7d8590;
+            margin-bottom: 8px;
+        }
+        
+        .user-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .user-action-btn {
+            padding: 4px 8px;
+            font-size: 0.7rem;
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            background: rgba(22, 27, 34, 0.5);
+            color: #7d8590;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .user-action-btn:hover {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: rgba(88, 166, 255, 0.3);
+            color: #58a6ff;
+        }
+        
+        .user-action-btn.danger:hover {
+            background: rgba(248, 81, 73, 0.1);
+            border-color: rgba(248, 81, 73, 0.3);
+            color: #f85149;
+        }
     </style>
 </head>
 <body>
@@ -1339,18 +1412,27 @@
             
             <!-- Management Section -->
             <div class="sidebar-customers">
-                <div class="sidebar-customers-header">
-                    <span class="sidebar-customers-title">Management</span>
+                <div class="sidebar-customers-header" onclick="toggleUserManagement()" style="cursor: pointer;">
+                    <span class="sidebar-customers-title">👥 Manage Users</span>
+                    <span id="userManagementToggle" style="transform: rotate(0deg); transition: transform 0.2s;">▼</span>
                 </div>
                 
-                <ul class="customer-list">
-                    <li class="customer-item" onclick="toggleUserModal()" style="cursor: pointer;">
-                        <div class="customer-item-content">
-                            <span class="customer-name">👥 Manage Users</span>
-                            <span class="customer-count">→</span>
+                <!-- Expandable User Management Section -->
+                <div id="userManagementSection" style="display: none; margin-top: 10px;">
+                    <!-- Add User Button -->
+                    <div style="padding: 15px; border-bottom: 1px solid rgba(240, 246, 252, 0.1);">
+                        <button onclick="toggleUserModal()" class="modal-button primary" style="width: 100%; padding: 10px; font-size: 0.9rem;">
+                            + Add New User
+                        </button>
+                    </div>
+                    
+                    <!-- User List -->
+                    <div id="userList" class="user-management-list">
+                        <div class="loading-users" style="padding: 20px; text-align: center; color: #7d8590;">
+                            Loading users...
                         </div>
-                    </li>
-                </ul>
+                    </div>
+                </div>
             </div>
             
             <div class="sidebar-customers">
@@ -2629,8 +2711,117 @@
         }
 
         // User Management Functions
+        function toggleUserManagement() {
+            const section = document.getElementById('userManagementSection');
+            const toggle = document.getElementById('userManagementToggle');
+            
+            if (section.style.display === 'none') {
+                section.style.display = 'block';
+                toggle.style.transform = 'rotate(180deg)';
+                loadUsers(); // Load users when expanding
+            } else {
+                section.style.display = 'none';
+                toggle.style.transform = 'rotate(0deg)';
+            }
+        }
+        
         function toggleUserModal() {
             document.getElementById('userModal').style.display = 'flex';
+        }
+        
+        async function loadUsers() {
+            const userList = document.getElementById('userList');
+            userList.innerHTML = '<div class="loading-users" style="padding: 20px; text-align: center; color: #7d8590;">Loading users...</div>';
+            
+            try {
+                const response = await fetch('/api/users');
+                if (response.ok) {
+                    const users = await response.json();
+                    displayUsers(users);
+                } else {
+                    userList.innerHTML = '<div style="padding: 20px; text-align: center; color: #f85149;">Failed to load users</div>';
+                }
+            } catch (error) {
+                console.error('Error loading users:', error);
+                userList.innerHTML = '<div style="padding: 20px; text-align: center; color: #f85149;">Error loading users</div>';
+            }
+        }
+        
+        function displayUsers(users) {
+            const userList = document.getElementById('userList');
+            
+            if (users.length === 0) {
+                userList.innerHTML = '<div style="padding: 20px; text-align: center; color: #7d8590;">No users found</div>';
+                return;
+            }
+            
+            const userHTML = users.map(user => `
+                <div class="user-item">
+                    <div class="user-item-header">
+                        <span class="user-name">${user.username}</span>
+                        <span class="user-role">${user.role}</span>
+                    </div>
+                    <div class="user-details">
+                        ${user.customer_name ? `Customer: ${user.customer_name}` : ''}
+                        ${user.total_views ? `• Views: ${user.total_views}` : ''}
+                    </div>
+                    <div class="user-actions">
+                        <button class="user-action-btn" onclick="editUser('${user.id}')">Edit</button>
+                        <button class="user-action-btn" onclick="resetPassword('${user.id}')">Reset Password</button>
+                        <button class="user-action-btn danger" onclick="deactivateUser('${user.id}', '${user.username}')">
+                            ${user.is_active ? 'Deactivate' : 'Activate'}
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+            
+            userList.innerHTML = userHTML;
+        }
+        
+        async function editUser(userId) {
+            // TODO: Implement edit user modal
+            alert('Edit user functionality coming soon...');
+        }
+        
+        async function resetPassword(userId) {
+            const newPassword = prompt('Enter new password:');
+            if (!newPassword) return;
+            
+            try {
+                const response = await fetch(`/api/users/${userId}/password`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ password: newPassword })
+                });
+                
+                if (response.ok) {
+                    alert('Password updated successfully');
+                } else {
+                    alert('Failed to update password');
+                }
+            } catch (error) {
+                console.error('Error updating password:', error);
+                alert('Error updating password');
+            }
+        }
+        
+        async function deactivateUser(userId, username) {
+            if (!confirm(`Are you sure you want to deactivate user "${username}"?`)) return;
+            
+            try {
+                const response = await fetch(`/api/users/${userId}/toggle`, {
+                    method: 'PUT'
+                });
+                
+                if (response.ok) {
+                    loadUsers(); // Refresh the list
+                } else {
+                    alert('Failed to update user status');
+                }
+            } catch (error) {
+                console.error('Error updating user:', error);
+                alert('Error updating user');
+            }
         }
 
         function closeUserModal() {
