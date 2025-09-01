@@ -161,6 +161,25 @@
             transform: translateY(-1px);
         }
         
+        .feedback-btn {
+            width: 100%;
+            padding: 12px;
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            color: #58a6ff;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+        
+        .feedback-btn:hover {
+            background: rgba(88, 166, 255, 0.2);
+            transform: translateY(-1px);
+        }
+        
         /* Main Content Area */
         .main-content {
             flex: 1;
@@ -371,6 +390,224 @@
             background: rgba(88, 166, 255, 0.2);
             border-color: rgba(88, 166, 255, 0.4);
             color: #58a6ff;
+        }
+        
+        .color-guide-btn {
+            padding: 8px 12px;
+            background: rgba(22, 27, 34, 0.8);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            color: #7d8590;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+        }
+        
+        .color-guide-btn:hover {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: rgba(88, 166, 255, 0.3);
+            color: #58a6ff;
+        }
+        
+        .color-guide-btn.active {
+            background: rgba(88, 166, 255, 0.2);
+            border-color: rgba(88, 166, 255, 0.4);
+            color: #58a6ff;
+        }
+        
+        .color-preview {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+            border: 1px solid rgba(240, 246, 252, 0.3);
+            background: #ffffff;
+        }
+        
+        .color-picker-input {
+            position: absolute;
+            opacity: 0;
+            pointer-events: none;
+            width: 0;
+            height: 0;
+        }
+        
+        /* Feedback Modal Styles */
+        .feedback-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 2001;
+        }
+        
+        .feedback-modal-content {
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.95), rgba(30, 35, 42, 0.95));
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            backdrop-filter: blur(20px);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        .feedback-header {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        
+        .feedback-header h3 {
+            color: #e6edf3;
+            font-size: 1.4rem;
+            margin-bottom: 8px;
+        }
+        
+        .feedback-subtitle {
+            color: #7d8590;
+            font-size: 0.9rem;
+        }
+        
+        .feedback-options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        .feedback-option {
+            padding: 20px;
+            border-radius: 12px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        
+        .feedback-option.positive {
+            background: rgba(46, 160, 67, 0.1);
+            border-color: rgba(46, 160, 67, 0.3);
+        }
+        
+        .feedback-option.positive:hover,
+        .feedback-option.positive.selected {
+            background: rgba(46, 160, 67, 0.2);
+            border-color: rgba(46, 160, 67, 0.6);
+        }
+        
+        .feedback-option.negative {
+            background: rgba(248, 81, 73, 0.1);
+            border-color: rgba(248, 81, 73, 0.3);
+        }
+        
+        .feedback-option.negative:hover,
+        .feedback-option.negative.selected {
+            background: rgba(248, 81, 73, 0.2);
+            border-color: rgba(248, 81, 73, 0.6);
+        }
+        
+        .feedback-option-icon {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        .feedback-option-title {
+            color: #e6edf3;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        
+        .feedback-option-desc {
+            color: #7d8590;
+            font-size: 0.85rem;
+        }
+        
+        .feedback-categories {
+            margin-bottom: 20px;
+        }
+        
+        .feedback-categories h4 {
+            color: #e6edf3;
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+        }
+        
+        .category-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .category-tag {
+            padding: 6px 12px;
+            background: rgba(240, 246, 252, 0.1);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 20px;
+            color: #7d8590;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .category-tag:hover,
+        .category-tag.selected {
+            background: rgba(88, 166, 255, 0.2);
+            border-color: rgba(88, 166, 255, 0.4);
+            color: #58a6ff;
+        }
+        
+        .feedback-comment {
+            margin-bottom: 20px;
+        }
+        
+        .feedback-comment textarea {
+            width: 100%;
+            min-height: 80px;
+            background: rgba(22, 27, 34, 0.8);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 8px;
+            color: #e6edf3;
+            padding: 12px;
+            font-size: 0.9rem;
+            resize: vertical;
+        }
+        
+        .feedback-comment textarea:focus {
+            outline: none;
+            border-color: rgba(88, 166, 255, 0.5);
+        }
+        
+        .feedback-actions {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        .feedback-cancel {
+            padding: 10px 20px;
+            background: rgba(248, 81, 73, 0.1);
+            border: 1px solid rgba(248, 81, 73, 0.3);
+            color: #f85149;
+            border-radius: 8px;
+            cursor: pointer;
+        }
+        
+        .feedback-submit {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #58a6ff, #79c0ff);
+            border: none;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
         }
         
         .models-grid {
@@ -812,27 +1049,10 @@
         
         <div class="sidebar-content">
             <div class="sidebar-section">
-                <h4>Quick Stats</h4>
-                <div class="quick-stat">
-                    <div class="quick-stat-label">Total Furniture</div>
-                    <div class="quick-stat-value" id="sidebarTotalFurniture">-</div>
-                </div>
-                <div class="quick-stat">
-                    <div class="quick-stat-label">Total Views</div>
-                    <div class="quick-stat-value" id="sidebarTotalViews">-</div>
-                </div>
-                <div class="quick-stat">
-                    <div class="quick-stat-label">Collection Size</div>
-                    <div class="quick-stat-value" id="sidebarTotalSize">-</div>
-                </div>
-            </div>
-            
-            <div class="sidebar-section">
-                <h4>Account</h4>
-                <div class="quick-stat">
-                    <div class="quick-stat-label">Customer ID</div>
-                    <div class="quick-stat-value" id="sidebarCustomerId" style="font-size: 1rem;">-</div>
-                </div>
+                <h4>Actions</h4>
+                <button class="feedback-btn" onclick="openFeedbackModal()">
+                    💬 Give Feedback
+                </button>
             </div>
         </div>
         
@@ -906,6 +1126,14 @@
                             </svg>
                         </button>
                     </div>
+                    <button class="color-guide-btn" onclick="openColorGuide()" title="Customize background color">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                            <path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.91-1.93 3.12-3.12c.39-.39.39-1.02 0-1.41zM6.92 19L5 17.08l8.06-8.06 1.92 1.92L6.92 19z"/>
+                        </svg>
+                        <div class="color-preview" id="colorPreview"></div>
+                        <span>Theme</span>
+                        <input type="color" class="color-picker-input" id="backgroundColorPicker" onchange="updateBackgroundColor(this.value)">
+                    </button>
                     <button class="refresh-button" onclick="loadFurniture()">Refresh</button>
                 </div>
             </div>
@@ -979,6 +1207,45 @@
                 <button class="modal-btn primary" onclick="generateVideo()" id="generateBtn">
                     🎬 Generate Video
                 </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="feedback-modal" style="display: none;">
+        <div class="feedback-modal-content">
+            <div class="feedback-header">
+                <h3>💬 Share Your Feedback</h3>
+                <p class="feedback-subtitle">Help us improve your furniture browsing experience</p>
+            </div>
+            
+            <div class="feedback-options">
+                <div class="feedback-option positive" onclick="selectFeedbackType('positive')">
+                    <div class="feedback-option-icon">👍</div>
+                    <div class="feedback-option-title">Works Great!</div>
+                    <div class="feedback-option-desc">Everything is smooth</div>
+                </div>
+                <div class="feedback-option negative" onclick="selectFeedbackType('negative')">
+                    <div class="feedback-option-icon">⚠️</div>
+                    <div class="feedback-option-title">Needs Work</div>
+                    <div class="feedback-option-desc">Something isn't right</div>
+                </div>
+            </div>
+            
+            <div class="feedback-categories" id="feedbackCategories" style="display: none;">
+                <h4 id="categoryTitle">What specifically?</h4>
+                <div class="category-tags" id="categoryTags">
+                    <!-- Categories will be populated by JavaScript -->
+                </div>
+            </div>
+            
+            <div class="feedback-comment">
+                <textarea id="feedbackComment" placeholder="Any additional thoughts? (optional)"></textarea>
+            </div>
+            
+            <div class="feedback-actions">
+                <button class="feedback-cancel" onclick="closeFeedbackModal()">Cancel</button>
+                <button class="feedback-submit" onclick="submitFeedback()" id="feedbackSubmitBtn" disabled>Send Feedback</button>
             </div>
         </div>
     </div>
@@ -1059,7 +1326,6 @@
             document.getElementById('userName').textContent = userName.charAt(0).toUpperCase() + userName.slice(1);
             document.getElementById('userRole').textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
             document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
-            document.getElementById('sidebarCustomerId').textContent = customerId;
         }
         
         function logout() {
@@ -1098,19 +1364,10 @@
                 // Update customer branding
                 updateCustomerBranding(customerId, data.models);
                 
-                // Update stats in both places
-                const totalModels = data.stats.totalModels || 0;
-                const totalViews = data.stats.totalViews || 0;
-                const totalSize = formatFileSize(data.stats.totalSize || 0);
-                
-                document.getElementById('totalFurniture').textContent = totalModels;
-                document.getElementById('totalViews').textContent = totalViews;
-                document.getElementById('totalSize').textContent = totalSize;
-                
-                // Update sidebar stats
-                document.getElementById('sidebarTotalFurniture').textContent = totalModels;
-                document.getElementById('sidebarTotalViews').textContent = totalViews;
-                document.getElementById('sidebarTotalSize').textContent = totalSize;
+                // Update main stats cards
+                document.getElementById('totalFurniture').textContent = data.stats.totalModels || 0;
+                document.getElementById('totalViews').textContent = data.stats.totalViews || 0;
+                document.getElementById('totalSize').textContent = formatFileSize(data.stats.totalSize || 0);
                 
                 // Display furniture
                 displayFurniture(data.models);
@@ -1210,6 +1467,11 @@
             
             html += '</div>';
             document.getElementById('furnitureContainer').innerHTML = html;
+            
+            // Apply saved background color to newly loaded model cards
+            if (currentBackgroundColor && currentBackgroundColor !== '#0a0c10') {
+                applyBackgroundColor(currentBackgroundColor);
+            }
         }
         
         function copyToClipboard(text, button) {
@@ -1431,6 +1693,245 @@
                 });
             }, 1000);
         });
+        
+        // Color guide functions
+        let currentBackgroundColor = '#0a0c10'; // Default background color
+        
+        function openColorGuide() {
+            const colorPicker = document.getElementById('backgroundColorPicker');
+            colorPicker.click();
+        }
+        
+        function updateBackgroundColor(color) {
+            currentBackgroundColor = color;
+            
+            // Update color preview
+            const colorPreview = document.getElementById('colorPreview');
+            colorPreview.style.backgroundColor = color;
+            
+            // Apply color globally to body background
+            applyBackgroundColor(color);
+            
+            // Store color preference in localStorage
+            localStorage.setItem('customer_background_color', color);
+            
+            // Mark color guide button as active
+            document.querySelector('.color-guide-btn').classList.add('active');
+        }
+        
+        function applyBackgroundColor(color) {
+            // Convert hex to RGB for transparency effects
+            const hex = color.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            
+            // Create a custom background gradient using the selected color
+            const customBackground = `
+                radial-gradient(circle at 20% 80%, rgba(${r}, ${g}, ${b}, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(${Math.min(r + 30, 255)}, ${Math.min(g + 30, 255)}, ${Math.min(b + 30, 255)}, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(${r}, ${g}, ${b}, 0.08) 0%, transparent 50%),
+                linear-gradient(135deg, ${color} 0%, rgba(${r}, ${g}, ${b}, 0.8) 50%, rgba(${Math.max(r - 20, 0)}, ${Math.max(g - 20, 0)}, ${Math.max(b - 20, 0)}, 0.9) 100%)
+            `;
+            
+            // Apply the background to body
+            document.body.style.background = customBackground;
+            
+            // Also update the model preview backgrounds to match
+            const modelPreviews = document.querySelectorAll('.model-preview');
+            modelPreviews.forEach(preview => {
+                preview.style.background = `linear-gradient(135deg, rgba(${r}, ${g}, ${b}, 0.3) 0%, rgba(${r}, ${g}, ${b}, 0.1) 100%)`;
+            });
+        }
+        
+        function resetBackgroundColor() {
+            const defaultColor = '#0a0c10';
+            currentBackgroundColor = defaultColor;
+            
+            // Reset to original background
+            document.body.style.background = `
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 255, 0.05) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0c10 0%, #0d1117 50%, #111418 100%)
+            `;
+            
+            // Reset model previews
+            const modelPreviews = document.querySelectorAll('.model-preview');
+            modelPreviews.forEach(preview => {
+                preview.style.background = 'linear-gradient(135deg, #0d1117 0%, #21262d 100%)';
+            });
+            
+            // Update color preview and picker
+            document.getElementById('colorPreview').style.backgroundColor = '#ffffff';
+            document.getElementById('backgroundColorPicker').value = defaultColor;
+            
+            // Remove active state
+            document.querySelector('.color-guide-btn').classList.remove('active');
+            
+            // Remove from localStorage
+            localStorage.removeItem('customer_background_color');
+        }
+        
+        // Load saved background color on page load
+        function loadSavedBackgroundColor() {
+            const savedColor = localStorage.getItem('customer_background_color');
+            if (savedColor) {
+                document.getElementById('backgroundColorPicker').value = savedColor;
+                updateBackgroundColor(savedColor);
+            }
+        }
+        
+        // Initialize background color on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(loadSavedBackgroundColor, 500);
+        });
+        
+        // Feedback system
+        let selectedFeedbackType = null;
+        let selectedCategories = [];
+        
+        const feedbackCategories = {
+            positive: ['Easy to use', 'Fast loading', 'Great design', 'AR works well', 'Love the features'],
+            negative: ['Too slow', 'Confusing layout', 'AR not working', 'Missing features', 'Hard to navigate']
+        };
+        
+        function openFeedbackModal() {
+            document.getElementById('feedbackModal').style.display = 'flex';
+            resetFeedbackForm();
+        }
+        
+        function closeFeedbackModal() {
+            document.getElementById('feedbackModal').style.display = 'none';
+            resetFeedbackForm();
+        }
+        
+        function resetFeedbackForm() {
+            selectedFeedbackType = null;
+            selectedCategories = [];
+            document.querySelectorAll('.feedback-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.getElementById('feedbackCategories').style.display = 'none';
+            document.getElementById('feedbackComment').value = '';
+            document.getElementById('feedbackSubmitBtn').disabled = true;
+        }
+        
+        function selectFeedbackType(type) {
+            selectedFeedbackType = type;
+            
+            // Update visual selection
+            document.querySelectorAll('.feedback-option').forEach(option => {
+                option.classList.remove('selected');
+            });
+            document.querySelector(`.feedback-option.${type}`).classList.add('selected');
+            
+            // Show categories
+            showFeedbackCategories(type);
+            
+            // Enable submit button
+            document.getElementById('feedbackSubmitBtn').disabled = false;
+        }
+        
+        function showFeedbackCategories(type) {
+            const categoriesDiv = document.getElementById('feedbackCategories');
+            const categoryTitle = document.getElementById('categoryTitle');
+            const categoryTags = document.getElementById('categoryTags');
+            
+            categoryTitle.textContent = type === 'positive' ? 'What do you like?' : 'What needs improvement?';
+            
+            // Clear existing tags
+            categoryTags.innerHTML = '';
+            selectedCategories = [];
+            
+            // Add category tags
+            feedbackCategories[type].forEach(category => {
+                const tag = document.createElement('div');
+                tag.className = 'category-tag';
+                tag.textContent = category;
+                tag.onclick = () => toggleCategory(category, tag);
+                categoryTags.appendChild(tag);
+            });
+            
+            categoriesDiv.style.display = 'block';
+        }
+        
+        function toggleCategory(category, element) {
+            if (selectedCategories.includes(category)) {
+                selectedCategories = selectedCategories.filter(c => c !== category);
+                element.classList.remove('selected');
+            } else {
+                selectedCategories.push(category);
+                element.classList.add('selected');
+            }
+        }
+        
+        async function submitFeedback() {
+            if (!selectedFeedbackType) return;
+            
+            const feedback = {
+                type: selectedFeedbackType,
+                categories: selectedCategories,
+                comment: document.getElementById('feedbackComment').value.trim(),
+                customerId: customerId,
+                timestamp: new Date().toISOString(),
+                userAgent: navigator.userAgent
+            };
+            
+            const submitBtn = document.getElementById('feedbackSubmitBtn');
+            const originalText = submitBtn.textContent;
+            
+            try {
+                submitBtn.disabled = true;
+                submitBtn.textContent = 'Sending...';
+                
+                // In a real implementation, you'd send this to your backend
+                console.log('Feedback submitted:', feedback);
+                
+                // Simulate API call
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                
+                // Show success message
+                alert('🎉 Thank you for your feedback! We really appreciate it.');
+                closeFeedbackModal();
+                
+                // Store feedback timestamp to avoid spam
+                localStorage.setItem('last_feedback_time', Date.now().toString());
+                
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+                alert('Sorry, there was an error sending your feedback. Please try again.');
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = originalText;
+            }
+        }
+        
+        // Check if user can give feedback (prevent spam)
+        function canGiveFeedback() {
+            const lastFeedback = localStorage.getItem('last_feedback_time');
+            if (!lastFeedback) return true;
+            
+            const timeSinceLastFeedback = Date.now() - parseInt(lastFeedback);
+            const minInterval = 24 * 60 * 60 * 1000; // 24 hours
+            
+            return timeSinceLastFeedback > minInterval;
+        }
+        
+        // Update feedback button if recently used
+        function updateFeedbackButton() {
+            const feedbackBtn = document.querySelector('.feedback-btn');
+            if (!canGiveFeedback()) {
+                feedbackBtn.innerHTML = '✅ Feedback Sent';
+                feedbackBtn.style.opacity = '0.7';
+                feedbackBtn.onclick = () => {
+                    alert('Thank you! You can send feedback again tomorrow.');
+                };
+            }
+        }
+        
+        // Initialize feedback system
+        setTimeout(updateFeedbackButton, 1000);
         
         // Auto-refresh every 30 seconds
         setInterval(loadFurniture, 30000);
