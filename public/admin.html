@@ -1460,6 +1460,100 @@
             border-color: rgba(248, 81, 73, 0.5);
             transform: translateY(-1px);
         }
+        
+        /* Modern File Upload Styles */
+        .modern-file-upload {
+            position: relative;
+            border: 2px dashed rgba(88, 166, 255, 0.3);
+            border-radius: 12px;
+            padding: 30px 20px;
+            background: rgba(13, 17, 23, 0.5);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+        
+        .modern-file-upload:hover {
+            border-color: rgba(88, 166, 255, 0.6);
+            background: rgba(88, 166, 255, 0.05);
+            transform: translateY(-1px);
+        }
+        
+        .modern-file-upload.drag-over {
+            border-color: #58a6ff;
+            background: rgba(88, 166, 255, 0.1);
+            transform: scale(1.02);
+        }
+        
+        .upload-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .upload-icon-modern {
+            width: 48px;
+            height: 48px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(121, 192, 255, 0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #58a6ff;
+            transition: all 0.3s ease;
+        }
+        
+        .modern-file-upload:hover .upload-icon-modern {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+        }
+        
+        .upload-text-modern {
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .upload-primary {
+            color: #e6edf3;
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+        
+        .upload-secondary {
+            color: #7d8590;
+            font-size: 0.85rem;
+        }
+        
+        .upload-border {
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.1), transparent);
+            transition: left 0.6s ease;
+        }
+        
+        .modern-file-upload:hover .upload-border {
+            left: 100%;
+        }
+        
+        .file-name-modern {
+            margin-top: 15px;
+            padding: 12px 16px;
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            border-radius: 8px;
+            color: #58a6ff;
+            font-size: 0.9rem;
+            text-align: center;
+            font-weight: 500;
+        }
     </style>
 </head>
 <body>
@@ -1829,17 +1923,18 @@
             
             <form id="variantForm" onsubmit="uploadVariant(event)">
                 <div class="form-section">
-                    <h4 class="section-title">📄 Variant Details</h4>
+                    <h4 class="section-title">✨ Variant Details</h4>
                     
-                    <div class="input-group">
-                        <input type="text" id="variantName" placeholder="Variant Name (e.g., Red Leather, Dark Wood)" required class="futuristic-input">
-                        <div class="input-line"></div>
-                    </div>
-                    
-                    <div class="input-group">
-                        <input type="color" id="variantColor" value="#FF0000" required class="futuristic-input" style="height: 50px;">
-                        <label for="variantColor" style="color: #7d8590; font-size: 0.8rem; margin-top: 5px;">Choose the primary color for this variant</label>
-                        <div class="input-line"></div>
+                    <!-- Name & Color on same row -->
+                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                        <div class="input-group" style="flex: 1;">
+                            <input type="text" id="variantName" placeholder="Variant name (e.g., Red Leather)" required class="futuristic-input">
+                            <div class="input-line"></div>
+                        </div>
+                        <div class="input-group" style="width: 120px;">
+                            <input type="color" id="variantColor" value="#FF0000" required class="futuristic-input" style="height: 45px; border-radius: 8px; cursor: pointer;">
+                            <div class="input-line"></div>
+                        </div>
                     </div>
                     
                     <div class="input-group">
@@ -1851,17 +1946,29 @@
                 </div>
                 
                 <div class="form-section">
-                    <h4 class="section-title">📁 GLB File (Optional)</h4>
-                    <p style="color: #7d8590; font-size: 0.85rem; margin-bottom: 15px;">Leave empty to use the same GLB file as the original model</p>
-                    <div class="file-upload-area" onclick="document.getElementById('variantFile').click()">
-                        <div class="upload-icon">📤</div>
-                        <div class="upload-text">
-                            <strong>Click to select new GLB file</strong>
-                            <span>or drag and drop (optional)</span>
+                    <h4 class="section-title">🎯 Advanced Options</h4>
+                    <p style="color: #7d8590; font-size: 0.85rem; margin-bottom: 15px;">Optional: Upload a different GLB file for this variant</p>
+                    
+                    <!-- Modern file upload area -->
+                    <div class="modern-file-upload" onclick="document.getElementById('variantFile').click()" id="fileUploadArea">
+                        <div class="upload-content">
+                            <div class="upload-icon-modern">
+                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                    <polyline points="7,10 12,15 17,10"/>
+                                    <line x1="12" y1="15" x2="12" y2="3"/>
+                                </svg>
+                            </div>
+                            <div class="upload-text-modern">
+                                <span class="upload-primary">Drop GLB file here or click to browse</span>
+                                <span class="upload-secondary">Leave empty to reuse original model</span>
+                            </div>
                         </div>
+                        <div class="upload-border"></div>
                     </div>
+                    
                     <input type="file" id="variantFile" accept=".glb,.gltf" style="display: none;" onchange="updateVariantFileName()">
-                    <div id="variantFileName" class="file-name" style="display: none;"></div>
+                    <div id="variantFileName" class="file-name-modern" style="display: none;"></div>
                 </div>
                 
                 <div class="modal-buttons">
@@ -3347,31 +3454,49 @@
         function closeVariantModal() {
             document.getElementById('variantModal').style.display = 'none';
             document.getElementById('variantForm').reset();
-            document.getElementById('variantFileName').textContent = 'No file selected';
+            document.getElementById('variantFileName').style.display = 'none';
+            // Reset upload area appearance
+            const uploadArea = document.getElementById('fileUploadArea');
+            uploadArea.style.borderColor = 'rgba(88, 166, 255, 0.3)';
+            uploadArea.style.background = 'rgba(13, 17, 23, 0.5)';
             currentModelId = null;
         }
 
         function updateVariantFileName() {
             const fileInput = document.getElementById('variantFile');
             const fileName = document.getElementById('variantFileName');
+            const uploadArea = document.getElementById('fileUploadArea');
             
             if (fileInput.files.length > 0) {
                 const file = fileInput.files[0];
-                fileName.textContent = file.name;
+                fileName.style.display = 'block';
                 
                 // Validate file type
                 if (!file.name.match(/\.(glb|gltf)$/i)) {
-                    fileName.textContent = 'Invalid file type (GLB/GLTF only)';
+                    fileName.textContent = '❌ Invalid file type (GLB/GLTF only)';
+                    fileName.style.background = 'rgba(248, 81, 73, 0.1)';
+                    fileName.style.borderColor = 'rgba(248, 81, 73, 0.3)';
                     fileName.style.color = '#f85149';
                 } else if (file.size > 100 * 1024 * 1024) {
-                    fileName.textContent = 'File too large (max 100MB)';
+                    fileName.textContent = '❌ File too large (max 100MB)';
+                    fileName.style.background = 'rgba(248, 81, 73, 0.1)';
+                    fileName.style.borderColor = 'rgba(248, 81, 73, 0.3)';
                     fileName.style.color = '#f85149';
                 } else {
-                    fileName.style.color = '#7c3aed';
+                    fileName.textContent = `✅ ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
+                    fileName.style.background = 'rgba(88, 166, 255, 0.1)';
+                    fileName.style.borderColor = 'rgba(88, 166, 255, 0.3)';
+                    fileName.style.color = '#58a6ff';
                 }
+                
+                // Update upload area appearance
+                uploadArea.style.borderColor = 'rgba(88, 166, 255, 0.6)';
+                uploadArea.style.background = 'rgba(88, 166, 255, 0.05)';
             } else {
-                fileName.textContent = 'No file selected';
-                fileName.style.color = '#8b949e';
+                fileName.style.display = 'none';
+                // Reset upload area
+                uploadArea.style.borderColor = 'rgba(88, 166, 255, 0.3)';
+                uploadArea.style.background = 'rgba(13, 17, 23, 0.5)';
             }
         }
 

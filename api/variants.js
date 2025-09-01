@@ -80,8 +80,8 @@ async function handleCreateVariant(req, res, modelId) {
 
   try {
     // Get parent model data first
-    const { getModelById } = await import('../lib/supabase.js');
-    const parentModel = await getModelById(modelId);
+    const { getModel } = await import('../lib/supabase.js');
+    const parentModel = await getModel(modelId);
     
     if (!parentModel) {
       return res.status(404).json({ error: 'Parent model not found' });
