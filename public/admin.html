@@ -1038,6 +1038,10 @@
             font-size: 0.85rem;
         }
         
+        .sidebar-section {
+            padding: 20px;
+        }
+        
         .sidebar-customers {
             padding: 20px;
             flex: 1;
@@ -1306,6 +1310,12 @@
         
         /* User Management Styles */
         .user-management-list {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+        
+        .user-management-list.expanded {
             max-height: 300px;
             overflow-y: auto;
         }
@@ -1441,15 +1451,22 @@
                        oninput="handleSearch(this.value)" />
             </div>
             
+            <!-- Upload Button -->
+            <div style="padding: 20px; border-bottom: 1px solid rgba(240, 246, 252, 0.1);">
+                <button onclick="toggleUploadModal()" class="modal-button primary" style="width: 100%; padding: 12px; font-size: 0.9rem; background: rgba(88, 166, 255, 0.15); border: 1px solid rgba(88, 166, 255, 0.3); color: #58a6ff; border-radius: 12px; transition: all 0.2s ease;">
+                    📤 Upload Furniture
+                </button>
+            </div>
+            
             <!-- Management Section -->
-            <div class="sidebar-customers">
+            <div class="sidebar-section">
                 <div class="sidebar-customers-header" onclick="toggleUserManagement()" style="cursor: pointer;">
                     <span class="sidebar-customers-title">👥 Manage Users</span>
                     <span id="userManagementToggle" style="transform: rotate(0deg); transition: transform 0.2s;">▼</span>
                 </div>
                 
                 <!-- Expandable User Management Section -->
-                <div id="userManagementSection" style="display: none; margin-top: 10px;">
+                <div id="userManagementSection" style="margin-top: 10px;">
                     <!-- Add User Button -->
                     <div style="padding: 15px; border-bottom: 1px solid rgba(240, 246, 252, 0.1);">
                         <button onclick="toggleUserModal()" class="modal-button primary" style="width: 100%; padding: 10px; font-size: 0.9rem;">
@@ -1518,9 +1535,6 @@
             <div class="header">
                 <div class="header-content">
                     <h1>⚙️ Admin Dashboard</h1>
-                    <div class="nav-buttons">
-                        <button class="nav-button" onclick="toggleUploadModal()">📤 Upload Furniture</button>
-                    </div>
                 </div>
             </div>
             
@@ -2770,15 +2784,16 @@
         // User Management Functions
         function toggleUserManagement() {
             const section = document.getElementById('userManagementSection');
+            const userList = document.getElementById('userList');
             const toggle = document.getElementById('userManagementToggle');
             
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
+            if (userList.classList.contains('expanded')) {
+                userList.classList.remove('expanded');
+                toggle.style.transform = 'rotate(0deg)';
+            } else {
+                userList.classList.add('expanded');
                 toggle.style.transform = 'rotate(180deg)';
                 loadUsers(); // Load users when expanding
-            } else {
-                section.style.display = 'none';
-                toggle.style.transform = 'rotate(0deg)';
             }
         }
         
