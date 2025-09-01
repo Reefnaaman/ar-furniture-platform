@@ -355,23 +355,44 @@
                 document.querySelector('.container').style.display = 'none';
                 
                 // Create new desktop layout with luxury dark theme
+                // First, reset the body to remove any existing styles
+                document.body.style = '';
+                document.body.className = '';
+                
                 const desktopHTML = `
                     <style>
-                        @keyframes gradient-shift {
-                            0% { background-position: 0% 50%; }
-                            50% { background-position: 100% 50%; }
-                            100% { background-position: 0% 50%; }
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            background: #0d1117;
+                            min-height: 100vh;
+                            overflow-x: hidden;
                         }
                         .gradient-text {
-                            background: linear-gradient(135deg, #58a6ff, #79c0ff, #a371f7, #58a6ff);
-                            background-size: 300% 300%;
+                            background: linear-gradient(90deg, #58a6ff 0%, #79c0ff 25%, #a371f7 50%, #ff7b72 75%, #ffa657 100%);
                             -webkit-background-clip: text;
                             -webkit-text-fill-color: transparent;
                             background-clip: text;
-                            animation: gradient-shift 3s ease infinite;
+                            font-weight: 700;
+                        }
+                        .main-container {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: #0d1117;
+                            background-image: 
+                                radial-gradient(circle at 25% 25%, rgba(88, 166, 255, 0.04) 0%, transparent 50%),
+                                radial-gradient(circle at 75% 75%, rgba(163, 113, 247, 0.04) 0%, transparent 50%),
+                                linear-gradient(180deg, #0d1117 0%, #161b22 100%);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 20px;
                         }
                     </style>
-                    <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: #0d1117;">
+                    <div class="main-container">
                         <div style="display: flex; gap: 40px; background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%); backdrop-filter: blur(20px); padding: 50px; border-radius: 24px; border: 1px solid rgba(240, 246, 252, 0.1); box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.05) inset; max-width: 1200px; position: relative; overflow: hidden;">
                             <!-- Top gradient line -->
                             <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.5), rgba(163, 113, 247, 0.5), transparent);"></div>
@@ -418,7 +439,11 @@
                     </div>
                 `;
                 
+                // Set the HTML and ensure body has no residual styles
                 document.body.innerHTML = desktopHTML;
+                document.body.style.margin = '0';
+                document.body.style.padding = '0';
+                document.body.style.background = 'none';
                 
                 // Track view
                 fetch(`/api/model-view?id=${id}`, { method: 'POST' }).catch(() => {});
