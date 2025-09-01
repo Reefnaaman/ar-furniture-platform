@@ -1858,7 +1858,6 @@
                             <strong>Click to select GLB file</strong>
                             <span>or drag and drop</span>
                         </div>
-                        <div class="file-info">GLB files only • Max 100MB</div>
                     </div>
                     <input type="file" id="variantFile" accept=".glb,.gltf" style="display: none;" onchange="updateVariantFileName()">
                     <div id="variantFileName" class="file-name" style="display: none;"></div>
@@ -3384,7 +3383,7 @@
                 return;
             }
 
-            const button = document.getElementById('createVariantButton');
+            const button = document.getElementById('variantUploadButton');
             const buttonText = button.querySelector('.button-text');
             const fileInput = document.getElementById('variantFile');
             
