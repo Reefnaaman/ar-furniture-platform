@@ -3932,10 +3932,15 @@
                                                 // Simple heuristic: Only color the first material (usually fabric/upholstery)
                                                 // Skip other materials (usually wood/metal structural parts)
                                                 if (index === 0) {
+                                                    // Only color material 0 with a much gentler approach
                                                     const originalColor = material.pbrMetallicRoughness.baseColorFactor;
-                                                    const remappedColor = intelligentColorRemap(originalColor, targetRgba);
-                                                    material.pbrMetallicRoughness.setBaseColorFactor(remappedColor);
-                                                    console.log(`✓ Colored material ${index} (primary/fabric)`);
+                                                    console.log('Original color:', originalColor);
+                                                    console.log('Target color:', targetRgba);
+                                                    
+                                                    // Simple color replacement - just use target color directly but preserve alpha
+                                                    const newColor = [targetRgba[0], targetRgba[1], targetRgba[2], originalColor[3]];
+                                                    material.pbrMetallicRoughness.setBaseColorFactor(newColor);
+                                                    console.log(`✓ Colored material ${index} (primary/fabric)`, newColor);
                                                 } else {
                                                     console.log(`✗ Skipped material ${index} (structural/wood/metal)`);
                                                 }
