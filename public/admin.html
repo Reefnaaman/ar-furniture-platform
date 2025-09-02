@@ -3231,6 +3231,7 @@
             // Add "All Furniture" option
             const allItem = document.createElement('li');
             allItem.className = `customer-item ${currentCustomerFilter === null ? 'active' : ''}`;
+            allItem.setAttribute('data-customer-id', 'all');
             allItem.innerHTML = `
                 <div class="customer-item-content">
                     <span class="customer-name">All Furniture</span>
@@ -3248,6 +3249,7 @@
             if (unassignedCount > 0) {
                 const unassignedItem = document.createElement('li');
                 unassignedItem.className = `customer-item ${currentCustomerFilter === 'unassigned' ? 'active' : ''}`;
+                unassignedItem.setAttribute('data-customer-id', 'unassigned');
                 unassignedItem.innerHTML = `
                     <div class="customer-item-content">
                         <span class="customer-name">Unassigned</span>
@@ -3269,6 +3271,7 @@
             customers.filter(customer => customer.id !== 'unassigned').forEach(customer => {
                 const item = document.createElement('li');
                 item.className = `customer-item ${currentCustomerFilter === customer.id ? 'active' : ''}`;
+                item.setAttribute('data-customer-id', customer.id);
                 item.innerHTML = `
                     <div class="customer-item-content">
                         <span class="customer-name">${customer.name}</span>
@@ -3285,13 +3288,31 @@
         }
         
         function filterByCustomer(customerId, customerName = null) {
+            // Always navigate to Dashboard first (if not already there)
+            if (currentPage !== 'dashboard') {
+                console.log(`🔄 Switching from ${currentPage} to Dashboard to show customer: ${customerName || customerId}`);
+                navigateToPage('dashboard');
+            }
+            
             currentCustomerFilter = customerId;
             
             // Update active state in sidebar
             document.querySelectorAll('.customer-item').forEach(item => {
                 item.classList.remove('active');
             });
-            event.target.closest('.customer-item').classList.add('active');
+            
+            // Find and highlight the clicked customer
+            const customerIdToFind = customerId === null ? 'all' : customerId;
+            const clickedCustomer = document.querySelector(`.customer-item[data-customer-id="${customerIdToFind}"]`);
+            if (clickedCustomer) {
+                clickedCustomer.classList.add('active');
+            } else if (event && event.target) {
+                // Fallback to event target if available
+                const customerItem = event.target.closest('.customer-item');
+                if (customerItem) {
+                    customerItem.classList.add('active');
+                }
+            }
             
             // Filter displayed models
             const customerGroups = document.querySelectorAll('.customer-group');
@@ -3307,7 +3328,7 @@
             });
             
             // Update header to show current filter
-            const headerTitle = document.querySelector('.header h1');
+            const headerTitle = document.querySelector('#dashboardPage .header h1');
             if (customerId === null) {
                 headerTitle.textContent = '⚙️ Admin Dashboard';
             } else {
