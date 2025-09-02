@@ -2186,30 +2186,32 @@
                     </div>
                 </div>
                 
-                <div class="filters-section">
-                    <div class="filter-group">
-                        <label class="filter-label">Filter by Type:</label>
-                        <select id="imageTypeFilter" class="filter-select" onchange="filterImages()">
-                            <option value="all">All Types</option>
-                            <option value="logo">Company Logo</option>
-                            <option value="customer_logo">Customer Logo</option>
-                            <option value="brand">Brand Asset</option>
-                            <option value="general">General</option>
-                        </select>
+                <div class="dashboard-content">
+                    <div class="filters-section">
+                        <div class="filter-group">
+                            <label class="filter-label">Filter by Type:</label>
+                            <select id="imageTypeFilter" class="filter-select" onchange="filterImages()">
+                                <option value="all">All Types</option>
+                                <option value="logo">Company Logo</option>
+                                <option value="customer_logo">Customer Logo</option>
+                                <option value="brand">Brand Asset</option>
+                                <option value="general">General</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Filter by Customer:</label>
+                            <select id="imageCustomerFilter" class="filter-select" onchange="filterImages()">
+                                <option value="all">All Customers</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <input type="text" id="imageSearchFilter" class="filter-input" placeholder="Search images..." oninput="filterImages()">
+                        </div>
                     </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Filter by Customer:</label>
-                        <select id="imageCustomerFilter" class="filter-select" onchange="filterImages()">
-                            <option value="all">All Customers</option>
-                        </select>
+                    
+                    <div class="images-grid" id="imagesGrid">
+                        <div class="loading">Loading images...</div>
                     </div>
-                    <div class="filter-group">
-                        <input type="text" id="imageSearchFilter" class="filter-input" placeholder="Search images..." oninput="filterImages()">
-                    </div>
-                </div>
-                
-                <div class="images-grid" id="imagesGrid">
-                    <div class="loading">Loading images...</div>
                 </div>
             </div>
             
@@ -2227,9 +2229,11 @@
                     </div>
                 </div>
                 
-                <div class="users-section">
-                    <div id="usersContainer">
-                        <div class="loading">Loading users...</div>
+                <div class="dashboard-content">
+                    <div class="users-section">
+                        <div id="usersContainer">
+                            <div class="loading">Loading users...</div>
+                        </div>
                     </div>
                 </div>
             </div>
