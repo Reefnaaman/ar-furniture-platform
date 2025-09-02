@@ -82,6 +82,16 @@ export default async function handler(req, res) {
       return await handleUpdateColor(req, res);
     }
     
+    // Route: /api/upload-image
+    if (routePath === 'upload-image') {
+      return await handleImageUpload(req, res);
+    }
+    
+    // Route: /api/images
+    if (routePath === 'images') {
+      return await handleImages(req, res);
+    }
+    
     // Route: /api/customer/[id]
     if (routePath?.startsWith('customer/')) {
       const customerId = routePath.split('/')[1];
@@ -609,5 +619,165 @@ async function handleUpdateColor(req, res) {
       success: false, 
       error: error.message
     });
+  }
+}
+
+/**
+ * Handle image upload (logos, brand assets, etc.)
+ */
+async function handleImageUpload(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    // Parse multipart form data
+    const form = new multiparty.Form();
+    
+    const { fields, files } = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve({ fields, files });
+      });
+    });
+
+    // Get file
+    const uploadedFile = files.file?.[0];
+    if (!uploadedFile) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+
+    // Validate file type
+    if (!uploadedFile.originalFilename?.match(/\.(jpg|jpeg|png|webp|svg)$/i)) {
+      return res.status(400).json({ error: 'Only image files (JPG, PNG, WebP, SVG) are allowed' });
+    }
+
+    // Check file size (10MB for images)
+    if (uploadedFile.size > 10 * 1024 * 1024) {
+      return res.status(400).json({ error: 'File too large. Maximum size is 10MB' });
+    }
+
+    // Read file
+    const fs = await import('fs');
+    const fileBuffer = fs.readFileSync(uploadedFile.path);
+
+    // Upload to Cloudinary
+    console.log('Uploading image to Cloudinary...');
+    const { uploadImage } = await import('../lib/cloudinary.js');
+    const cloudinaryResult = await uploadImage(fileBuffer, uploadedFile.originalFilename);
+
+    // Save to database
+    console.log('Saving image to database...');
+    const imageType = fields.imageType?.[0] || 'general';
+    const customerId = fields.customerId?.[0] || null;
+    
+    const { data, error } = await supabase
+      .from('images')
+      .insert({
+        filename: uploadedFile.originalFilename,
+        cloudinary_url: cloudinaryResult.url,
+        cloudinary_public_id: cloudinaryResult.publicId,
+        file_size: cloudinaryResult.size,
+        width: cloudinaryResult.width,
+        height: cloudinaryResult.height,
+        format: cloudinaryResult.format,
+        image_type: imageType,
+        customer_id: customerId,
+        metadata: {
+          originalName: uploadedFile.originalFilename,
+          uploadedAt: new Date().toISOString()
+        }
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('Database error:', error);
+      return res.status(500).json({ error: 'Failed to save image to database' });
+    }
+
+    // Clean up temp file
+    try {
+      fs.unlinkSync(uploadedFile.path);
+    } catch (e) {
+      console.log('Could not delete temp file:', e);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Image uploaded successfully',
+      image: data
+    });
+
+  } catch (error) {
+    console.error('Image upload error:', error);
+    return res.status(500).json({ error: error.message });
+  }
+}
+
+/**
+ * Handle fetching all images or images by type
+ */
+async function handleImages(req, res) {
+  if (req.method === 'GET') {
+    try {
+      const { imageType, customerId } = req.query;
+      
+      let query = supabase.from('images').select('*');
+      
+      if (imageType) {
+        query = query.eq('image_type', imageType);
+      }
+      
+      if (customerId) {
+        query = query.eq('customer_id', customerId);
+      }
+      
+      query = query.order('created_at', { ascending: false });
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching images:', error);
+        return res.status(500).json({ error: 'Failed to fetch images' });
+      }
+      
+      return res.status(200).json({ images: data || [] });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  } else if (req.method === 'DELETE') {
+    try {
+      const { id, cloudinaryPublicId } = req.body;
+      
+      if (!id || !cloudinaryPublicId) {
+        return res.status(400).json({ error: 'Image ID and Cloudinary ID required' });
+      }
+      
+      // Delete from Cloudinary
+      const { deleteImage } = await import('../lib/cloudinary.js');
+      await deleteImage(cloudinaryPublicId);
+      
+      // Delete from database
+      const { error } = await supabase
+        .from('images')
+        .delete()
+        .eq('id', id);
+      
+      if (error) {
+        console.error('Error deleting image:', error);
+        return res.status(500).json({ error: 'Failed to delete image' });
+      }
+      
+      return res.status(200).json({ success: true, message: 'Image deleted successfully' });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  } else {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 }
