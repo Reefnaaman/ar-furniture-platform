@@ -2083,24 +2083,8 @@
                     </button>
                 </div>
             </div>
-                    <!-- Add User Button -->
-                    <div id="addUserButtonContainer" style="max-height: 0; overflow: hidden; transition: max-height 0.3s ease;">
-                        <div style="padding: 15px; border-bottom: 1px solid rgba(240, 246, 252, 0.1);">
-                            <button onclick="toggleUserModal()" class="modal-button primary" style="width: 100%; padding: 12px; font-size: 0.9rem; background: rgba(88, 166, 255, 0.15); border: 1px solid rgba(88, 166, 255, 0.3); color: #58a6ff; border-radius: 12px; transition: all 0.2s ease;">
-                                + Add New User
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <!-- User List -->
-                    <div id="userList" class="user-management-list">
-                        <div class="loading-users" style="padding: 20px; text-align: center; color: #7d8590;">
-                            Loading users...
-                        </div>
-                    </div>
-                </div>
-            </div>
             
+            <!-- Customers Section -->
             <div class="sidebar-customers" style="margin-top: 5px;">
                 <div class="sidebar-customers-header">
                     <span class="sidebar-customers-title">Customers</span>
@@ -3693,24 +3677,7 @@
             await assignFurnitureToCustomer(modelId, customerId, customerName);
         }
 
-        // User Management Functions
-        function toggleUserManagement() {
-            const section = document.getElementById('userManagementSection');
-            const userList = document.getElementById('userList');
-            const addUserButton = document.getElementById('addUserButtonContainer');
-            const toggle = document.getElementById('userManagementToggle');
-            
-            if (userList.classList.contains('expanded')) {
-                userList.classList.remove('expanded');
-                addUserButton.style.maxHeight = '0';
-                toggle.style.transform = 'rotate(0deg)';
-            } else {
-                userList.classList.add('expanded');
-                addUserButton.style.maxHeight = '80px';
-                toggle.style.transform = 'rotate(180deg)';
-                loadUsers(); // Load users when expanding
-            }
-        }
+        // User Management Functions - Moved to dedicated page
         
         function toggleUserModal() {
             document.getElementById('userModal').style.display = 'flex';
@@ -4442,20 +4409,7 @@
             return materialType === 'fabric';
         }
 
-        // Image Management Functions
-        function toggleImagesSection() {
-            const section = document.getElementById('imagesSection');
-            const toggle = document.getElementById('imagesSectionToggle');
-            
-            if (section.style.display === 'none') {
-                section.style.display = 'block';
-                toggle.style.transform = 'rotate(180deg)';
-                loadImages();
-            } else {
-                section.style.display = 'none';
-                toggle.style.transform = 'rotate(0deg)';
-            }
-        }
+        // Image Management Functions - Moved to dedicated page
         
         function showImageUploadModal() {
             document.getElementById('imageUploadModal').style.display = 'flex';
@@ -4547,66 +4501,7 @@
             }
         }
         
-        async function loadImages() {
-            const imagesList = document.getElementById('imagesList');
-            imagesList.innerHTML = '<div style="padding: 10px; color: #7d8590;">Loading images...</div>';
-            
-            try {
-                const response = await fetch('/api/images');
-                if (response.ok) {
-                    const { images } = await response.json();
-                    displayImages(images);
-                } else {
-                    imagesList.innerHTML = '<div style="padding: 10px; color: #f85149;">Failed to load images</div>';
-                }
-            } catch (error) {
-                console.error('Error loading images:', error);
-                imagesList.innerHTML = '<div style="padding: 10px; color: #f85149;">Error loading images</div>';
-            }
-        }
-        
-        function displayImages(images) {
-            const imagesList = document.getElementById('imagesList');
-            
-            if (images.length === 0) {
-                imagesList.innerHTML = '<div style="padding: 10px; color: #7d8590; text-align: center;">No images uploaded</div>';
-                return;
-            }
-            
-            imagesList.innerHTML = images.map(img => `
-                <div style="padding: 10px; border-bottom: 1px solid rgba(240, 246, 252, 0.1); display: flex; align-items: center; gap: 10px;">
-                    <img src="${img.cloudinary_url}" style="width: 40px; height: 40px; object-fit: contain; border-radius: 4px; background: rgba(240, 246, 252, 0.05);">
-                    <div style="flex: 1;">
-                        <div style="font-size: 0.85rem; color: #f0f6fc;">${img.filename}</div>
-                        <div style="font-size: 0.75rem; color: #7d8590;">${img.image_type}</div>
-                    </div>
-                    <button onclick="deleteImage('${img.id}', '${img.cloudinary_public_id}')" style="background: none; border: none; color: #f85149; cursor: pointer; padding: 5px;">
-                        ×
-                    </button>
-                </div>
-            `).join('');
-        }
-        
-        async function deleteImage(id, cloudinaryPublicId) {
-            if (!confirm('Delete this image?')) return;
-            
-            try {
-                const response = await fetch('/api/images', {
-                    method: 'DELETE',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, cloudinaryPublicId })
-                });
-                
-                if (response.ok) {
-                    loadImages();
-                } else {
-                    alert('Failed to delete image');
-                }
-            } catch (error) {
-                console.error('Error deleting image:', error);
-                alert('Error deleting image');
-            }
-        }
+        // Old image functions removed - now handled by dedicated Images page
         
         // Prevent form submission since we're auto-uploading
         document.getElementById('imageUploadForm').addEventListener('submit', (e) => {
