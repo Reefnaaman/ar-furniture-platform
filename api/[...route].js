@@ -97,6 +97,11 @@ export default async function handler(req, res) {
       return await handleCreateImagesTable(req, res);
     }
     
+    // Route: /api/init-models-db
+    if (routePath === 'init-models-db') {
+      return await handleInitModelsDB(req, res);
+    }
+    
     // Route: /api/create-user
     if (routePath === 'create-user') {
       return await handleCreateUser(req, res);
@@ -797,6 +802,93 @@ async function handleImages(req, res) {
     }
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+/**
+ * Handle initializing models database table
+ */
+async function handleInitModelsDB(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    console.log('🎨 Checking models table...');
+
+    // Try to insert and then delete a test record to check if table exists
+    const testId = 'test-' + Date.now();
+    
+    const { error: testError } = await supabase
+      .from('models')
+      .insert({
+        id: testId,
+        title: 'test',
+        filename: 'test.glb',
+        cloudinary_url: 'https://test.url',
+        cloudinary_public_id: 'test-id',
+        file_size: 0,
+        customer_id: 'test',
+        customer_name: 'Test',
+        metadata: {}
+      });
+    
+    if (testError && testError.code === '42P01') {
+      // Table doesn't exist
+      console.log('Models table does not exist');
+      return res.status(200).json({
+        success: false,
+        message: 'Models table needs to be created manually',
+        sql: `
+CREATE TABLE IF NOT EXISTS models (
+  id TEXT PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  description TEXT,
+  filename VARCHAR(255) NOT NULL,
+  cloudinary_url TEXT NOT NULL,
+  cloudinary_public_id VARCHAR(255) NOT NULL,
+  file_size BIGINT DEFAULT 0,
+  customer_id VARCHAR(100) DEFAULT 'unassigned',
+  customer_name VARCHAR(255) DEFAULT 'Unassigned',
+  view_count INTEGER DEFAULT 0,
+  dominant_color VARCHAR(7) DEFAULT '#6b7280',
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_models_customer ON models(customer_id);
+CREATE INDEX IF NOT EXISTS idx_models_created ON models(created_at);
+
+-- Grant permissions
+GRANT ALL ON models TO authenticated;
+GRANT ALL ON models TO service_role;
+        `,
+        instructions: 'Please run the SQL above in your Supabase SQL editor'
+      });
+    }
+    
+    // If test insert succeeded, delete the test record
+    if (!testError) {
+      await supabase
+        .from('models')
+        .delete()
+        .eq('id', testId);
+    }
+
+    console.log('✅ Models table exists and is accessible!');
+
+    return res.status(200).json({
+      success: true,
+      message: 'Models table is ready!'
+    });
+
+  } catch (error) {
+    console.error('💥 Database initialization error:', error);
+    return res.status(500).json({ 
+      error: error.message,
+      solution: 'Check your Supabase configuration'
+    });
   }
 }
 
