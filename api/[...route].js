@@ -102,6 +102,11 @@ export default async function handler(req, res) {
       return await handleInitModelsDB(req, res);
     }
     
+    // Route: /api/test-save-model
+    if (routePath === 'test-save-model') {
+      return await handleTestSaveModel(req, res);
+    }
+    
     // Route: /api/create-user
     if (routePath === 'create-user') {
       return await handleCreateUser(req, res);
@@ -802,6 +807,60 @@ async function handleImages(req, res) {
     }
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+/**
+ * Handle testing saveModel function
+ */
+async function handleTestSaveModel(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    console.log('🧪 Testing saveModel function...');
+    
+    const testResult = await saveModel({
+      title: 'Test Model',
+      description: 'Test Description',
+      filename: 'test.glb',
+      cloudinaryUrl: 'https://test.cloudinary.com/test.glb',
+      cloudinaryPublicId: 'test-public-id',
+      fileSize: 12345,
+      customerId: 'test-customer',
+      customerName: 'Test Customer',
+      dominantColor: '#6b7280',
+      metadata: { test: true }
+    });
+    
+    console.log('🧪 Test result:', testResult);
+    
+    if (!testResult.success) {
+      return res.status(500).json({ 
+        error: 'SaveModel test failed',
+        details: testResult.error
+      });
+    }
+    
+    // Clean up test record
+    await supabase
+      .from('models')
+      .delete()
+      .eq('id', testResult.id);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'SaveModel test passed!',
+      testId: testResult.id
+    });
+
+  } catch (error) {
+    console.error('🧪 Test error:', error);
+    return res.status(500).json({ 
+      error: error.message,
+      stack: error.stack
+    });
   }
 }
 
