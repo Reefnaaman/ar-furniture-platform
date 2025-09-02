@@ -92,6 +92,11 @@ export default async function handler(req, res) {
       return await handleImages(req, res);
     }
     
+    // Route: /api/create-images-table
+    if (routePath === 'create-images-table') {
+      return await handleCreateImagesTable(req, res);
+    }
+    
     // Route: /api/customer/[id]
     if (routePath?.startsWith('customer/')) {
       const customerId = routePath.split('/')[1];
@@ -671,9 +676,13 @@ async function handleImageUpload(req, res) {
     const imageType = fields.imageType?.[0] || 'general';
     const customerId = fields.customerId?.[0] || null;
     
+    // Generate a UUID for the image
+    const imageId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     const { data, error } = await supabase
       .from('images')
       .insert({
+        id: imageId,
         filename: uploadedFile.originalFilename,
         cloudinary_url: cloudinaryResult.url,
         cloudinary_public_id: cloudinaryResult.publicId,
@@ -780,4 +789,49 @@ async function handleImages(req, res) {
   } else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+}
+
+/**
+ * Handle creating images table SQL instructions
+ */
+async function handleCreateImagesTable(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  return res.status(200).json({
+    message: 'Please run the following SQL in your Supabase SQL editor',
+    sql: `
+-- Create images table
+CREATE TABLE IF NOT EXISTS images (
+  id TEXT PRIMARY KEY,
+  filename VARCHAR(255) NOT NULL,
+  cloudinary_url TEXT NOT NULL,
+  cloudinary_public_id VARCHAR(255) NOT NULL,
+  file_size INTEGER,
+  width INTEGER,
+  height INTEGER,
+  format VARCHAR(50),
+  image_type VARCHAR(50) NOT NULL DEFAULT 'general',
+  customer_id VARCHAR(100),
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add indexes for faster queries
+CREATE INDEX IF NOT EXISTS idx_images_type ON images(image_type);
+CREATE INDEX IF NOT EXISTS idx_images_customer ON images(customer_id);
+
+-- Grant permissions
+GRANT ALL ON images TO authenticated;
+GRANT ALL ON images TO service_role;
+    `,
+    instructions: [
+      '1. Go to your Supabase dashboard',
+      '2. Navigate to SQL Editor',
+      '3. Copy and paste the SQL above',
+      '4. Click "Run" to create the table'
+    ]
+  });
 }

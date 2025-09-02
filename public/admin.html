@@ -2155,15 +2155,11 @@
                     <div class="upload-border"></div>
                 </div>
                 
-                <input type="file" id="imageFile" accept=".jpg,.jpeg,.png,.webp,.svg" style="display: none;" onchange="updateImageFileName()" required>
+                <input type="file" id="imageFile" accept=".jpg,.jpeg,.png,.webp,.svg" style="display: none;" onchange="updateImageFileName()">
                 <div id="imageFileName" class="file-name-modern" style="display: none;"></div>
                 
                 <div class="modal-buttons">
-                    <button type="button" class="modal-button secondary" onclick="closeImageUploadModal()">Cancel</button>
-                    <button type="submit" class="modal-button primary futuristic-primary" id="imageUploadButton">
-                        <span class="button-text">Upload</span>
-                        <div class="button-glow"></div>
-                    </button>
+                    <button type="button" class="modal-button secondary" onclick="closeImageUploadModal()">Close</button>
                 </div>
             </form>
         </div>
@@ -4043,7 +4039,7 @@
             uploadArea.style.background = 'rgba(13, 17, 23, 0.5)';
         }
         
-        function updateImageFileName() {
+        async function updateImageFileName() {
             const fileInput = document.getElementById('imageFile');
             const fileName = document.getElementById('imageFileName');
             const uploadArea = document.getElementById('imageFileUploadArea');
@@ -4058,13 +4054,15 @@
                     fileName.style.background = 'rgba(248, 81, 73, 0.1)';
                     fileName.style.borderColor = 'rgba(248, 81, 73, 0.3)';
                     fileName.style.color = '#f85149';
+                    return;
                 } else if (file.size > 10 * 1024 * 1024) {
                     fileName.textContent = '❌ File too large (max 10MB)';
                     fileName.style.background = 'rgba(248, 81, 73, 0.1)';
                     fileName.style.borderColor = 'rgba(248, 81, 73, 0.3)';
                     fileName.style.color = '#f85149';
+                    return;
                 } else {
-                    fileName.textContent = `✅ ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
+                    fileName.textContent = `⏳ Uploading ${file.name}...`;
                     fileName.style.background = 'rgba(88, 166, 255, 0.1)';
                     fileName.style.borderColor = 'rgba(88, 166, 255, 0.3)';
                     fileName.style.color = '#58a6ff';
@@ -4072,10 +4070,49 @@
                 
                 uploadArea.style.borderColor = 'rgba(88, 166, 255, 0.6)';
                 uploadArea.style.background = 'rgba(88, 166, 255, 0.05)';
+                
+                // Auto-upload the file
+                await uploadImageFile();
             } else {
                 fileName.style.display = 'none';
                 uploadArea.style.borderColor = 'rgba(88, 166, 255, 0.3)';
                 uploadArea.style.background = 'rgba(13, 17, 23, 0.5)';
+            }
+        }
+        
+        async function uploadImageFile() {
+            const fileInput = document.getElementById('imageFile');
+            const imageType = document.getElementById('imageType').value;
+            const fileName = document.getElementById('imageFileName');
+            
+            if (!fileInput.files.length) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('imageType', imageType);
+                
+                const response = await fetch('/api/upload-image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    fileName.textContent = `✅ Uploaded successfully!`;
+                    setTimeout(() => {
+                        closeImageUploadModal();
+                        loadImages();
+                    }, 1500);
+                } else {
+                    fileName.textContent = `❌ Upload failed: ${result.error || 'Unknown error'}`;
+                    fileName.style.color = '#f85149';
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                fileName.textContent = `❌ Upload error: ${error.message}`;
+                fileName.style.color = '#f85149';
             }
         }
         
@@ -4140,50 +4177,9 @@
             }
         }
         
-        // Handle image upload form submission
-        document.getElementById('imageUploadForm').addEventListener('submit', async (e) => {
+        // Prevent form submission since we're auto-uploading
+        document.getElementById('imageUploadForm').addEventListener('submit', (e) => {
             e.preventDefault();
-            
-            const button = document.getElementById('imageUploadButton');
-            const buttonText = button.querySelector('.button-text');
-            const fileInput = document.getElementById('imageFile');
-            const imageType = document.getElementById('imageType').value;
-            
-            if (!fileInput.files.length) {
-                alert('Please select an image');
-                return;
-            }
-            
-            // Show loading state
-            button.disabled = true;
-            buttonText.textContent = 'Uploading...';
-            
-            try {
-                const formData = new FormData();
-                formData.append('file', fileInput.files[0]);
-                formData.append('imageType', imageType);
-                
-                const response = await fetch('/api/upload-image', {
-                    method: 'POST',
-                    body: formData
-                });
-                
-                const result = await response.json();
-                
-                if (response.ok) {
-                    alert('Image uploaded successfully!');
-                    closeImageUploadModal();
-                    loadImages();
-                } else {
-                    alert('Failed to upload image: ' + (result.error || 'Unknown error'));
-                }
-            } catch (error) {
-                console.error('Error uploading image:', error);
-                alert('Error uploading image: ' + error.message);
-            } finally {
-                button.disabled = false;
-                buttonText.textContent = 'Upload';
-            }
         });
         
         // Switch to variant function (handles both upload and color variants)
