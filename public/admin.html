@@ -4996,7 +4996,11 @@
                     throw new Error(`Failed to load users: ${response.status}`);
                 }
                 
-                const { users } = await response.json();
+                const responseData = await response.json();
+                console.log('📊 API Response:', responseData);
+                
+                // Handle both array response and object response
+                const users = Array.isArray(responseData) ? responseData : (responseData.users || []);
                 console.log('📊 Users loaded:', users.length);
                 
                 if (!users || users.length === 0) {

@@ -102,10 +102,7 @@ export default async function handler(req, res) {
       return await handleCreateUser(req, res);
     }
     
-    // Route: /api/users
-    if (routePath === 'users') {
-      return await handleUsers(req, res);
-    }
+    // Note: /api/users is handled by dedicated users.js file
     
     // Route: /api/customer/[id]
     if (routePath?.startsWith('customer/')) {
@@ -793,34 +790,6 @@ async function handleImages(req, res) {
       }
       
       return res.status(200).json({ success: true, message: 'Image deleted successfully' });
-      
-    } catch (error) {
-      console.error('Error:', error);
-      return res.status(500).json({ error: error.message });
-    }
-  } else {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-}
-
-/**
- * Handle users listing and management
- */
-async function handleUsers(req, res) {
-  if (req.method === 'GET') {
-    try {
-      // Load all users from database
-      const { data: users, error } = await supabase
-        .from('users')
-        .select('id, username, role, customer_id, customer_name, is_active, created_at')
-        .order('created_at', { ascending: false });
-      
-      if (error) {
-        console.error('Error fetching users:', error);
-        return res.status(500).json({ error: 'Failed to fetch users' });
-      }
-      
-      return res.status(200).json({ users: users || [] });
       
     } catch (error) {
       console.error('Error:', error);
