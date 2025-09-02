@@ -1978,6 +1978,68 @@
             border-color: #f85149;
             color: #f85149;
         }
+        
+        /* Customer Logo Management Styles */
+        .customer-logo-section {
+            margin-top: 20px;
+            padding: 15px;
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 8px;
+            background: rgba(13, 17, 23, 0.3);
+        }
+        
+        .subsection-title {
+            color: #7d8590;
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .logo-management {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+        
+        .current-logo {
+            width: 80px;
+            height: 80px;
+            border: 2px dashed rgba(240, 246, 252, 0.2);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            background: rgba(240, 246, 252, 0.02);
+        }
+        
+        .current-logo img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .logo-placeholder {
+            color: #7d8590;
+            font-size: 0.8rem;
+            text-align: center;
+            padding: 10px;
+        }
+        
+        .logo-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+        }
+        
+        .logo-actions .action-button {
+            padding: 8px 12px;
+            font-size: 0.8rem;
+            border-radius: 6px;
+        }
     </style>
 </head>
 <body>
@@ -2321,6 +2383,24 @@
                     <div class="input-group">
                         <input type="text" id="editCustomerName" placeholder="Customer Display Name" class="futuristic-input">
                         <div class="input-line"></div>
+                    </div>
+                    
+                    <!-- Customer Logo Section -->
+                    <div class="customer-logo-section">
+                        <h5 class="subsection-title">🎨 Customer Logo</h5>
+                        <div class="logo-management">
+                            <div class="current-logo" id="currentCustomerLogo">
+                                <div class="logo-placeholder">No logo uploaded</div>
+                            </div>
+                            <div class="logo-actions">
+                                <button type="button" class="action-button secondary" onclick="showCustomerLogoUpload()">
+                                    📤 Upload Logo
+                                </button>
+                                <button type="button" class="action-button danger" id="removeLogoBtn" onclick="removeCustomerLogo()" style="display: none;">
+                                    🗑️ Remove
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 
@@ -4919,6 +4999,155 @@
             console.log('🚀 Modern page system initialized');
             // Dashboard is shown by default
         });
+        
+        // ========================================
+        // CUSTOMER LOGO MANAGEMENT
+        // ========================================
+        
+        let currentCustomerLogoData = null;
+        
+        async function showCustomerLogoUpload() {
+            // Get current customer info
+            const customerId = document.getElementById('editCustomerId').value.trim();
+            const customerName = document.getElementById('editCustomerName').value.trim();
+            
+            if (!customerId || !customerName) {
+                alert('Please save customer information first');
+                return;
+            }
+            
+            // Update the image upload modal to be customer-specific
+            document.getElementById('imageType').value = 'customer_logo';
+            
+            // Store customer info for the upload
+            window.currentCustomerForLogo = { id: customerId, name: customerName };
+            
+            // Show the image upload modal
+            showImageUploadModal();
+        }
+        
+        async function loadCustomerLogo(customerId) {
+            if (!customerId) return;
+            
+            try {
+                const response = await fetch(`/api/images?imageType=customer_logo&customerId=${customerId}`);
+                if (response.ok) {
+                    const { images } = await response.json();
+                    const customerLogo = images && images.length > 0 ? images[0] : null;
+                    
+                    const logoContainer = document.getElementById('currentCustomerLogo');
+                    const removeBtn = document.getElementById('removeLogoBtn');
+                    
+                    if (customerLogo) {
+                        logoContainer.innerHTML = `<img src="${customerLogo.cloudinary_url}" alt="Customer Logo">`;
+                        removeBtn.style.display = 'block';
+                        currentCustomerLogoData = customerLogo;
+                    } else {
+                        logoContainer.innerHTML = '<div class="logo-placeholder">No logo uploaded</div>';
+                        removeBtn.style.display = 'none';
+                        currentCustomerLogoData = null;
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading customer logo:', error);
+            }
+        }
+        
+        async function removeCustomerLogo() {
+            if (!currentCustomerLogoData || !confirm('Remove this customer logo?')) return;
+            
+            try {
+                const response = await fetch('/api/images', {
+                    method: 'DELETE',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: currentCustomerLogoData.id,
+                        cloudinaryPublicId: currentCustomerLogoData.cloudinary_public_id
+                    })
+                });
+                
+                if (response.ok) {
+                    // Reset logo display
+                    document.getElementById('currentCustomerLogo').innerHTML = 
+                        '<div class="logo-placeholder">No logo uploaded</div>';
+                    document.getElementById('removeLogoBtn').style.display = 'none';
+                    currentCustomerLogoData = null;
+                } else {
+                    alert('Failed to remove logo');
+                }
+            } catch (error) {
+                console.error('Error removing logo:', error);
+                alert('Error removing logo');
+            }
+        }
+        
+        // Enhanced openUserEditModal to load customer logo
+        const originalOpenUserEditModal = openUserEditModal;
+        openUserEditModal = function(userId, username, role, customerId, customerName, isActive, isAdmin) {
+            originalOpenUserEditModal(userId, username, role, customerId, customerName, isActive, isAdmin);
+            
+            // Load customer logo if it's a customer
+            if (role === 'customer' && customerId) {
+                setTimeout(() => loadCustomerLogo(customerId), 500);
+            }
+        };
+        
+        // Enhanced image upload to handle customer logos
+        const originalUploadImageFile = uploadImageFile;
+        uploadImageFile = async function() {
+            const fileInput = document.getElementById('imageFile');
+            const imageType = document.getElementById('imageType').value;
+            const fileName = document.getElementById('imageFileName');
+            
+            if (!fileInput.files.length) return;
+            
+            try {
+                const formData = new FormData();
+                formData.append('file', fileInput.files[0]);
+                formData.append('imageType', imageType);
+                
+                // If uploading customer logo, add customer info
+                if (imageType === 'customer_logo' && window.currentCustomerForLogo) {
+                    formData.append('customerId', window.currentCustomerForLogo.id);
+                    formData.append('customerName', window.currentCustomerForLogo.name);
+                }
+                
+                const response = await fetch('/api/upload-image', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    fileName.textContent = `✅ Uploaded successfully!`;
+                    
+                    // If it's a customer logo, refresh the logo display
+                    if (imageType === 'customer_logo' && window.currentCustomerForLogo) {
+                        setTimeout(() => {
+                            loadCustomerLogo(window.currentCustomerForLogo.id);
+                        }, 1000);
+                    }
+                    
+                    setTimeout(() => {
+                        closeImageUploadModal();
+                        if (currentPage === 'images') {
+                            loadImagesPage();
+                        }
+                    }, 1500);
+                } else {
+                    fileName.textContent = `❌ Upload failed: ${result.error || 'Unknown error'}`;
+                    fileName.style.color = '#f85149';
+                }
+            } catch (error) {
+                console.error('Error uploading image:', error);
+                fileName.textContent = `❌ Upload error: ${error.message}`;
+                fileName.style.color = '#f85149';
+            } finally {
+                // Clean up customer logo context
+                window.currentCustomerForLogo = null;
+            }
+        };
     </script>
         </div>
     </div>

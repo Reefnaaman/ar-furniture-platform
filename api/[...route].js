@@ -680,6 +680,7 @@ async function handleImageUpload(req, res) {
     console.log('Saving image to database...');
     const imageType = fields.imageType?.[0] || 'general';
     const customerId = fields.customerId?.[0] || null;
+    const customerName = fields.customerName?.[0] || null;
     
     // Generate a UUID for the image
     const imageId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -699,7 +700,8 @@ async function handleImageUpload(req, res) {
         customer_id: customerId,
         metadata: {
           originalName: uploadedFile.originalFilename,
-          uploadedAt: new Date().toISOString()
+          uploadedAt: new Date().toISOString(),
+          customerName: customerName
         }
       })
       .select()
