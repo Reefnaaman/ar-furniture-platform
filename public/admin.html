@@ -2045,77 +2045,43 @@
     
     <!-- Variant Modal -->
     <div class="password-modal" id="variantModal" style="display: none;">
-        <div class="modal-content futuristic-upload">
-            <div class="upload-header">
-                <div class="upload-icon-container">
-                    <div class="upload-icon-bg">
-                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none">
-                            <path d="M12 2l3.09 6.26L22 9l-5 4.74 1.18 6.88L12 17l-6.18 3.62L7 14.74 2 9l6.91-.74L12 2z" stroke="currentColor" stroke-width="2"/>
-                        </svg>
-                    </div>
-                </div>
-                <h3 class="upload-title" id="variantModalTitle">🎨 Add Color Variant</h3>
-                <p class="upload-subtitle" id="variantModalSubtitle">Create a new color variant for this furniture piece</p>
-            </div>
+        <div class="modal-content futuristic-upload" style="max-width: 500px;">
+            <h3 class="upload-title" id="variantModalTitle" style="margin-bottom: 20px;">Add Variant</h3>
             
             <form id="variantForm">
-                <div class="form-section">
-                    <h4 class="section-title">✨ Variant Details</h4>
-                    
-                    <!-- Name & Color on same row -->
-                    <div style="display: flex; gap: 15px; margin-bottom: 20px;">
-                        <div class="input-group" style="flex: 1;">
-                            <input type="text" id="variantName" placeholder="Variant name (e.g., Red Leather)" required class="futuristic-input">
-                            <div class="input-line"></div>
-                        </div>
-                    </div>
-                    
-                    <!-- Only GLB Upload Variants Supported -->
-                    <div class="variant-info" style="background: rgba(88, 166, 255, 0.1); border: 1px solid rgba(88, 166, 255, 0.3); padding: 15px; border-radius: 12px; text-align: center; margin-bottom: 20px;">
-                        <div style="font-size: 20px; margin-bottom: 8px;">📁</div>
-                        <div style="font-weight: 600; margin-bottom: 4px;">Upload GLB Variant</div>
-                        <div style="font-size: 0.85rem; color: #7d8590;">Upload a different GLB file as a variant</div>
-                        <input type="hidden" name="variantType" value="upload">
-                    </div>
-                    
-                    <div class="input-group">
-                        <label class="checkbox-container">
-                            <input type="checkbox" id="isPrimary">
-                            <span class="checkbox-label">Set as primary variant</span>
-                        </label>
-                    </div>
+                <!-- Title Input -->
+                <div class="input-group" style="margin-bottom: 25px;">
+                    <input type="text" id="variantName" placeholder="Variant title" required class="futuristic-input" style="font-size: 1rem;">
+                    <div class="input-line"></div>
                 </div>
                 
-                <div class="form-section" id="uploadSection">
-                    <h4 class="section-title">📁 Upload GLB File</h4>
-                    <p style="color: #7d8590; font-size: 0.85rem; margin-bottom: 15px;">Upload a different GLB file for this variant</p>
-                    
-                    <!-- Modern file upload area -->
-                    <div class="modern-file-upload" onclick="document.getElementById('variantFile').click()" id="fileUploadArea">
-                        <div class="upload-content">
-                            <div class="upload-icon-modern">
-                                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                                    <polyline points="7,10 12,15 17,10"/>
-                                    <line x1="12" y1="15" x2="12" y2="3"/>
-                                </svg>
-                            </div>
-                            <div class="upload-text-modern">
-                                <span class="upload-primary">Drop GLB file here or click to browse</span>
-                                <span class="upload-secondary">Leave empty to reuse original model</span>
-                            </div>
+                <!-- Upload Area -->
+                <div class="modern-file-upload" onclick="document.getElementById('variantFile').click()" id="fileUploadArea" style="margin-bottom: 25px;">
+                    <div class="upload-content">
+                        <div class="upload-icon-modern">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                                <polyline points="7,10 12,15 17,10"/>
+                                <line x1="12" y1="15" x2="12" y2="3"/>
+                            </svg>
                         </div>
-                        <div class="upload-border"></div>
+                        <div class="upload-text-modern">
+                            <span class="upload-primary">Drop GLB file or click to browse</span>
+                            <span class="upload-secondary">Max 100MB</span>
+                        </div>
                     </div>
-                    
-                    <input type="file" id="variantFile" accept=".glb,.gltf" style="display: none;" onchange="updateVariantFileName()">
-                    <div id="variantFileName" class="file-name-modern" style="display: none;"></div>
+                    <div class="upload-border"></div>
                 </div>
+                
+                <input type="file" id="variantFile" accept=".glb,.gltf" style="display: none;" onchange="updateVariantFileName()" required>
+                <div id="variantFileName" class="file-name-modern" style="display: none;"></div>
+                
+                <input type="hidden" name="variantType" value="upload">
                 
                 <div class="modal-buttons">
                     <button type="button" class="modal-button secondary" onclick="closeVariantModal()">Cancel</button>
                     <button type="submit" class="modal-button primary futuristic-primary" id="variantUploadButton">
-                        <span class="button-text">Create Variant</span>
+                        <span class="button-text">Upload</span>
                         <div class="button-glow"></div>
                     </button>
                 </div>
@@ -3657,7 +3623,7 @@
         function openVariantModal(modelId, title) {
             currentModelId = modelId;
             document.getElementById('variantModal').style.display = 'flex';
-            document.getElementById('variantModalTitle').textContent = `Add Variant for "${title}"`;
+            document.getElementById('variantModalTitle').textContent = 'Add Variant';
         }
 
         function closeVariantModal() {
