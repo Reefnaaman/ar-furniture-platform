@@ -1984,6 +1984,39 @@
             color: #f85149;
         }
         
+        .user-customer {
+            color: #7d8590;
+            font-size: 0.85em;
+            margin-left: 8px;
+        }
+        
+        .user-meta {
+            display: flex;
+            gap: 15px;
+            margin-top: 5px;
+            font-size: 0.8em;
+        }
+        
+        .user-status {
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-weight: 500;
+        }
+        
+        .status-active {
+            background: rgba(46, 160, 67, 0.15);
+            color: #2ea043;
+        }
+        
+        .status-inactive {
+            background: rgba(248, 81, 73, 0.15);
+            color: #f85149;
+        }
+        
+        .user-created {
+            color: #7d8590;
+        }
+        
         /* Customer Logo Management Styles */
         .customer-logo-section {
             margin-top: 20px;
@@ -4816,22 +4849,41 @@
             const customerFilter = document.getElementById('imageCustomerFilter');
             if (!customerFilter) return;
             
-            // Get unique customers from images
-            const customers = [...new Set(allImages
-                .filter(img => img.customer_id)
-                .map(img => ({ id: img.customer_id, name: img.customer_name || img.customer_id }))
-            )];
-            
             // Clear existing options (keep "All Customers")
             customerFilter.innerHTML = '<option value="all">All Customers</option>';
             
-            // Add customer options
-            customers.forEach(customer => {
-                const option = document.createElement('option');
-                option.value = customer.id;
-                option.textContent = customer.name;
-                customerFilter.appendChild(option);
+            // Get customers from universal customer manager
+            const allCustomers = customerManager.getAllCustomers();
+            console.log('🏢 Populating customer filter with:', allCustomers.length, 'customers');
+            
+            // Add customer options from universal system
+            allCustomers.forEach(customer => {
+                if (customer.id !== 'unassigned') { // Skip unassigned
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = customer.name;
+                    customerFilter.appendChild(option);
+                }
             });
+            
+            // Also add customers from images that might not be in universal system yet
+            const imageCustomers = [...new Set(allImages
+                .filter(img => img.customer_id && img.customer_id !== 'unassigned')
+                .map(img => ({ id: img.customer_id, name: img.customer_name || img.customer_id }))
+            )];
+            
+            imageCustomers.forEach(imgCustomer => {
+                // Only add if not already in the list
+                const existingOption = customerFilter.querySelector(`option[value="${imgCustomer.id}"]`);
+                if (!existingOption) {
+                    const option = document.createElement('option');
+                    option.value = imgCustomer.id;
+                    option.textContent = imgCustomer.name;
+                    customerFilter.appendChild(option);
+                }
+            });
+            
+            console.log('✅ Customer filter populated with', customerFilter.options.length - 1, 'customers');
         }
         
         function filterImages() {
@@ -4937,28 +4989,74 @@
                     return;
                 }
                 
-                console.log('🎨 Setting users page content...');
-                // For now, show a placeholder since we need to implement user listing
+                // Load users from API
+                console.log('🌐 Fetching users from API...');
+                const response = await fetch('/api/users');
+                if (!response.ok) {
+                    throw new Error(`Failed to load users: ${response.status}`);
+                }
+                
+                const { users } = await response.json();
+                console.log('📊 Users loaded:', users.length);
+                
+                if (!users || users.length === 0) {
+                    usersContainer.innerHTML = `
+                        <div class="empty-state" style="padding: 40px; text-align: center; color: #7d8590;">
+                            <h3>No Users Found</h3>
+                            <p>Create your first user using the "Add User" button above</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Generate users HTML
+                usersContainer.innerHTML = users.map(user => {
+                    const isAdmin = user.role === 'admin';
+                    const roleDisplay = user.role === 'customer' ? 'Customer' : 'Administrator';
+                    const statusClass = user.is_active ? 'active' : 'inactive';
+                    const statusText = user.is_active ? 'Active' : 'Inactive';
+                    
+                    return `
+                        <div class="user-card ${statusClass}">
+                            <div class="user-avatar">
+                                ${user.role === 'admin' ? '👨‍💼' : '👤'}
+                            </div>
+                            <div class="user-info">
+                                <div class="user-name">${user.username}</div>
+                                <div class="user-role-container">
+                                    <span class="user-role">${roleDisplay}</span>
+                                    ${user.customer_name ? `<span class="user-customer">→ ${user.customer_name}</span>` : ''}
+                                </div>
+                                <div class="user-meta">
+                                    <span class="user-status status-${statusClass}">${statusText}</span>
+                                    <span class="user-created">Created: ${new Date(user.created_at).toLocaleDateString()}</span>
+                                </div>
+                            </div>
+                            <div class="user-actions">
+                                <button class="user-action-btn edit" onclick="openUserEditModal('${user.id}', '${user.username}', '${user.role}', '${user.customer_id || ''}', '${user.customer_name || ''}', ${user.is_active}, ${isAdmin})">
+                                    ⚙️ Edit
+                                </button>
+                                ${!isAdmin ? `
+                                    <button class="user-action-btn danger" onclick="toggleUserStatus('${user.id}', ${user.is_active})">
+                                        ${user.is_active ? '🔒 Deactivate' : '🔓 Activate'}
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                console.log('✅ Users page populated successfully');
+                
+            } catch (error) {
+                console.error('💥 Error loading users page:', error);
                 usersContainer.innerHTML = `
-                    <div class="user-card">
-                        <div class="user-avatar">👤</div>
-                        <div class="user-info">
-                            <div class="user-name">Admin User</div>
-                            <div class="user-role">Administrator</div>
-                        </div>
-                        <div class="user-actions">
-                            <button class="user-action-btn">Edit</button>
-                            <button class="user-action-btn danger">Deactivate</button>
-                        </div>
-                    </div>
-                    <div class="empty-state" style="padding: 40px; text-align: center; color: #7d8590;">
-                        <h3>User Management Coming Soon</h3>
-                        <p>Full user management interface will be implemented next</p>
+                    <div class="empty-state" style="padding: 40px; text-align: center; color: #f85149;">
+                        <h3>Error Loading Users</h3>
+                        <p>${error.message}</p>
+                        <button onclick="loadUsersPage()" class="user-action-btn">Retry</button>
                     </div>
                 `;
-                console.log('✅ Users page content set successfully');
-            } catch (error) {
-                console.error('Error loading users page:', error);
             }
         }
         
