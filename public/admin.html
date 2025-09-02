@@ -4720,28 +4720,36 @@
         
         async function loadImagesPage() {
             try {
-                // Load images
+                console.log('🖼️ Loading images page...');
                 const response = await fetch('/api/images');
+                console.log('📡 Response status:', response.status);
+                
                 if (response.ok) {
-                    const { images } = await response.json();
-                    allImages = images || [];
+                    const result = await response.json();
+                    console.log('📊 API Response:', result);
+                    
+                    const images = result.images || [];
+                    console.log('🖼️ Images found:', images.length);
+                    
+                    allImages = images;
                     filteredImages = [...allImages];
                     
-                    // Populate customer filter
+                    console.log('🔄 Populating customer filter...');
                     populateCustomerFilter();
                     
-                    // Display images
+                    console.log('🎨 Displaying images grid...');
                     displayImagesGrid();
                 } else {
+                    console.error('❌ Failed to load images:', response.status, response.statusText);
                     document.getElementById('imagesGrid').innerHTML = `
                         <div class="empty-state">
                             <h3>Failed to Load Images</h3>
-                            <p>Please try refreshing the page</p>
+                            <p>Status: ${response.status} - ${response.statusText}</p>
                         </div>
                     `;
                 }
             } catch (error) {
-                console.error('Error loading images page:', error);
+                console.error('💥 Error loading images page:', error);
                 document.getElementById('imagesGrid').innerHTML = `
                     <div class="empty-state">
                         <h3>Error Loading Images</h3>
@@ -4796,8 +4804,11 @@
         
         function displayImagesGrid() {
             const grid = document.getElementById('imagesGrid');
+            console.log('🎨 Display grid called, grid element:', grid);
+            console.log('🎨 Filtered images count:', filteredImages.length);
             
             if (filteredImages.length === 0) {
+                console.log('📭 No images to display');
                 grid.innerHTML = `
                     <div class="empty-state">
                         <h3>No Images Found</h3>
@@ -4806,6 +4817,8 @@
                 `;
                 return;
             }
+            
+            console.log('🎨 Rendering', filteredImages.length, 'images');
             
             grid.innerHTML = filteredImages.map(image => `
                 <div class="image-card">
