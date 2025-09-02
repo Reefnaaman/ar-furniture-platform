@@ -3664,10 +3664,18 @@
                     alert(`User "${userData.username}" created successfully!\n\nLogin credentials:\nUsername: ${userData.username}\nPassword: ${userData.password}\nRole: ${userData.role}${userData.role === 'customer' ? `\nCustomer: ${userData.customerName}` : ''}`);
                     closeUserModal();
                     
-                    // Refresh customer data if needed
-                    if (typeof customerDataManager !== 'undefined') {
-                        await customerDataManager.loadCustomers();
+                    // If creating a customer, immediately add to universal customer manager
+                    if (userData.role === 'customer' && userData.customerId && userData.customerName) {
+                        customerManager.setCustomer({
+                            id: userData.customerId,
+                            name: userData.customerName,
+                            count: 0
+                        });
+                        console.log('✅ Customer added to universal system:', userData.customerName);
                     }
+                    
+                    // Refresh all customer-related UI
+                    await customerManager.loadFromAPI();
                 } else {
                     alert('Failed to create user: ' + (result.error || 'Unknown error'));
                 }

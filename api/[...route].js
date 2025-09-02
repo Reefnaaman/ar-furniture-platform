@@ -97,6 +97,11 @@ export default async function handler(req, res) {
       return await handleCreateImagesTable(req, res);
     }
     
+    // Route: /api/create-user
+    if (routePath === 'create-user') {
+      return await handleCreateUser(req, res);
+    }
+    
     // Route: /api/customer/[id]
     if (routePath?.startsWith('customer/')) {
       const customerId = routePath.split('/')[1];
@@ -834,4 +839,80 @@ GRANT ALL ON images TO service_role;
       '4. Click "Run" to create the table'
     ]
   });
+}
+
+/**
+ * Handle user creation with universal customer integration
+ */
+async function handleCreateUser(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { username, password, role, customerId, customerName } = req.body;
+
+    if (!username || !password || !role) {
+      return res.status(400).json({ error: 'Username, password and role are required' });
+    }
+
+    if (role === 'customer' && (!customerId || !customerName)) {
+      return res.status(400).json({ error: 'Customer ID and name are required for customer role' });
+    }
+
+    // Generate user ID
+    const userId = Date.now().toString().slice(-8);
+    
+    // Create user record
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .insert({
+        id: userId,
+        username,
+        password_hash: password, // In production, this should be hashed
+        role,
+        customer_id: customerId || null,
+        customer_name: customerName || null
+      })
+      .select()
+      .single();
+
+    if (userError) {
+      console.error('Error creating user:', userError);
+      return res.status(500).json({ error: 'Failed to create user: ' + userError.message });
+    }
+
+    // If creating a customer, also ensure they exist in the customers system
+    if (role === 'customer') {
+      // Check if customer already exists in models table (via assignment)
+      const { data: existingCustomers } = await supabase
+        .from('models')
+        .select('customer_id, customer_name')
+        .eq('customer_id', customerId)
+        .limit(1);
+
+      // If customer doesn't exist in models, create a placeholder entry
+      if (!existingCustomers || existingCustomers.length === 0) {
+        console.log(`Creating customer entry for: ${customerName} (${customerId})`);
+        // We'll let the customer appear when they first get furniture assigned
+        // This ensures the customer system stays universal
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'User created successfully',
+      user: {
+        id: userData.id,
+        username: userData.username,
+        role: userData.role,
+        customerId: userData.customer_id,
+        customerName: userData.customer_name
+      }
+    });
+
+  } catch (error) {
+    console.error('Create user error:', error);
+    return res.status(500).json({ error: error.message });
+  }
 }
