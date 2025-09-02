@@ -1700,6 +1700,11 @@
             overflow-y: auto;
         }
         
+        /* Content wrapper for pages */
+        .dashboard-content {
+            padding: 30px;
+        }
+        
         .sidebar-nav-title {
             padding: 15px 20px 10px;
             font-size: 0.85rem;
@@ -2143,33 +2148,36 @@
                     </div>
                 </div>
                 
-            <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">📦</div>
-                <div class="stat-label">Total Furniture</div>
-                <div class="stat-value" id="totalModels">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">👁️</div>
-                <div class="stat-label">Total Views</div>
-                <div class="stat-value" id="totalViews">-</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">💾</div>
-                <div class="stat-label">Storage Used</div>
-                <div class="stat-value" id="totalSize">-</div>
-            </div>
-        </div>
-        
-        <div class="models-section">
-            <div class="section-header">
-                <h2 class="section-title">Uploaded Furniture</h2>
-                <button class="refresh-button" onclick="loadModels()">Refresh</button>
-            </div>
-            
-            <div id="modelsContainer">
-                <div class="loading">Loading furniture...</div>
-            </div>
+                <div class="dashboard-content">
+                    <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">📦</div>
+                        <div class="stat-label">Total Furniture</div>
+                        <div class="stat-value" id="totalModels">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">👁️</div>
+                        <div class="stat-label">Total Views</div>
+                        <div class="stat-value" id="totalViews">-</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-icon">💾</div>
+                        <div class="stat-label">Storage Used</div>
+                        <div class="stat-value" id="totalSize">-</div>
+                    </div>
+                    </div>
+                    
+                    <div class="models-section">
+                        <div class="section-header">
+                            <h2 class="section-title">Uploaded Furniture</h2>
+                            <button class="refresh-button" onclick="loadModels()">Refresh</button>
+                        </div>
+                        
+                        <div id="modelsContainer">
+                            <div class="loading">Loading furniture...</div>
+                        </div>
+                    </div>
+                </div>
             </div>
             
             <!-- Images Page -->
