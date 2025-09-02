@@ -4676,42 +4676,62 @@
         
         // Universal Page Navigation
         function navigateToPage(pageName) {
+            console.log(`🧭 Navigation requested to: ${pageName}`);
+            
             // Hide all pages
-            document.querySelectorAll('.page').forEach(page => {
+            const allPages = document.querySelectorAll('.page');
+            console.log(`📄 Found ${allPages.length} pages to hide`);
+            allPages.forEach(page => {
+                console.log(`🙈 Hiding page:`, page.id);
                 page.style.display = 'none';
             });
             
             // Show selected page
-            const targetPage = document.getElementById(pageName + 'Page');
+            const targetPageId = pageName + 'Page';
+            const targetPage = document.getElementById(targetPageId);
+            console.log(`🎯 Looking for page with ID: ${targetPageId}`, targetPage);
+            
             if (targetPage) {
                 targetPage.style.display = 'block';
                 currentPage = pageName;
+                console.log(`✅ Successfully showed page: ${targetPageId}`);
+            } else {
+                console.error(`❌ Target page not found: ${targetPageId}`);
             }
             
             // Update navigation active state
-            document.querySelectorAll('.sidebar-nav-link').forEach(link => {
+            const allNavLinks = document.querySelectorAll('.sidebar-nav-link');
+            console.log(`🔗 Found ${allNavLinks.length} nav links`);
+            allNavLinks.forEach(link => {
                 link.classList.remove('active');
             });
             
             const activeLink = document.querySelector(`[data-page="${pageName}"]`);
+            console.log(`🎯 Looking for nav link with data-page="${pageName}"`, activeLink);
             if (activeLink) {
                 activeLink.classList.add('active');
+                console.log(`✅ Successfully activated nav link for: ${pageName}`);
             }
             
             // Initialize page-specific functionality
+            console.log(`🚀 Initializing page-specific functionality for: ${pageName}`);
             switch(pageName) {
                 case 'images':
+                    console.log(`📸 Loading images page...`);
                     loadImagesPage();
                     break;
                 case 'users':
+                    console.log(`👥 Loading users page...`);
                     loadUsersPage();
                     break;
                 case 'dashboard':
-                    // Dashboard is already loaded
+                    console.log(`🏠 Dashboard page (no initialization needed)`);
                     break;
+                default:
+                    console.warn(`⚠️ Unknown page: ${pageName}`);
             }
             
-            console.log(`📄 Navigated to: ${pageName}`);
+            console.log(`📄 Navigation completed to: ${pageName}`);
         }
         
         // ========================================
@@ -4875,8 +4895,18 @@
         
         async function loadUsersPage() {
             try {
+                console.log('👥 Loading users page...');
+                const usersContainer = document.getElementById('usersContainer');
+                console.log('📦 Users container:', usersContainer);
+                
+                if (!usersContainer) {
+                    console.error('❌ Users container not found!');
+                    return;
+                }
+                
+                console.log('🎨 Setting users page content...');
                 // For now, show a placeholder since we need to implement user listing
-                document.getElementById('usersContainer').innerHTML = `
+                usersContainer.innerHTML = `
                     <div class="user-card">
                         <div class="user-avatar">👤</div>
                         <div class="user-info">
@@ -4893,6 +4923,7 @@
                         <p>Full user management interface will be implemented next</p>
                     </div>
                 `;
+                console.log('✅ Users page content set successfully');
             } catch (error) {
                 console.error('Error loading users page:', error);
             }
