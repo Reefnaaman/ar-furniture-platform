@@ -4243,7 +4243,8 @@
                 formData.append('variantName', variantName);
                 formData.append('hexColor', hexColor);
                 formData.append('variantType', variantType);
-                formData.append('isPrimary', document.getElementById('isPrimary').checked);
+                // Default isPrimary to false since we don't have this checkbox in the form
+                formData.append('isPrimary', false);
 
                 const response = await fetch(`/api/variants?modelId=${currentModelId}`, {
                     method: 'POST',
