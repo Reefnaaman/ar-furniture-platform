@@ -3087,41 +3087,90 @@
             document.getElementById('uploadStatus').textContent = 'Preparing upload...';
             
             try {
-                // Enhanced progress simulation with different stages
-                let progress = 0;
-                let stage = 0;
-                const stages = ['Preparing upload...', 'Uploading furniture...', 'Processing file...', 'Finalizing...'];
+                // Show file size
+                const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
+                console.log(`📦 Uploading file: ${fileSizeMB}MB`);
                 
-                const progressInterval = setInterval(() => {
-                    progress += 5;
-                    if (progress <= 90) {
-                        document.getElementById('progressBar').style.width = progress + '%';
-                        document.getElementById('progressPercentage').textContent = Math.round(progress) + '%';
-                        
-                        // Update stage text
-                        const newStage = Math.floor(progress / 25);
-                        if (newStage !== stage && stages[newStage]) {
-                            stage = newStage;
-                            document.getElementById('uploadStatus').textContent = stages[stage];
-                        }
-                    }
-                }, 150);
-                
-                const response = await fetch('/api/upload-simple', {
+                // Step 1: Get signed upload parameters
+                document.getElementById('uploadStatus').textContent = 'Getting upload signature...';
+                const signatureResponse = await fetch('/api/cloudinary-config', {
                     method: 'POST',
-                    body: formData
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        uploadType: 'model',
+                        filename: selectedFile.name
+                    })
                 });
                 
-                clearInterval(progressInterval);
+                const signatureData = await signatureResponse.json();
+                if (!signatureResponse.ok) {
+                    throw new Error(signatureData.error || 'Failed to get upload signature');
+                }
+                
+                // Step 2: Upload directly to Cloudinary
+                document.getElementById('uploadStatus').textContent = `Uploading ${fileSizeMB}MB file to cloud...`;
+                document.getElementById('progressBar').style.width = '30%';
+                document.getElementById('progressPercentage').textContent = '30%';
+                
+                const cloudinaryForm = new FormData();
+                cloudinaryForm.append('file', selectedFile);
+                cloudinaryForm.append('api_key', signatureData.apiKey);
+                cloudinaryForm.append('timestamp', signatureData.timestamp);
+                cloudinaryForm.append('signature', signatureData.signature);
+                cloudinaryForm.append('folder', signatureData.params.folder);
+                cloudinaryForm.append('public_id', signatureData.params.public_id);
+                cloudinaryForm.append('resource_type', signatureData.params.resource_type);
+                
+                const cloudinaryResponse = await fetch(signatureData.uploadUrl, {
+                    method: 'POST',
+                    body: cloudinaryForm
+                });
+                
+                document.getElementById('progressBar').style.width = '60%';
+                document.getElementById('progressPercentage').textContent = '60%';
+                
+                if (!cloudinaryResponse.ok) {
+                    const errorText = await cloudinaryResponse.text();
+                    console.error('❌ Cloudinary upload failed:', errorText);
+                    throw new Error('Failed to upload file to Cloudinary');
+                }
+                
+                const cloudinaryData = await cloudinaryResponse.json();
+                console.log('✅ Cloudinary upload successful:', cloudinaryData);
+                
+                // Step 3: Save metadata to database
+                document.getElementById('uploadStatus').textContent = 'Saving to database...';
+                document.getElementById('progressBar').style.width = '80%';
+                document.getElementById('progressPercentage').textContent = '80%';
+                
+                const saveResponse = await fetch('/api/cloudinary-save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'model',
+                        cloudinaryData: cloudinaryData,
+                        metadata: {
+                            title: titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''),
+                            description: descriptionInput.value || '',
+                            filename: selectedFile.name,
+                            customerId: customerId,
+                            customerName: customerName
+                        }
+                    })
+                });
+                
+                const result = await saveResponse.json();
+                
                 document.getElementById('progressBar').style.width = '100%';
                 document.getElementById('progressPercentage').textContent = '100%';
                 
-                if (!response.ok) {
-                    const error = await response.json();
-                    throw new Error(error.error || 'Upload failed');
+                if (!saveResponse.ok) {
+                    throw new Error(result.error || 'Failed to save model to database');
                 }
-                
-                const result = await response.json();
                 document.getElementById('uploadStatus').textContent = '✅ Upload successful!';
                 
                 // Extract and save dominant color after successful upload
@@ -4238,27 +4287,39 @@
             buttonText.textContent = `Uploading ${fileSizeMB}MB file...`;
 
             try {
-                // Step 1: Get Cloudinary configuration
-                console.log('🔧 Getting Cloudinary configuration...');
-                const configResponse = await fetch('/api/cloudinary-config');
-                const config = await configResponse.json();
+                // Step 1: Get signed upload parameters from backend
+                console.log('🔧 Getting upload signature...');
+                const signatureResponse = await fetch('/api/cloudinary-config', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        uploadType: 'variant',
+                        filename: file.name
+                    })
+                });
                 
-                if (!configResponse.ok) {
-                    throw new Error(config.error || 'Failed to get upload configuration');
+                const signatureData = await signatureResponse.json();
+                
+                if (!signatureResponse.ok) {
+                    throw new Error(signatureData.error || 'Failed to get upload signature');
                 }
                 
-                // Step 2: Upload directly to Cloudinary
+                // Step 2: Upload directly to Cloudinary with signature
                 console.log('☁️ Uploading directly to Cloudinary...');
                 buttonText.textContent = 'Uploading to Cloudinary...';
                 
                 const formData = new FormData();
                 formData.append('file', file);
-                formData.append('upload_preset', config.uploadPreset || 'ml_default'); // Use default if preset not configured
-                formData.append('folder', 'furniture-models');
-                formData.append('public_id', `variant_${currentModelId}_${Date.now()}_${file.name}`);
-                formData.append('resource_type', 'raw');
+                formData.append('api_key', signatureData.apiKey);
+                formData.append('timestamp', signatureData.timestamp);
+                formData.append('signature', signatureData.signature);
+                formData.append('folder', signatureData.params.folder);
+                formData.append('public_id', signatureData.params.public_id);
+                formData.append('resource_type', signatureData.params.resource_type);
                 
-                const cloudinaryResponse = await fetch(config.uploadUrl, {
+                const cloudinaryResponse = await fetch(signatureData.uploadUrl, {
                     method: 'POST',
                     body: formData
                 });
