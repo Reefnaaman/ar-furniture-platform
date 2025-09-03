@@ -4238,6 +4238,14 @@
                     fileName.style.background = 'rgba(88, 166, 255, 0.1)';
                     fileName.style.borderColor = 'rgba(88, 166, 255, 0.3)';
                     fileName.style.color = '#58a6ff';
+                    
+                    // Auto-fill variant name from filename (without extension)
+                    const variantNameInput = document.getElementById('variantName');
+                    if (!variantNameInput.value.trim()) {
+                        const nameWithoutExtension = file.name.replace(/\.(glb|gltf)$/i, '');
+                        variantNameInput.value = nameWithoutExtension;
+                        variantNameInput.placeholder = nameWithoutExtension;
+                    }
                 }
                 
                 // Update upload area appearance
@@ -4365,17 +4373,21 @@
                 
                 console.log('✅ Variant saved successfully:', saveResult);
                 
-                // Extract and save dominant color for the new variant
-                buttonText.textContent = 'Extracting colors...';
-                if (saveResult.success && saveResult.id) {
-                    setTimeout(async () => {
-                        await extractAndSaveVariantColor(saveResult.id, currentModelId);
-                    }, 2000); // Wait for model to be processed and rendered
-                }
-                
                 alert(`Variant "${variantName}" created successfully!`);
                 closeVariantModal();
-                location.reload(); // Refresh the models display
+                
+                // Reload immediately to show the new variant
+                location.reload();
+                
+                // Extract and save dominant color for the new variant AFTER page reload
+                // This will run on the new page load and update the color
+                if (saveResult.success && saveResult.id) {
+                    // Store the variant ID for color extraction after reload
+                    sessionStorage.setItem('extractColorForVariant', JSON.stringify({
+                        variantId: saveResult.id,
+                        modelId: currentModelId
+                    }));
+                }
                 
             } catch (error) {
                 console.error('❌ Error creating variant:', error);
@@ -4987,6 +4999,28 @@
         // Update colors when page loads (for existing models)
         document.addEventListener('DOMContentLoaded', () => {
             setTimeout(updateOriginalVariantColors, 3000); // Give models time to load and render
+            
+            // Check if we need to extract color for a newly uploaded variant
+            const extractColorData = sessionStorage.getItem('extractColorForVariant');
+            if (extractColorData) {
+                try {
+                    const { variantId, modelId } = JSON.parse(extractColorData);
+                    console.log('🎨 Found variant color extraction request:', variantId, 'for model:', modelId);
+                    
+                    // Clear the session storage
+                    sessionStorage.removeItem('extractColorForVariant');
+                    
+                    // Extract color after models are loaded and rendered
+                    setTimeout(async () => {
+                        console.log('🎨 Starting delayed color extraction for new variant...');
+                        await extractAndSaveVariantColor(variantId, modelId);
+                    }, 5000); // Wait 5 seconds for models to fully load and render
+                    
+                } catch (error) {
+                    console.error('Error parsing variant color extraction data:', error);
+                    sessionStorage.removeItem('extractColorForVariant');
+                }
+            }
         });
 
         // ========================================
