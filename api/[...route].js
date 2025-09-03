@@ -22,6 +22,15 @@ export default async function handler(req, res) {
   console.log('Request URL:', req.url);
   console.log('Request headers:', JSON.stringify(req.headers, null, 2));
   
+  // Immediate response for password update test
+  if (req.url?.includes('/users/') && req.url?.includes('/password')) {
+    return res.status(200).json({ 
+      message: 'Password route reached!', 
+      url: req.url,
+      method: req.method 
+    });
+  }
+  
   // Enable CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
