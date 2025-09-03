@@ -25,6 +25,18 @@ export default async function handler(req, res) {
       method: req.method 
     });
     
+    // Debug endpoint to check request details
+    if (req.method === 'GET' && req.url?.includes('debug-test')) {
+      return res.status(200).json({
+        url: req.url,
+        pathname: url.pathname,
+        pathParts,
+        pathSegments,
+        method: req.method,
+        headers: req.headers
+      });
+    }
+    
     if (req.method === 'GET' && pathSegments.length === 0) {
       // GET /api/users - List all users with view counts
       const usersResult = await query(`
