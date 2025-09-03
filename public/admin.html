@@ -3119,9 +3119,10 @@
                 cloudinaryForm.append('api_key', signatureData.apiKey);
                 cloudinaryForm.append('timestamp', signatureData.timestamp);
                 cloudinaryForm.append('signature', signatureData.signature);
+                // Only send parameters that were used to generate the signature
                 cloudinaryForm.append('folder', signatureData.params.folder);
                 cloudinaryForm.append('public_id', signatureData.params.public_id);
-                cloudinaryForm.append('resource_type', signatureData.params.resource_type);
+                // Don't send resource_type in form data - it's specified in the URL
                 
                 const cloudinaryResponse = await fetch(signatureData.uploadUrl, {
                     method: 'POST',
@@ -4315,9 +4316,10 @@
                 formData.append('api_key', signatureData.apiKey);
                 formData.append('timestamp', signatureData.timestamp);
                 formData.append('signature', signatureData.signature);
+                // Only send parameters that were used to generate the signature
                 formData.append('folder', signatureData.params.folder);
                 formData.append('public_id', signatureData.params.public_id);
-                formData.append('resource_type', signatureData.params.resource_type);
+                // Don't send resource_type - it's specified in the URL
                 
                 const cloudinaryResponse = await fetch(signatureData.uploadUrl, {
                     method: 'POST',

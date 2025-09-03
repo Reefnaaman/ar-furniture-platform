@@ -50,17 +50,23 @@ export default async function handler(req, res) {
       const folder = 'furniture-models';
       const publicId = `${folder}/${Date.now()}-${filename || 'model.glb'}`;
       
+      // Only include parameters that will be sent to Cloudinary for signature
+      const signatureParams = {
+        folder: folder,
+        public_id: publicId,
+        timestamp: timestamp
+      };
+
+      // Generate signature - ONLY use params that will be sent
+      const signature = cloudinary.utils.api_sign_request(signatureParams, process.env.CLOUDINARY_API_SECRET);
+      
+      // Full params for client (includes everything needed)
       const params = {
         timestamp: timestamp,
         folder: folder,
         public_id: publicId,
-        resource_type: 'raw',
-        type: 'upload',
-        overwrite: true
+        resource_type: 'raw'
       };
-
-      // Generate signature
-      const signature = cloudinary.utils.api_sign_request(params, process.env.CLOUDINARY_API_SECRET);
 
       res.status(200).json({
         signature,
