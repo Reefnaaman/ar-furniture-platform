@@ -234,28 +234,12 @@
         }
 
         /* Variant color styles */
-        .variant-colors {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin: 20px 0;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            backdrop-filter: blur(10px);
-        }
-
-        .variant-colors-label {
-            font-size: 0.9rem;
-            color: #7d8590;
-            font-weight: 600;
-            margin-right: 5px;
-        }
-
         .variant-circles {
             display: flex;
             gap: 10px;
             align-items: center;
+            margin: 20px 0;
+            padding: 0;
         }
 
         .variant-circle {
@@ -496,8 +480,6 @@
                                 
                                 <!-- Variant Colors Section -->
                                 ${modelInfo.variants && modelInfo.variants.length > 0 ? `
-                                <div class="variant-colors">
-                                    <span class="variant-colors-label">Available Colors:</span>
                                     <div class="variant-circles">
                                         <!-- Original variant -->
                                         <div class="variant-circle ${!currentVariantId ? 'active' : ''}" 
@@ -515,7 +497,6 @@
                                             </div>
                                         `).join('')}
                                     </div>
-                                </div>
                                 ` : ''}
                             </div>
                             
