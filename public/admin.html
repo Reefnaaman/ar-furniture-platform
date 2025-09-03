@@ -4201,7 +4201,7 @@
             }
         }
 
-        // Handle variant creation form submission
+        // Handle variant creation form submission - DIRECT CLOUDINARY UPLOAD
         document.getElementById('variantForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -4216,58 +4216,102 @@
             
             // Validate required fields
             const variantName = document.getElementById('variantName').value.trim();
-            const hexColor = '#000000'; // Default color since we don't use color picker anymore
-            const variantType = 'upload'; // Always upload type now
+            const hexColor = '#000000'; // Default color
+            const file = fileInput.files[0];
             
             if (!variantName) {
                 alert('Please enter a variant name');
                 return;
             }
             
-            // Always require file upload now
-            if (!fileInput.files.length) {
+            if (!file) {
                 alert('Please select a GLB file for the variant');
                 return;
             }
 
+            // Show file size for debugging
+            const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
+            console.log(`📦 File size: ${fileSizeMB}MB`);
+
             // Show loading state
             button.disabled = true;
-            buttonText.textContent = 'Creating Variant...';
+            buttonText.textContent = `Uploading ${fileSizeMB}MB file...`;
 
             try {
-                // Create form data for multipart upload
-                const formData = new FormData();
-                if (variantType === 'upload' && fileInput.files[0]) {
-                    formData.append('file', fileInput.files[0]);
+                // Step 1: Get Cloudinary configuration
+                console.log('🔧 Getting Cloudinary configuration...');
+                const configResponse = await fetch('/api/cloudinary-config');
+                const config = await configResponse.json();
+                
+                if (!configResponse.ok) {
+                    throw new Error(config.error || 'Failed to get upload configuration');
                 }
-                formData.append('variantName', variantName);
-                formData.append('hexColor', hexColor);
-                formData.append('variantType', variantType);
-                // Default isPrimary to false since we don't have this checkbox in the form
-                formData.append('isPrimary', false);
-
-                const response = await fetch(`/api/variants?modelId=${currentModelId}`, {
+                
+                // Step 2: Upload directly to Cloudinary
+                console.log('☁️ Uploading directly to Cloudinary...');
+                buttonText.textContent = 'Uploading to Cloudinary...';
+                
+                const formData = new FormData();
+                formData.append('file', file);
+                formData.append('upload_preset', config.uploadPreset || 'ml_default'); // Use default if preset not configured
+                formData.append('folder', 'furniture-models');
+                formData.append('public_id', `variant_${currentModelId}_${Date.now()}_${file.name}`);
+                formData.append('resource_type', 'raw');
+                
+                const cloudinaryResponse = await fetch(config.uploadUrl, {
                     method: 'POST',
                     body: formData
                 });
-
-                const result = await response.json();
-
-                if (response.ok) {
-                    alert(`Variant "${variantName}" created successfully!`);
-                    closeVariantModal();
-                    // Refresh the models display
-                    location.reload();
-                } else {
-                    alert('Failed to create variant: ' + (result.error || 'Unknown error'));
+                
+                if (!cloudinaryResponse.ok) {
+                    const errorText = await cloudinaryResponse.text();
+                    console.error('❌ Cloudinary upload failed:', errorText);
+                    throw new Error('Failed to upload file to Cloudinary');
                 }
+                
+                const cloudinaryData = await cloudinaryResponse.json();
+                console.log('✅ Cloudinary upload successful:', cloudinaryData);
+                
+                // Step 3: Save metadata to database
+                buttonText.textContent = 'Saving to database...';
+                console.log('💾 Saving variant to database...');
+                
+                const saveResponse = await fetch('/api/cloudinary-save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        type: 'variant',
+                        cloudinaryData: cloudinaryData,
+                        metadata: {
+                            modelId: currentModelId,
+                            variantName: variantName,
+                            hexColor: hexColor,
+                            filename: file.name,
+                            isPrimary: false
+                        }
+                    })
+                });
+                
+                const saveResult = await saveResponse.json();
+                
+                if (!saveResponse.ok) {
+                    throw new Error(saveResult.error || 'Failed to save variant to database');
+                }
+                
+                console.log('✅ Variant saved successfully:', saveResult);
+                alert(`Variant "${variantName}" created successfully!`);
+                closeVariantModal();
+                location.reload(); // Refresh the models display
+                
             } catch (error) {
-                console.error('Error creating variant:', error);
-                alert('Error creating variant: ' + error.message);
+                console.error('❌ Error creating variant:', error);
+                alert(`Error creating variant: ${error.message}`);
             } finally {
                 // Reset button state
                 button.disabled = false;
-                buttonText.textContent = 'Create Variant';
+                buttonText.textContent = 'Upload';
             }
         });
 
