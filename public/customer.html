@@ -1031,6 +1031,8 @@
             gap: 8px;
             align-items: center;
             flex-wrap: wrap;
+            margin: 15px 0;
+            padding: 0;
         }
 
         .variant-circle {
@@ -1584,8 +1586,6 @@
                             </div>
                             
                             ${model.variants && model.variants.length > 0 ? `
-                            <div class="model-variants">
-                                <div class="variants-label">Available Colors:</div>
                                 <div class="variants-circles">
                                     <!-- Original variant -->
                                     <div class="variant-circle" 
@@ -1603,7 +1603,6 @@
                                         </div>
                                     `).join('')}
                                 </div>
-                            </div>
                             ` : ''}
                             
                             <div class="model-actions">

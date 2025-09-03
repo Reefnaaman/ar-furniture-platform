@@ -1573,6 +1573,8 @@
             display: flex;
             gap: 8px;
             flex-wrap: wrap;
+            margin: 15px 0;
+            padding: 0;
         }
         
         .variant-circle {
@@ -2817,8 +2819,6 @@
                         </div>
                         
                         ${model.variants && model.variants.length > 0 ? `
-                        <div class="model-variants">
-                            <div class="variants-label">Available Colors:</div>
                             <div class="variants-circles">
                                 <!-- Always show original as first variant with extracted color -->
                                 <div class="variant-circle original-variant" 
@@ -2841,7 +2841,6 @@
                                     </div>
                                 `).join('')}
                             </div>
-                        </div>
                         ` : ''}
                         
                         <div class="model-actions">
