@@ -381,6 +381,13 @@
                 
                 const modelInfo = await response.json();
                 
+                // Debug: Log model info and variants
+                console.log('🖥️ Desktop model info:', modelInfo);
+                console.log('🎨 Variants found:', modelInfo.variants?.length || 0);
+                if (modelInfo.variants) {
+                    modelInfo.variants.forEach(v => console.log(`  • ${v.variant_name}: ${v.hex_color}`));
+                }
+                
                 // Desktop - show 3D viewer with QR code
                 document.title = `${modelInfo.title} - 3D View`;
                 
@@ -448,14 +455,14 @@
                                 ${modelInfo.variants && modelInfo.variants.length > 0 ? `
                                     <div class="variant-circles">
                                         <!-- Original variant -->
-                                        <div class="variant-circle ${!currentVariantId ? 'active' : ''}" 
+                                        <div class="variant-circle active" 
                                              style="background: ${modelInfo.dominant_color || '#6b7280'};" 
                                              title="Original"
                                              onclick="switchToVariant('original', '/api/model-file?id=${id}', '${modelInfo.dominant_color || '#6b7280'}')">
                                         </div>
                                         <!-- Variant colors -->
                                         ${modelInfo.variants.map(variant => `
-                                            <div class="variant-circle ${variant.is_primary ? 'primary' : ''} ${currentVariantId === variant.id ? 'active' : ''}" 
+                                            <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
                                                  style="background-color: ${variant.hex_color};" 
                                                  title="${variant.variant_name}"
                                                  onclick="switchToVariant('${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}')">
@@ -643,8 +650,14 @@
             launchDirectAR(modelId, modelUrl);
         }
 
-        // Direct AR launch (original functionality)
-        function launchDirectAR(modelId, modelUrl) {
+        // Direct AR launch with optional variant data
+        function launchDirectAR(modelId, modelUrl, variantData = null) {
+            // If we have variant data, create AR with variant switching
+            if (variantData) {
+                createARWithVariantSwitching(modelId, modelUrl, variantData);
+                return;
+            }
+            
             // Keep body completely black and hidden
             document.body.style.cssText = 'visibility: hidden; background: #000 !important; margin: 0; padding: 0;';
             
@@ -662,13 +675,25 @@
             modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
             document.body.appendChild(modelViewer);
 
-            // Direct AR activation - no fallback UI
-            setTimeout(() => {
-                if (modelViewer.activateAR) {
-                    console.log('🚀 Launching AR directly...');
+            // Wait for model to load, then activate AR
+            let arActivated = false;
+            
+            modelViewer.addEventListener('load', () => {
+                if (!arActivated && modelViewer.canActivateAR) {
+                    arActivated = true;
+                    console.log('🚀 Model loaded, activating AR...');
                     modelViewer.activateAR();
                 }
-            }, 500);
+            });
+            
+            // Backup: Try AR after a delay if load event doesn't fire
+            setTimeout(() => {
+                if (!arActivated && modelViewer.activateAR) {
+                    arActivated = true;
+                    console.log('🚀 Activating AR via timeout...');
+                    modelViewer.activateAR();
+                }
+            }, 2000);
 
             // Track view
             fetch(`/api/model-view?id=${modelId}`, { method: 'POST' }).catch(() => {});
