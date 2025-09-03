@@ -16,9 +16,24 @@ export default async function handler(req, res) {
     
     console.log('User route debug:', { 
       url: req.url, 
-      pathSegments, 
+      pathSegments,
+      pathSegmentsType: typeof pathSegments,
+      pathSegmentsArray: Array.isArray(pathSegments),
+      pathSegmentsLength: pathSegments?.length,
       method: req.method 
     });
+    
+    // Debug endpoint - return path segments info
+    if (req.method === 'GET' && req.url?.includes('debug')) {
+      return res.status(200).json({
+        pathSegments,
+        pathSegmentsType: typeof pathSegments,
+        pathSegmentsArray: Array.isArray(pathSegments),
+        pathSegmentsLength: pathSegments?.length,
+        url: req.url,
+        query: req.query
+      });
+    }
     
     // GET /api/users - List all users
     if (req.method === 'GET' && (!pathSegments || pathSegments.length === 0)) {
