@@ -1007,6 +1007,68 @@
             display: flex;
             gap: 10px;
         }
+
+        /* Variant colors styles */
+        .model-variants {
+            margin: 15px 0;
+            padding: 12px 15px;
+            background: linear-gradient(135deg, rgba(13, 17, 23, 0.5) 0%, rgba(22, 27, 34, 0.3) 100%);
+            border-radius: 12px;
+            border: 1px solid rgba(240, 246, 252, 0.1);
+        }
+
+        .variants-label {
+            font-size: 0.8rem;
+            color: #7d8590;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .variants-circles {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .variant-circle {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 2px solid rgba(240, 246, 252, 0.3);
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .variant-circle:hover {
+            transform: scale(1.15);
+            border-color: rgba(88, 166, 255, 0.6);
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.4);
+        }
+
+        .variant-circle.active {
+            border-color: #58a6ff;
+            border-width: 3px;
+            box-shadow: 0 0 15px rgba(88, 166, 255, 0.5);
+        }
+
+        .variant-circle.primary {
+            border-color: #ffd700;
+            border-width: 3px;
+        }
+
+        .variant-circle.primary:hover {
+            box-shadow: 0 4px 12px rgba(255, 215, 0, 0.6);
+        }
         
         .action-button {
             padding: 8px 16px;
@@ -1484,6 +1546,29 @@
                                 </div>
                             </div>
                             
+                            ${model.variants && model.variants.length > 0 ? `
+                            <div class="model-variants">
+                                <div class="variants-label">Available Colors:</div>
+                                <div class="variants-circles">
+                                    <!-- Original variant -->
+                                    <div class="variant-circle" 
+                                         style="background: ${model.dominant_color || '#6b7280'};" 
+                                         title="Original"
+                                         data-model-id="${model.id}"
+                                         onclick="switchToVariant('${model.id}', 'original', '${modelUrl}')">
+                                    </div>
+                                    ${model.variants.map(variant => `
+                                        <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
+                                             style="background-color: ${variant.hex_color};" 
+                                             title="${variant.variant_name}"
+                                             onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}', '${variant.variant_type || 'upload'}')">
+                                             ${variant.is_primary ? '★' : ''}
+                                        </div>
+                                    `).join('')}
+                                </div>
+                            </div>
+                            ` : ''}
+                            
                             <div class="model-actions">
                                 <a href="/view?id=${model.id}" target="_blank" class="action-button">
                                     👁️ View in AR
@@ -1521,6 +1606,40 @@
                     button.textContent = originalText;
                 }, 2000);
             });
+        }
+
+        // Switch to variant function for collection view
+        function switchToVariant(modelId, variantId, variantUrl, hexColor = null, variantType = 'upload') {
+            console.log('Switching to variant:', { modelId, variantId, variantUrl, hexColor, variantType });
+            
+            // Find the model-viewer element for this model
+            const modelCard = document.querySelector(`[data-model-id="${modelId}"]`)?.closest('.model-card');
+            if (!modelCard) {
+                console.warn('Model card not found for variant switching');
+                return;
+            }
+
+            const modelViewer = modelCard.querySelector('model-viewer');
+            if (!modelViewer) {
+                console.warn('Model viewer not found for variant switching');
+                return;
+            }
+
+            // Update the model viewer source
+            modelViewer.src = variantUrl;
+
+            // Update active state of variant circles
+            const variantCircles = modelCard.querySelectorAll('.variant-circle');
+            variantCircles.forEach(circle => {
+                circle.classList.remove('active');
+            });
+
+            // Add active class to clicked variant
+            if (event && event.target) {
+                event.target.classList.add('active');
+            }
+
+            console.log(`✅ Switched model ${modelId} to variant: ${variantId}`);
         }
         
         function formatFileSize(bytes) {

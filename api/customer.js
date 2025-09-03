@@ -1,4 +1,4 @@
-import { getModelsByCustomer } from '../lib/supabase.js';
+import { getModelsByCustomerWithVariants } from '../lib/supabase.js';
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -27,7 +27,7 @@ export default async function handler(req, res) {
     const limit = parseInt(req.query.limit) || 100;
     const offset = parseInt(req.query.offset) || 0;
     
-    const models = await getModelsByCustomer(customerId, limit, offset);
+    const models = await getModelsByCustomerWithVariants(customerId, limit, offset);
     
     console.log(`Found ${models.length} models for customer ${customerId}:`, models);
     
