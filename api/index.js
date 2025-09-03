@@ -233,15 +233,10 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid credentials' });
           }
           
-          // Generate session
-          const { nanoid } = await import('nanoid');
-          const sessionId = nanoid(32);
-          
-          // For now, skip database session storage and just set cookies
-          // Set session cookie
+          // Set basic session cookie (simplified)
           res.setHeader('Set-Cookie', [
-            `session=${sessionId}; HttpOnly; Path=/; Max-Age=86400; SameSite=Strict`,
-            `user_role=${user.role}; Path=/; Max-Age=86400; SameSite=Strict`
+            `user_role=${user.role}; Path=/; Max-Age=86400; SameSite=Strict`,
+            `user_id=${user.id}; Path=/; Max-Age=86400; SameSite=Strict`
           ]);
           
           return res.status(200).json({
