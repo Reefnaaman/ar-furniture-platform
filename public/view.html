@@ -343,9 +343,15 @@
         const urlParams = new URLSearchParams(window.location.search);
         const modelId = urlParams.get('id');
         
+        console.log('🔍 Current URL:', window.location.href);
+        console.log('🔍 URL params:', Object.fromEntries(urlParams));
+        console.log('🔍 Model ID from URL:', modelId);
+        
         if (!modelId) {
+            console.error('❌ No model ID in URL parameters');
             showError('No model ID provided');
         } else {
+            console.log('✅ Loading model with ID:', modelId);
             loadModel(modelId);
         }
         
@@ -373,10 +379,16 @@
                 }
                 
                 // Desktop - fetch model info and show preview with QR
+                console.log(`🌐 Making API call: /api/model/${id}/info`);
                 const response = await fetch(`/api/model/${id}/info`);
                 
+                console.log('📡 API Response status:', response.status);
+                console.log('📡 API Response ok:', response.ok);
+                
                 if (!response.ok) {
-                    throw new Error('Model not found');
+                    const errorData = await response.text();
+                    console.error('❌ API Error response:', errorData);
+                    throw new Error(`API Error ${response.status}: ${errorData}`);
                 }
                 
                 const modelInfo = await response.json();
