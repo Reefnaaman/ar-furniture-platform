@@ -1,7 +1,8 @@
 import { uploadModel } from '../lib/cloudinary.js';
-import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase } from '../lib/supabase.js';
+import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase, query } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import multiparty from 'multiparty';
+import bcrypt from 'bcryptjs';
 
 export const config = {
   api: {
@@ -117,21 +118,81 @@ export default async function handler(req, res) {
       return await handleCreateUser(req, res);
     }
     
-    // Route: /api/users (delegate to users.js for all user operations)
-    if (routePath === 'users' || routePath?.startsWith('users/')) {
-      // For debugging - return direct response
-      if (routePath?.includes('debug-direct')) {
-        return res.status(200).json({
-          message: 'Direct from catch-all',
-          routePath,
-          url: req.url,
-          method: req.method
-        });
+    // Route: /api/users - handle all user operations directly
+    if (routePath === 'users') {
+      // GET /api/users - List all users with view counts
+      if (req.method === 'GET') {
+        const usersResult = await query(`
+          SELECT 
+            u.id,
+            u.username,
+            u.role,
+            u.customer_id,
+            u.customer_name,
+            u.is_active,
+            u.created_at,
+            COALESCE(SUM(m.view_count), 0) as total_views
+          FROM users u
+          LEFT JOIN models m ON (u.role = 'customer' AND m.customer_id = u.customer_id)
+          GROUP BY u.id, u.username, u.role, u.customer_id, u.customer_name, u.is_active, u.created_at
+          ORDER BY u.created_at DESC
+        `);
+        
+        if (!usersResult.success) {
+          return res.status(500).json({ error: 'Failed to fetch users' });
+        }
+        
+        return res.status(200).json(usersResult.data || []);
       }
       
-      console.log('Delegating to users.js:', { routePath, method: req.method, url: req.url });
-      const usersHandler = await import('./users.js');
-      return usersHandler.default(req, res);
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+    
+    // Route: /api/users/{id}/password - Update user password
+    if (routePath?.startsWith('users/') && routePath.endsWith('/password')) {
+      if (req.method === 'PUT') {
+        const userId = routePath.split('/')[1];
+        const { password } = req.body;
+        
+        if (!password) {
+          return res.status(400).json({ error: 'Password is required' });
+        }
+        
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        const updateResult = await query(
+          'UPDATE users SET password_hash = $1 WHERE id = $2',
+          [hashedPassword, userId]
+        );
+        
+        if (!updateResult.success) {
+          return res.status(500).json({ error: 'Failed to update password' });
+        }
+        
+        return res.status(200).json({ success: true });
+      }
+      
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+    
+    // Route: /api/users/{id}/toggle - Toggle user active status  
+    if (routePath?.startsWith('users/') && routePath.endsWith('/toggle')) {
+      if (req.method === 'PUT') {
+        const userId = routePath.split('/')[1];
+        
+        const toggleResult = await query(
+          'UPDATE users SET is_active = NOT is_active WHERE id = $1',
+          [userId]
+        );
+        
+        if (!toggleResult.success) {
+          return res.status(500).json({ error: 'Failed to toggle user status' });
+        }
+        
+        return res.status(200).json({ success: true });
+      }
+      
+      return res.status(405).json({ error: 'Method not allowed' });
     }
     
     // Route: /api/customer/[id]
