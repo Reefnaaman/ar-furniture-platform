@@ -376,7 +376,7 @@
         async function loadModel(id, variantId = null) {
             try {
                 // Fetch model info first (needed for both desktop and mobile)
-                const response = await fetch(`/api/model-info?id=${id}`);
+                const response = await fetch(`/api/model/${id}/info`);
                 if (!response.ok) {
                     throw new Error('Model not found');
                 }
@@ -387,7 +387,7 @@
                     document.body.style.visibility = 'hidden';
                     document.body.style.background = '#000';
                     
-                    let modelUrl = `/api/model-file?id=${id}`;
+                    let modelUrl = `/api/model/${id}`;
                     let selectedVariant = null;
                     
                     // If variant specified, find the variant and use its URL
@@ -469,7 +469,7 @@
                                 <div style="background: linear-gradient(135deg, rgba(13, 17, 23, 0.6) 0%, rgba(22, 27, 34, 0.4) 100%); padding: 20px; border-radius: 16px; border: 1px solid rgba(240, 246, 252, 0.08);">
                                     <model-viewer
                                         id="desktopModelViewer"
-                                        src="/api/model-file?id=${id}"
+                                        src="/api/model/${id}"
                                         alt="${modelInfo.title}"
                                         camera-controls
                                         auto-rotate
@@ -534,7 +534,7 @@
                 document.body.style.background = 'none';
                 
                 // Track view
-                fetch(`/api/model-view?id=${id}`, { method: 'POST' }).catch(() => {});
+                fetch(`/api/model/${id}/view`, { method: 'POST' }).catch(() => {});
                 
             } catch (error) {
                 showError(error.message);
@@ -607,7 +607,7 @@
             }, 2000);
 
             // Track view
-            fetch(`/api/model-view?id=${modelId}`, { method: 'POST' }).catch(() => {});
+            fetch(`/api/model/${modelId}/view`, { method: 'POST' }).catch(() => {});
         }
         
         function createARVariantControls(modelId, modelInfo, selectedVariant, modelViewer) {
@@ -666,7 +666,7 @@
                 box-shadow: ${isOriginalActive ? '0 0 20px rgba(88, 166, 255, 0.5)' : 'none'};
             `;
             originalCircle.title = 'Original';
-            originalCircle.onclick = () => switchARVariant(modelViewer, `/api/model-file?id=${modelId}`, 'Original', originalCircle);
+            originalCircle.onclick = () => switchARVariant(modelViewer, `/api/model/${modelId}`, 'Original', originalCircle);
             variantControls.appendChild(originalCircle);
             
             // Add variant color circles
