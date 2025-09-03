@@ -351,57 +351,23 @@
         
         async function loadModel(id) {
             try {
-                // For mobile - go straight to AR without showing anything
+                // For mobile - show variant selection before AR
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                    // Keep body completely black and hidden
-                    document.body.style.cssText = 'visibility: hidden; background: #000 !important; margin: 0; padding: 0;';
+                    // Fetch model info to get variants
+                    const response = await fetch(`/api/model-info?id=${id}`);
+                    if (!response.ok) {
+                        throw new Error('Model not found');
+                    }
+                    const modelInfo = await response.json();
                     
-                    // Clear any existing content
-                    document.body.innerHTML = '';
+                    // If no variants, go straight to AR
+                    if (!modelInfo.variants || modelInfo.variants.length === 0) {
+                        launchDirectAR(id, `/api/model-file?id=${id}`);
+                        return;
+                    }
                     
-                    // Create invisible model-viewer
-                    const modelUrl = `/api/model-file?id=${id}`;
-                    
-                    const modelViewer = document.createElement('model-viewer');
-                    modelViewer.setAttribute('id', 'modelViewer');
-                    modelViewer.setAttribute('src', modelUrl);
-                    modelViewer.setAttribute('ar', '');
-                    modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
-                    modelViewer.setAttribute('auto-rotate', '');
-                    modelViewer.setAttribute('camera-controls', '');
-                    modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
-                    document.body.appendChild(modelViewer);
-                    
-                    // Try multiple AR activation methods
-                    let arActivated = false;
-                    
-                    modelViewer.addEventListener('load', () => {
-                        if (!arActivated && modelViewer.canActivateAR) {
-                            arActivated = true;
-                            modelViewer.activateAR();
-                        }
-                    });
-                    
-                    // Backup: Try AR after a short delay
-                    setTimeout(() => {
-                        if (!arActivated && modelViewer.canActivateAR) {
-                            arActivated = true;
-                            modelViewer.activateAR();
-                        } else if (!arActivated) {
-                            // If still no AR, show a button as last resort
-                            document.body.style.visibility = 'visible';
-                            document.body.innerHTML = `
-                                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; color: white;">
-                                    <h2 style="margin-bottom: 20px;">Tap to view in AR</h2>
-                                    <button onclick="document.getElementById('hiddenViewer').activateAR()" style="padding: 20px 40px; font-size: 1.2rem; background: #58a6ff; color: white; border: none; border-radius: 10px;">Open AR Camera</button>
-                                    <model-viewer id="hiddenViewer" src="${modelUrl}" ar ar-modes="webxr scene-viewer quick-look" style="width: 1px; height: 1px; opacity: 0;"></model-viewer>
-                                </div>
-                            `;
-                        }
-                    }, 2000);
-                    
-                    // Track view
-                    fetch(`/api/model-view?id=${id}`, { method: 'POST' }).catch(() => {});
+                    // Show mobile variant selection screen
+                    showMobileVariantSelection(id, modelInfo);
                     return;
                     
                 }
@@ -568,6 +534,167 @@
 
             // Optional: Show feedback
             console.log(`Switched to variant: ${variantId} with color: ${hexColor}`);
+        }
+
+        // Mobile AR variant selection
+        function showMobileVariantSelection(modelId, modelInfo) {
+            document.body.style.visibility = 'visible';
+            document.body.innerHTML = `
+                <div style="
+                    display: flex; 
+                    flex-direction: column; 
+                    align-items: center; 
+                    justify-content: center; 
+                    min-height: 100vh; 
+                    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); 
+                    color: white; 
+                    padding: 20px; 
+                    text-align: center;
+                    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+                ">
+                    <div style="
+                        background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%); 
+                        backdrop-filter: blur(20px); 
+                        padding: 30px; 
+                        border-radius: 20px; 
+                        border: 1px solid rgba(240, 246, 252, 0.2); 
+                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+                        max-width: 400px;
+                        width: 100%;
+                    ">
+                        <h2 style="margin: 0 0 10px 0; font-size: 1.8rem; font-weight: 700; color: #e6edf3;">
+                            ${modelInfo.title}
+                        </h2>
+                        <p style="margin: 0 0 30px 0; color: #7d8590; font-size: 1rem;">
+                            Choose your color to view in AR
+                        </p>
+                        
+                        <div style="
+                            display: flex; 
+                            gap: 12px; 
+                            justify-content: center; 
+                            flex-wrap: wrap; 
+                            margin-bottom: 30px;
+                        ">
+                            <!-- Original variant -->
+                            <div class="mobile-variant-circle" 
+                                 style="
+                                    width: 48px; 
+                                    height: 48px; 
+                                    border-radius: 50%; 
+                                    border: 3px solid rgba(240, 246, 252, 0.3); 
+                                    cursor: pointer; 
+                                    transition: all 0.3s ease;
+                                    background: ${modelInfo.dominant_color || '#6b7280'};
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: white;
+                                    font-size: 14px;
+                                    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+                                 " 
+                                 title="Original"
+                                 onclick="launchAR('${modelId}', '/api/model-file?id=${modelId}', 'Original')">
+                            </div>
+                            
+                            ${modelInfo.variants.map(variant => `
+                                <div class="mobile-variant-circle ${variant.is_primary ? 'primary' : ''}" 
+                                     style="
+                                        width: 48px; 
+                                        height: 48px; 
+                                        border-radius: 50%; 
+                                        border: ${variant.is_primary ? '3px solid #ffd700' : '3px solid rgba(240, 246, 252, 0.3)'}; 
+                                        cursor: pointer; 
+                                        transition: all 0.3s ease;
+                                        background-color: ${variant.hex_color};
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        color: white;
+                                        font-size: 14px;
+                                        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+                                     " 
+                                     title="${variant.variant_name}"
+                                     onclick="launchAR('${modelId}', '${variant.cloudinary_url}', '${variant.variant_name}')">
+                                     ${variant.is_primary ? '★' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <p style="margin: 0; color: #58a6ff; font-size: 0.9rem;">
+                            Tap a color to view in your space
+                        </p>
+                    </div>
+                </div>
+                
+                <style>
+                .mobile-variant-circle:hover {
+                    transform: scale(1.1);
+                    border-color: rgba(88, 166, 255, 0.8) !important;
+                    box-shadow: 0 0 20px rgba(88, 166, 255, 0.4);
+                }
+                </style>
+            `;
+        }
+
+        // Launch AR with selected variant
+        function launchAR(modelId, modelUrl, variantName) {
+            console.log('🚀 Launching AR for:', variantName, 'URL:', modelUrl);
+            launchDirectAR(modelId, modelUrl);
+        }
+
+        // Direct AR launch (original functionality)
+        function launchDirectAR(modelId, modelUrl) {
+            // Keep body completely black and hidden
+            document.body.style.cssText = 'visibility: hidden; background: #000 !important; margin: 0; padding: 0;';
+            
+            // Clear any existing content
+            document.body.innerHTML = '';
+            
+            // Create invisible model-viewer
+            const modelViewer = document.createElement('model-viewer');
+            modelViewer.setAttribute('id', 'modelViewer');
+            modelViewer.setAttribute('src', modelUrl);
+            modelViewer.setAttribute('ar', '');
+            modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+            modelViewer.setAttribute('auto-rotate', '');
+            modelViewer.setAttribute('camera-controls', '');
+            modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
+            document.body.appendChild(modelViewer);
+
+            // Try AR activation
+            let arActivated = false;
+            
+            // Method 1: Direct AR activation
+            setTimeout(() => {
+                if (!arActivated && modelViewer.activateAR) {
+                    console.log('🎯 Trying direct AR activation...');
+                    modelViewer.activateAR().then(() => {
+                        arActivated = true;
+                        console.log('✅ AR activated successfully');
+                    }).catch(() => {
+                        console.log('❌ Direct AR activation failed');
+                    });
+                }
+            }, 1000);
+
+            // Method 2: Fallback UI after delay
+            setTimeout(() => {
+                if (!arActivated) {
+                    console.log('⚠️ AR auto-launch failed, showing fallback UI');
+                    document.body.style.visibility = 'visible';
+                    document.body.innerHTML = `
+                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; color: white;">
+                            <h2 style="margin-bottom: 20px;">Tap to view in AR</h2>
+                            <button onclick="document.getElementById('hiddenViewer').activateAR()" style="padding: 20px 40px; font-size: 1.2rem; background: #58a6ff; color: white; border: none; border-radius: 10px;">Open AR Camera</button>
+                            <model-viewer id="hiddenViewer" src="${modelUrl}" ar ar-modes="webxr scene-viewer quick-look" style="width: 1px; height: 1px; opacity: 0;"></model-viewer>
+                        </div>
+                    `;
+                }
+            }, 2000);
+
+            // Track view
+            fetch(`/api/model-view?id=${modelId}`, { method: 'POST' }).catch(() => {});
         }
         
         function showError(message) {
