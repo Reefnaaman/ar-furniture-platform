@@ -1,4 +1,4 @@
-import { getModel, supabase } from '../lib/supabase.js';
+import { getModel } from '../lib/supabase.js';
 
 export default async function handler(req, res) {
   // Enable CORS
@@ -33,20 +33,7 @@ export default async function handler(req, res) {
     
     console.log('Model found:', model.title);
     
-    // Get variants for this model
-    const { data: variants, error: variantsError } = await supabase
-      .from('model_variants')
-      .select('*')
-      .eq('parent_model_id', id)
-      .order('is_primary', { ascending: false });
-
-    if (variantsError) {
-      console.warn('Error fetching variants for model info:', variantsError);
-    }
-
-    console.log('Variants found:', variants?.length || 0);
-    
-    // Return model info with variants
+    // Return model info (ORIGINAL - no variants)
     res.status(200).json({
       id: model.id,
       title: model.title,
@@ -55,16 +42,7 @@ export default async function handler(req, res) {
       file_size: model.file_size,
       upload_date: model.upload_date,
       view_count: model.view_count,
-      dominant_color: model.dominant_color,
-      metadata: model.metadata,
-      variants: (variants || []).map(variant => ({
-        id: variant.id,
-        variant_name: variant.variant_name,
-        hex_color: variant.hex_color,
-        is_primary: variant.is_primary,
-        variant_type: variant.variant_type || 'upload',
-        cloudinary_url: variant.cloudinary_url // Include for variant switching
-      }))
+      metadata: model.metadata
     });
     
   } catch (error) {
