@@ -83,6 +83,8 @@
             transform-style: preserve-3d;
             animation: floatLeft 6s ease-in-out infinite;
             overflow: visible;
+            padding: 50px;
+            margin: -50px;
         }
 
         .furniture-left model-viewer {
@@ -90,6 +92,9 @@
             height: 100%;
             --poster-color: transparent;
             overflow: visible;
+            transform: scale(1.2);
+            transform-origin: center;
+            max-zoom: 1.5;
         }
 
         /* Right floating furniture - top */
@@ -103,6 +108,8 @@
             transform-style: preserve-3d;
             animation: floatRightTop 8s ease-in-out infinite;
             overflow: visible;
+            padding: 50px;
+            margin: -50px;
         }
 
         .furniture-right-top model-viewer {
@@ -110,6 +117,9 @@
             height: 100%;
             --poster-color: transparent;
             overflow: visible;
+            transform: scale(1.2);
+            transform-origin: center;
+            max-zoom: 1.5;
         }
 
         /* Right floating furniture - bottom */
@@ -123,6 +133,8 @@
             transform-style: preserve-3d;
             animation: floatRightBottom 9s ease-in-out infinite;
             overflow: visible;
+            padding: 50px;
+            margin: -50px;
         }
 
         .furniture-right-bottom model-viewer {
@@ -130,6 +142,9 @@
             height: 100%;
             --poster-color: transparent;
             overflow: visible;
+            transform: scale(1.0);
+            transform-origin: center;
+            max-zoom: 1.5;
         }
 
         @keyframes floatLeft {
@@ -516,8 +531,8 @@
                 auto-rotate-delay="3000"
                 rotation-per-second="30deg"
                 camera-controls
-                min-field-of-view="10deg"
-                max-field-of-view="120deg"
+                min-field-of-view="15deg"
+                max-field-of-view="90deg"
                 touch-action="pan-y"
                 loading="eager">
             </model-viewer>
@@ -532,8 +547,8 @@
                 auto-rotate-delay="4000"
                 rotation-per-second="25deg"
                 camera-controls
-                min-field-of-view="10deg"
-                max-field-of-view="120deg"
+                min-field-of-view="15deg"
+                max-field-of-view="90deg"
                 touch-action="pan-y"
                 loading="eager">
             </model-viewer>
@@ -548,8 +563,8 @@
                 auto-rotate-delay="5000"
                 rotation-per-second="20deg"
                 camera-controls
-                min-field-of-view="10deg"
-                max-field-of-view="120deg"
+                min-field-of-view="15deg"
+                max-field-of-view="90deg"
                 touch-action="pan-y"
                 loading="eager">
             </model-viewer>
