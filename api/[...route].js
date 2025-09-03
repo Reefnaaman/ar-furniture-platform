@@ -45,6 +45,11 @@ export default async function handler(req, res) {
       method: req.method 
     });
     
+    // Additional debug for users routes specifically
+    if (routePath?.includes('users')) {
+      console.log('USERS ROUTE DEBUG:', { routePath, startsWithUsers: routePath?.startsWith('users/'), equalsUsers: routePath === 'users' });
+    }
+    
     // Additional debug for model routes
     if (routePath?.startsWith('model/')) {
       const routeParts = routePath.split('/');
@@ -114,6 +119,7 @@ export default async function handler(req, res) {
     
     // Route: /api/users (delegate to users.js handler)
     if (routePath === 'users' || routePath?.startsWith('users/')) {
+      console.log('Delegating to users.js:', { routePath, method: req.method, url: req.url });
       const usersHandler = await import('./users.js');
       return usersHandler.default(req, res);
     }
