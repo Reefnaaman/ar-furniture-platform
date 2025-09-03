@@ -54,6 +54,8 @@ export default async function handler(req, res) {
       const userId = pathSegments[0];
       const action = pathSegments[1];
       
+      console.log('PUT request debug:', { userId, action, pathSegments });
+      
       if (action === 'password') {
         // PUT /api/users/{id}/password - Update user password
         const { password } = req.body;
@@ -91,7 +93,11 @@ export default async function handler(req, res) {
       }
     }
     
-    return res.status(405).json({ error: 'Method not allowed' });
+    console.log('No route matched:', { method: req.method, pathSegments, pathSegmentsLength: pathSegments?.length });
+    return res.status(404).json({ 
+      error: 'Route not found',
+      debug: { method: req.method, pathSegments, url: req.url }
+    });
     
   } catch (error) {
     console.error('Error in users API:', error);
