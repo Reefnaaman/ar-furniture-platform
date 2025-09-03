@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - AR Furniture Platform</title>
+    <title>FurniTech - Premium AR Experience</title>
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <!-- Model Viewer -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -17,130 +19,283 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
-            color: #e6edf3;
+            background: linear-gradient(135deg, #000000 0%, #0a0e1a 25%, #0f1419 50%, #1a1f2e 100%);
+            color: #ffffff;
+            min-height: 100vh;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background particles */
+        .background-particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 30%, rgba(88, 166, 255, 0.03) 0%, transparent 50%),
+                radial-gradient(circle at 80% 70%, rgba(120, 200, 255, 0.02) 0%, transparent 50%),
+                radial-gradient(circle at 60% 20%, rgba(163, 113, 247, 0.02) 0%, transparent 50%);
+            animation: particleFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes particleFloat {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            25% { transform: translate(20px, -10px) scale(1.02); }
+            50% { transform: translate(-10px, 20px) scale(0.98); }
+            75% { transform: translate(10px, 10px) scale(1.01); }
+        }
+
+        /* Split screen layout */
+        .login-stage {
+            position: relative;
             min-height: 100vh;
             display: flex;
             align-items: center;
             justify-content: center;
+            padding: 0;
         }
 
-        .login-container {
-            background: rgba(22, 27, 34, 0.95);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(240, 246, 252, 0.2);
-            border-radius: 20px;
-            padding: 40px;
-            width: 400px;
-            max-width: 90%;
+        /* Left floating furniture */
+        .furniture-left {
+            position: absolute;
+            left: 5%;
+            top: 20%;
+            width: 300px;
+            height: 400px;
+            z-index: 1;
+            transform-style: preserve-3d;
+            animation: floatLeft 6s ease-in-out infinite;
+        }
+
+        .furniture-left model-viewer {
+            width: 100%;
+            height: 100%;
+            --poster-color: transparent;
+        }
+
+        /* Right floating furniture */
+        .furniture-right {
+            position: absolute;
+            right: 5%;
+            top: 30%;
+            width: 280px;
+            height: 380px;
+            z-index: 1;
+            transform-style: preserve-3d;
+            animation: floatRight 7s ease-in-out infinite;
+        }
+
+        .furniture-right model-viewer {
+            width: 100%;
+            height: 100%;
+            --poster-color: transparent;
+        }
+
+        @keyframes floatLeft {
+            0%, 100% { transform: translateY(0px) rotateY(15deg) rotateX(5deg); }
+            50% { transform: translateY(-20px) rotateY(18deg) rotateX(8deg); }
+        }
+
+        @keyframes floatRight {
+            0%, 100% { transform: translateY(0px) rotateY(-12deg) rotateX(-3deg); }
+            50% { transform: translateY(-25px) rotateY(-15deg) rotateX(-6deg); }
+        }
+
+        /* Central glass authentication portal */
+        .glass-portal {
+            position: relative;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(32px);
+            -webkit-backdrop-filter: blur(32px);
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            border-radius: 24px;
+            padding: 60px 50px;
+            width: 480px;
+            max-width: 90vw;
             box-shadow: 
-                0 25px 50px rgba(0, 0, 0, 0.5),
-                0 0 0 1px rgba(88, 166, 255, 0.1);
+                0 40px 100px rgba(0, 0, 0, 0.8),
+                0 0 0 1px rgba(88, 166, 255, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05);
         }
 
-        .logo {
+        /* Hero Typography */
+        .hero-brand {
             text-align: center;
-            margin-bottom: 30px;
+            margin-bottom: 50px;
         }
 
-        .logo-icon {
-            width: 60px;
-            height: 60px;
-            background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(120, 200, 255, 0.1));
-            border-radius: 50%;
-            border: 2px solid rgba(88, 166, 255, 0.3);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin: 0 auto 20px;
-            animation: logoGlow 3s ease-in-out infinite;
-        }
-
-        @keyframes logoGlow {
-            0%, 100% { box-shadow: 0 0 0 0 rgba(88, 166, 255, 0.4); }
-            50% { box-shadow: 0 0 0 10px rgba(88, 166, 255, 0); }
-        }
-
-        .logo-text {
+        .brand-title {
             font-family: 'Inter', sans-serif;
-            font-size: 32px;
+            font-size: 48px;
             font-weight: 300;
-            letter-spacing: 3px;
-            background: linear-gradient(135deg, #ffffff 0%, #a8a8a8 100%);
+            letter-spacing: 8px;
+            background: linear-gradient(135deg, #ffffff 0%, #c0c8d4 50%, #a8a8a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 12px;
+            text-transform: uppercase;
+            position: relative;
+        }
+
+        .brand-title::after {
+            content: '';
+            position: absolute;
+            bottom: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.6), transparent);
+        }
+
+        .brand-subtitle {
+            font-size: 13px;
+            font-weight: 400;
+            color: rgba(255, 255, 255, 0.4);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        /* Minimal form design */
+        .auth-form {
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 32px;
+            position: relative;
+        }
+
+        .form-label {
+            display: block;
+            font-size: 11px;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            margin-bottom: 12px;
+        }
+
+        .ghost-input {
+            width: 100%;
+            padding: 18px 20px;
+            background: rgba(255, 255, 255, 0.04);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 16px;
+            color: #ffffff;
+            font-size: 16px;
+            font-weight: 400;
+            font-family: 'Inter', sans-serif;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            outline: none;
+        }
+
+        .ghost-input:focus {
+            background: rgba(255, 255, 255, 0.06);
+            border-color: rgba(88, 166, 255, 0.4);
+            box-shadow: 
+                0 0 0 4px rgba(88, 166, 255, 0.1),
+                0 8px 32px rgba(88, 166, 255, 0.2);
+            transform: translateY(-1px);
+        }
+
+        .ghost-input::placeholder {
+            color: rgba(255, 255, 255, 0.3);
+            font-weight: 300;
+        }
+
+        /* Gradient CTA button */
+        .cta-button {
+            width: 100%;
+            padding: 20px;
+            background: linear-gradient(135deg, #58a6ff 0%, #78c8ff 50%, #667eea 100%);
+            border: none;
+            border-radius: 16px;
+            color: #000000;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Inter', sans-serif;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cta-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 
+                0 20px 40px rgba(88, 166, 255, 0.4),
+                0 0 0 1px rgba(255, 255, 255, 0.1);
+        }
+
+        .cta-button:active {
+            transform: translateY(0);
+        }
+
+        .cta-button:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Conversion proof stats */
+        .conversion-stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .stat-card {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.03);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 16px;
+            padding: 20px 16px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-4px);
+            background: rgba(255, 255, 255, 0.05);
+            box-shadow: 0 16px 32px rgba(88, 166, 255, 0.2);
+        }
+
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            background: linear-gradient(135deg, #58a6ff 0%, #667eea 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 8px;
         }
 
-        .logo-subtitle {
-            font-size: 0.9rem;
-            color: #7d8590;
+        .stat-label {
+            font-size: 12px;
+            color: rgba(255, 255, 255, 0.5);
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 1px;
         }
 
-        .form-group {
-            margin-bottom: 20px;
-        }
-
-        .form-label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #e6edf3;
-        }
-
-        .form-input {
-            width: 100%;
-            padding: 12px 16px;
-            background: rgba(13, 17, 23, 0.8);
-            border: 1px solid rgba(240, 246, 252, 0.2);
-            border-radius: 12px;
-            color: #e6edf3;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-        }
-
-        .form-input:focus {
-            outline: none;
-            border-color: rgba(88, 166, 255, 0.5);
-            background: rgba(13, 17, 23, 0.9);
-            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.1);
-        }
-
-        .login-button {
-            width: 100%;
-            padding: 14px;
-            background: linear-gradient(135deg, #58a6ff 0%, #78c8ff 100%);
-            border: none;
-            border-radius: 12px;
-            color: #0d1117;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .login-button:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.4);
-        }
-
-        .login-button:disabled {
-            opacity: 0.7;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-        }
-
+        /* Loading states and messages */
         .loading-spinner {
             display: inline-block;
             width: 16px;
             height: 16px;
-            border: 2px solid rgba(13, 17, 23, 0.3);
+            border: 2px solid rgba(0, 0, 0, 0.3);
             border-radius: 50%;
-            border-top-color: #0d1117;
+            border-top-color: #000000;
             animation: spin 0.8s linear infinite;
             margin-right: 8px;
         }
@@ -149,75 +304,152 @@
             to { transform: rotate(360deg); }
         }
 
+        .message {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            font-weight: 500;
+            display: none;
+        }
+
         .error-message {
             background: rgba(248, 81, 73, 0.1);
             border: 1px solid rgba(248, 81, 73, 0.3);
             color: #f85149;
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            display: none;
         }
 
         .success-message {
             background: rgba(46, 160, 67, 0.1);
             border: 1px solid rgba(46, 160, 67, 0.3);
             color: #2ea043;
-            padding: 12px 16px;
-            border-radius: 12px;
-            margin-bottom: 20px;
-            font-size: 0.9rem;
-            display: none;
         }
 
-        .footer {
-            text-align: center;
-            margin-top: 30px;
-            padding-top: 20px;
-            border-top: 1px solid rgba(240, 246, 252, 0.1);
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .furniture-left,
+            .furniture-right {
+                display: none;
+            }
+            
+            .glass-portal {
+                padding: 40px 30px;
+                width: 95vw;
+            }
+            
+            .brand-title {
+                font-size: 36px;
+                letter-spacing: 4px;
+            }
+            
+            .conversion-stats {
+                flex-direction: column;
+                gap: 12px;
+            }
         }
 
-        .footer-text {
-            font-size: 0.8rem;
-            color: #7d8590;
+        @media (max-width: 1200px) {
+            .furniture-left {
+                left: 2%;
+                width: 250px;
+                height: 320px;
+            }
+            
+            .furniture-right {
+                right: 2%;
+                width: 230px;
+                height: 300px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="login-container">
-        <div class="logo">
-            <div class="logo-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#58a6ff" stroke-width="2">
-                    <path d="M12 2L15.09 8.26L22 9L17 14.74L18.18 21.02L12 18L5.82 21.02L7 14.74L2 9L8.91 8.26L12 2Z"/>
-                </svg>
-            </div>
-            <div class="logo-text">AR Furniture</div>
-            <div class="logo-subtitle">Secure Dashboard Access</div>
+    <div class="background-particles"></div>
+    
+    <div class="login-stage">
+        <!-- Left floating furniture -->
+        <div class="furniture-left">
+            <model-viewer
+                src="https://res.cloudinary.com/djjixqxzy/raw/upload/v1756822952/furniture-models/1756822952462-Treadmill%201.glb"
+                alt="Treadmill 3D Model"
+                auto-rotate
+                disable-zoom
+                disable-pan
+                interaction-policy="none"
+                loading="eager">
+            </model-viewer>
         </div>
 
-        <div class="error-message" id="errorMessage"></div>
-        <div class="success-message" id="successMessage"></div>
+        <!-- Right floating furniture -->
+        <div class="furniture-right">
+            <model-viewer
+                src="https://res.cloudinary.com/djjixqxzy/raw/upload/v1756471573/furniture-models/1756471573286-wheelchair.glb"
+                alt="Wheelchair 3D Model"
+                auto-rotate
+                disable-zoom
+                disable-pan
+                interaction-policy="none"
+                loading="eager">
+            </model-viewer>
+        </div>
 
-        <form id="loginForm">
-            <div class="form-group">
-                <label for="username" class="form-label">Username</label>
-                <input type="text" id="username" name="username" class="form-input" required autocomplete="username">
+        <!-- Central glass authentication portal -->
+        <div class="glass-portal">
+            <!-- Hero Typography -->
+            <div class="hero-brand">
+                <h1 class="brand-title">FurniTech</h1>
+                <p class="brand-subtitle">Premium AR Experience</p>
             </div>
 
-            <div class="form-group">
-                <label for="password" class="form-label">Password</label>
-                <input type="password" id="password" name="password" class="form-input" required autocomplete="current-password">
-            </div>
+            <!-- Messages -->
+            <div class="error-message message" id="errorMessage"></div>
+            <div class="success-message message" id="successMessage"></div>
 
-            <button type="submit" class="login-button" id="loginButton">
-                Sign In
-            </button>
-        </form>
+            <!-- Authentication Form -->
+            <form id="loginForm" class="auth-form">
+                <div class="form-group">
+                    <label for="username" class="form-label">Username</label>
+                    <input 
+                        type="text" 
+                        id="username" 
+                        name="username" 
+                        class="ghost-input" 
+                        placeholder="Enter username"
+                        required 
+                        autocomplete="username">
+                </div>
 
-        <div class="footer">
-            <div class="footer-text">
-                AR Furniture Platform - Secure Access
+                <div class="form-group">
+                    <label for="password" class="form-label">Password</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        class="ghost-input" 
+                        placeholder="Enter password"
+                        required 
+                        autocomplete="current-password">
+                </div>
+
+                <button type="submit" class="cta-button" id="loginButton">
+                    Access Portal
+                </button>
+            </form>
+
+            <!-- Conversion Proof Stats -->
+            <div class="conversion-stats">
+                <div class="stat-card">
+                    <div class="stat-number">+47%</div>
+                    <div class="stat-label">Conversion</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">+36%</div>
+                    <div class="stat-label">Retention</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number">-64%</div>
+                    <div class="stat-label">Returns</div>
+                </div>
             </div>
         </div>
     </div>
@@ -227,6 +459,27 @@
         const button = document.getElementById('loginButton');
         const errorDiv = document.getElementById('errorMessage');
         const successDiv = document.getElementById('successMessage');
+
+        // Enhanced floating animation for furniture models
+        function enhanceFurnitureAnimations() {
+            const leftFurniture = document.querySelector('.furniture-left model-viewer');
+            const rightFurniture = document.querySelector('.furniture-right model-viewer');
+            
+            if (leftFurniture) {
+                leftFurniture.addEventListener('load', () => {
+                    leftFurniture.style.filter = 'drop-shadow(0 10px 30px rgba(88, 166, 255, 0.2))';
+                });
+            }
+            
+            if (rightFurniture) {
+                rightFurniture.addEventListener('load', () => {
+                    rightFurniture.style.filter = 'drop-shadow(0 10px 30px rgba(120, 200, 255, 0.15))';
+                });
+            }
+        }
+
+        // Initialize animations when page loads
+        window.addEventListener('load', enhanceFurnitureAnimations);
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -239,7 +492,7 @@
 
             // Show loading state
             button.disabled = true;
-            button.innerHTML = '<span class="loading-spinner"></span>Signing in...';
+            button.innerHTML = '<span class="loading-spinner"></span>Authenticating...';
             hideMessages();
 
             try {
@@ -254,7 +507,7 @@
                 const result = await response.json();
 
                 if (response.ok) {
-                    showSuccess('Login successful! Redirecting...');
+                    showSuccess('Access granted! Welcome to FurniTech...');
                     
                     // Store user info for customer dashboard
                     if (result.user) {
@@ -265,20 +518,22 @@
                         localStorage.setItem('username', result.user.username);
                     }
                     
-                    // Redirect based on user role
+                    // Redirect based on user role with delay for effect
                     setTimeout(() => {
                         window.location.href = result.redirectUrl;
-                    }, 1000);
+                    }, 1500);
                 } else {
-                    showError(result.error || 'Login failed');
+                    showError(result.error || 'Access denied');
                 }
             } catch (error) {
-                showError('Network error. Please try again.');
+                showError('Connection failed. Please try again.');
                 console.error('Login error:', error);
             } finally {
                 // Reset button state
-                button.disabled = false;
-                button.innerHTML = 'Sign In';
+                setTimeout(() => {
+                    button.disabled = false;
+                    button.innerHTML = 'Access Portal';
+                }, 1000);
             }
         });
 
@@ -298,6 +553,28 @@
             errorDiv.style.display = 'none';
             successDiv.style.display = 'none';
         }
+
+        // Stat cards hover effects
+        document.querySelectorAll('.stat-card').forEach(card => {
+            card.addEventListener('mouseenter', () => {
+                card.style.transform = 'translateY(-6px) scale(1.02)';
+            });
+            
+            card.addEventListener('mouseleave', () => {
+                card.style.transform = 'translateY(0) scale(1)';
+            });
+        });
+
+        // Enhanced input focus effects
+        document.querySelectorAll('.ghost-input').forEach(input => {
+            input.addEventListener('focus', () => {
+                input.parentElement.style.transform = 'translateY(-2px)';
+            });
+            
+            input.addEventListener('blur', () => {
+                input.parentElement.style.transform = 'translateY(0)';
+            });
+        });
 
         // Handle Enter key on password field
         document.getElementById('password').addEventListener('keypress', (e) => {
