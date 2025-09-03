@@ -137,7 +137,6 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             margin-bottom: 12px;
-            text-transform: uppercase;
             position: relative;
         }
 
@@ -147,7 +146,7 @@
             bottom: -8px;
             left: 50%;
             transform: translateX(-50%);
-            width: 60px;
+            width: 160px;
             height: 1px;
             background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.6), transparent);
         }
@@ -479,7 +478,53 @@
         }
 
         // Initialize animations when page loads
-        window.addEventListener('load', enhanceFurnitureAnimations);
+        window.addEventListener('load', () => {
+            enhanceFurnitureAnimations();
+            animateStatsNumbers();
+        });
+
+        // Animate stats numbers running up
+        function animateStatsNumbers() {
+            const stats = [
+                { element: document.querySelectorAll('.stat-number')[0], target: 47, prefix: '+', suffix: '%' },
+                { element: document.querySelectorAll('.stat-number')[1], target: 36, prefix: '+', suffix: '%' },
+                { element: document.querySelectorAll('.stat-number')[2], target: -64, prefix: '', suffix: '%' }
+            ];
+
+            stats.forEach((stat, index) => {
+                if (!stat.element) return;
+                
+                const startValue = stat.target < 0 ? 0 : 0;
+                const endValue = Math.abs(stat.target);
+                const duration = 2000 + (index * 300); // Stagger animations
+                const startTime = performance.now() + (index * 200); // Delay each animation
+                
+                function updateNumber(currentTime) {
+                    if (currentTime < startTime) {
+                        requestAnimationFrame(updateNumber);
+                        return;
+                    }
+                    
+                    const elapsed = currentTime - startTime;
+                    const progress = Math.min(elapsed / duration, 1);
+                    
+                    // Easing function for smooth animation
+                    const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+                    const currentValue = Math.floor(startValue + (endValue - startValue) * easeOutQuart);
+                    
+                    const displayValue = stat.target < 0 ? -currentValue : currentValue;
+                    stat.element.textContent = stat.prefix + displayValue + stat.suffix;
+                    
+                    if (progress < 1) {
+                        requestAnimationFrame(updateNumber);
+                    }
+                }
+                
+                // Start with 0
+                stat.element.textContent = stat.prefix + '0' + stat.suffix;
+                setTimeout(() => requestAnimationFrame(updateNumber), 1000); // Wait 1s before starting
+            });
+        }
 
         form.addEventListener('submit', async (e) => {
             e.preventDefault();
