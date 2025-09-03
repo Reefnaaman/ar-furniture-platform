@@ -360,7 +360,7 @@
                 // For mobile - show variant selection before AR
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
                     // Fetch model info to get variants
-                    const response = await fetch(`/api/model/${id}/info`);
+                    const response = await fetch(`/api/model-info?id=${id}`);
                     if (!response.ok) {
                         throw new Error('Model not found');
                     }
@@ -379,8 +379,8 @@
                 }
                 
                 // Desktop - fetch model info and show preview with QR
-                console.log(`🌐 Making API call: /api/model/${id}/info`);
-                const response = await fetch(`/api/model/${id}/info`);
+                console.log(`🌐 Making API call: /api/model-info?id=${id}`);
+                const response = await fetch(`/api/model-info?id=${id}`);
                 
                 console.log('📡 API Response status:', response.status);
                 console.log('📡 API Response ok:', response.ok);
