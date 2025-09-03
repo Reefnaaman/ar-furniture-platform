@@ -65,6 +65,19 @@
             border-bottom: 1px solid rgba(240, 246, 252, 0.1);
         }
         
+        .customer-logo {
+            width: 120px;
+            max-width: 100%;
+            height: auto;
+            max-height: 60px;
+            object-fit: contain;
+            margin-bottom: 20px;
+            border-radius: 8px;
+            background: rgba(240, 246, 252, 0.1);
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
         .user-info {
             display: flex;
             align-items: center;
@@ -1143,6 +1156,7 @@
     <!-- Sidebar -->
     <div class="sidebar">
         <div class="sidebar-header">
+            <img id="customerLogo" class="customer-logo" style="display: none;" alt="Customer Logo" />
             <div class="user-info">
                 <div class="user-avatar" id="userAvatar">N</div>
                 <div class="user-details">
@@ -1437,6 +1451,38 @@
             document.getElementById('userName').textContent = userName.charAt(0).toUpperCase() + userName.slice(1);
             document.getElementById('userRole').textContent = userRole.charAt(0).toUpperCase() + userRole.slice(1);
             document.getElementById('userAvatar').textContent = userName.charAt(0).toUpperCase();
+            
+            // Load customer logo
+            loadCustomerLogo();
+        }
+        
+        async function loadCustomerLogo() {
+            if (!customerId || customerId === 'unassigned') return;
+            
+            try {
+                console.log('🎨 Loading customer logo for:', customerId);
+                const response = await fetch(`/api/images?imageType=customer_logo&customerId=${customerId}`);
+                
+                if (!response.ok) {
+                    console.log('No logo response or error fetching logo');
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('🎨 Logo data received:', data);
+                
+                if (data.images && data.images.length > 0) {
+                    const logo = data.images[0]; // Use the first (most recent) logo
+                    const logoElement = document.getElementById('customerLogo');
+                    logoElement.src = logo.cloudinary_url;
+                    logoElement.style.display = 'block';
+                    console.log('✅ Customer logo loaded:', logo.cloudinary_url);
+                } else {
+                    console.log('📝 No customer logo found for:', customerId);
+                }
+            } catch (error) {
+                console.error('Error loading customer logo:', error);
+            }
         }
         
         function logout() {

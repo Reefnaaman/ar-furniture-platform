@@ -3,6 +3,7 @@ import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCu
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
+import { nanoid } from 'nanoid';
 
 export const config = {
   api: {
@@ -199,6 +200,81 @@ export default async function handler(req, res) {
         }
         
         return res.status(200).json({ success: true });
+      }
+      
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    // Route: /api/login - User authentication
+    if (routePath === 'login') {
+      if (req.method === 'POST') {
+        try {
+          const { username, password } = req.body;
+          
+          if (!username || !password) {
+            return res.status(400).json({ error: 'Username and password are required' });
+          }
+          
+          // Find user by username
+          const userResult = await query(
+            'SELECT * FROM users WHERE username = $1 AND is_active = true',
+            [username]
+          );
+          
+          if (!userResult.success || !userResult.data || userResult.data.length === 0) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+          }
+          
+          const user = userResult.data[0];
+          
+          // Verify password
+          const passwordMatch = await bcrypt.compare(password, user.password_hash);
+          
+          if (!passwordMatch) {
+            return res.status(401).json({ error: 'Invalid credentials' });
+          }
+          
+          // Generate session
+          const sessionId = nanoid(32);
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
+          
+          // Create session
+          const sessionResult = await query(
+            'INSERT INTO user_sessions (session_id, user_id, expires_at) VALUES ($1, $2, $3)',
+            [sessionId, user.id, expiresAt.toISOString()]
+          );
+          
+          if (!sessionResult.success) {
+            console.error('Session creation error:', sessionResult.error);
+            return res.status(500).json({ error: 'Failed to create session' });
+          }
+          
+          // Set session cookie
+          res.setHeader('Set-Cookie', [
+            `session=${sessionId}; HttpOnly; Path=/; Max-Age=86400; SameSite=Strict`,
+            `user_role=${user.role}; Path=/; Max-Age=86400; SameSite=Strict`
+          ]);
+          
+          return res.status(200).json({
+            success: true,
+            message: 'Login successful',
+            user: {
+              id: user.id,
+              username: user.username,
+              role: user.role,
+              customerId: user.customer_id,
+              customerName: user.customer_name
+            },
+            redirectUrl: user.role === 'admin' ? '/admin.html' : `/customer.html?customer=${user.customer_id}`
+          });
+          
+        } catch (error) {
+          console.error('Login error:', error);
+          return res.status(500).json({ 
+            error: 'Login failed', 
+            details: error.message 
+          });
+        }
       }
       
       return res.status(405).json({ error: 'Method not allowed' });
