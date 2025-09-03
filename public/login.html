@@ -92,20 +92,40 @@
             overflow: visible;
         }
 
-        /* Right floating furniture */
-        .furniture-right {
+        /* Right floating furniture - top */
+        .furniture-right-top {
             position: absolute;
             right: 5%;
-            top: 30%;
-            width: 280px;
-            height: 380px;
+            top: 15%;
+            width: 260px;
+            height: 320px;
             z-index: 1;
             transform-style: preserve-3d;
-            animation: floatRight 7s ease-in-out infinite;
+            animation: floatRightTop 8s ease-in-out infinite;
             overflow: visible;
         }
 
-        .furniture-right model-viewer {
+        .furniture-right-top model-viewer {
+            width: 100%;
+            height: 100%;
+            --poster-color: transparent;
+            overflow: visible;
+        }
+
+        /* Right floating furniture - bottom */
+        .furniture-right-bottom {
+            position: absolute;
+            right: 5%;
+            top: 55%;
+            width: 270px;
+            height: 340px;
+            z-index: 1;
+            transform-style: preserve-3d;
+            animation: floatRightBottom 9s ease-in-out infinite;
+            overflow: visible;
+        }
+
+        .furniture-right-bottom model-viewer {
             width: 100%;
             height: 100%;
             --poster-color: transparent;
@@ -117,9 +137,14 @@
             50% { transform: translateY(-20px) rotateY(18deg) rotateX(8deg); }
         }
 
-        @keyframes floatRight {
-            0%, 100% { transform: translateY(0px) rotateY(-12deg) rotateX(-3deg); }
-            50% { transform: translateY(-25px) rotateY(-15deg) rotateX(-6deg); }
+        @keyframes floatRightTop {
+            0%, 100% { transform: translateY(0px) rotateY(-10deg) rotateX(-2deg); }
+            50% { transform: translateY(-18px) rotateY(-13deg) rotateX(-5deg); }
+        }
+
+        @keyframes floatRightBottom {
+            0%, 100% { transform: translateY(0px) rotateY(-15deg) rotateX(-4deg); }
+            50% { transform: translateY(-22px) rotateY(-18deg) rotateX(-7deg); }
         }
 
         /* Central glass authentication portal */
@@ -374,7 +399,8 @@
         /* Responsive design */
         @media (max-width: 768px) {
             .furniture-left,
-            .furniture-right {
+            .furniture-right-top,
+            .furniture-right-bottom {
                 display: none;
             }
             
@@ -497,14 +523,30 @@
             </model-viewer>
         </div>
 
-        <!-- Right floating furniture -->
-        <div class="furniture-right">
+        <!-- Right floating furniture - top (Wooden TV) -->
+        <div class="furniture-right-top">
             <model-viewer
-                src="https://res.cloudinary.com/djjixqxzy/raw/upload/v1756471573/furniture-models/1756471573286-wheelchair.glb"
-                alt="Wheelchair 3D Model"
+                src="https://res.cloudinary.com/djjixqxzy/raw/upload/v1756905186/furniture-models/1756905182625-Wooden_Tv.glb"
+                alt="Wooden TV 3D Model"
                 auto-rotate
-                auto-rotate-delay="3000"
-                rotation-per-second="30deg"
+                auto-rotate-delay="4000"
+                rotation-per-second="25deg"
+                camera-controls
+                min-field-of-view="10deg"
+                max-field-of-view="120deg"
+                touch-action="pan-y"
+                loading="eager">
+            </model-viewer>
+        </div>
+
+        <!-- Right floating furniture - bottom (Wooden Closet) -->
+        <div class="furniture-right-bottom">
+            <model-viewer
+                src="https://res.cloudinary.com/djjixqxzy/raw/upload/v1756905134/furniture-models/1756905130231-Wooden_Closet.glb"
+                alt="Wooden Closet 3D Model"
+                auto-rotate
+                auto-rotate-delay="5000"
+                rotation-per-second="20deg"
                 camera-controls
                 min-field-of-view="10deg"
                 max-field-of-view="120deg"
