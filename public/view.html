@@ -598,12 +598,12 @@
         }
         
         function createARVariantControls(modelId, modelInfo, selectedVariant, modelViewer) {
-            // 1. Create title (separate element, higher up)
+            // 1. Create title (separate element, much higher up)
             const instructionText = document.createElement('div');
             instructionText.id = 'arVariantTitle';
             instructionText.style.cssText = `
                 position: fixed;
-                bottom: 320px;
+                bottom: 450px;
                 left: 50%;
                 transform: translateX(-50%);
                 color: #ffffff;
@@ -621,12 +621,12 @@
             instructionText.textContent = 'Want to see in more colors?';
             document.body.appendChild(instructionText);
             
-            // 2. Create variant circles (no container, just the circles)
+            // 2. Create variant circles (higher up)
             const variantControls = document.createElement('div');
             variantControls.id = 'arVariantControls';
             variantControls.style.cssText = `
                 position: fixed;
-                bottom: 240px;
+                bottom: 360px;
                 left: 50%;
                 transform: translateX(-50%);
                 display: flex;
@@ -686,14 +686,14 @@
             
             document.body.appendChild(variantControls);
             
-            // 3. Create Back button or helpful message (positioned below variants)
+            // 3. Create Back button or helpful message (more spacing, even higher)
             if (document.referrer && document.referrer !== window.location.href && !document.referrer.includes(window.location.host)) {
                 // Show back button when there's an external referrer
                 const backButton = document.createElement('button');
                 backButton.id = 'arBackButton';
                 backButton.style.cssText = `
                     position: fixed;
-                    bottom: 180px;
+                    bottom: 260px;
                     left: 50%;
                     transform: translateX(-50%);
                     background: rgba(255, 255, 255, 0.2);
@@ -729,7 +729,7 @@
                 helpMessage.id = 'arHelpMessage';
                 helpMessage.style.cssText = `
                     position: fixed;
-                    bottom: 180px;
+                    bottom: 260px;
                     left: 50%;
                     transform: translateX(-50%);
                     color: rgba(255, 255, 255, 0.8);
