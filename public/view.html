@@ -679,7 +679,21 @@
             console.log(`🎨 Switching AR to: ${variantName} - URL: ${newUrl}`);
             
             if (modelViewer) {
+                // Change the model source
                 modelViewer.src = newUrl;
+                
+                // Re-launch AR with the new variant
+                console.log('🚀 Re-launching AR with new variant...');
+                
+                // Wait a moment for the model to load, then activate AR
+                setTimeout(() => {
+                    if (modelViewer.canActivateAR) {
+                        modelViewer.activateAR();
+                        console.log('✅ AR re-launched with new variant');
+                    } else {
+                        console.warn('⚠️ Cannot activate AR after variant switch');
+                    }
+                }, 1000);
             }
             
             // Update active state of circles
