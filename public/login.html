@@ -72,51 +72,44 @@
             padding: 0;
         }
 
-        /* Large interactive canvas for GLB models */
-        .furniture-canvas {
-            position: absolute;
-            top: -20%;
-            left: -20%;
-            width: 140%;
-            height: 140%;
-            z-index: 1;
-            pointer-events: none; /* Allow clicks through to login form */
-        }
-
         /* Left floating furniture */
         .furniture-left {
             position: absolute;
-            left: calc(25% - 150px);
-            top: calc(20% - 100px);
+            left: 5%;
+            top: 20%;
             width: 300px;
             height: 400px;
+            z-index: 1;
             transform-style: preserve-3d;
             animation: floatLeft 6s ease-in-out infinite;
-            pointer-events: auto; /* Enable interactions */
+            overflow: visible;
         }
 
         .furniture-left model-viewer {
             width: 100%;
             height: 100%;
             --poster-color: transparent;
+            overflow: visible;
         }
 
         /* Right floating furniture */
         .furniture-right {
             position: absolute;
-            right: calc(25% - 140px);
-            top: calc(30% - 90px);
+            right: 5%;
+            top: 30%;
             width: 280px;
             height: 380px;
+            z-index: 1;
             transform-style: preserve-3d;
             animation: floatRight 7s ease-in-out infinite;
-            pointer-events: auto; /* Enable interactions */
+            overflow: visible;
         }
 
         .furniture-right model-viewer {
             width: 100%;
             height: 100%;
             --poster-color: transparent;
+            overflow: visible;
         }
 
         @keyframes floatLeft {
@@ -380,7 +373,8 @@
 
         /* Responsive design */
         @media (max-width: 768px) {
-            .furniture-canvas {
+            .furniture-left,
+            .furniture-right {
                 display: none;
             }
             
@@ -487,41 +481,36 @@
     <div class="background-particles"></div>
     
     <div class="login-stage">
-        <!-- Large canvas for 3D models -->
-        <div class="furniture-canvas">
-            <!-- Left floating furniture -->
-            <div class="furniture-left">
-                <model-viewer
-                    src="https://res.cloudinary.com/djjixqxzy/raw/upload/v1756822952/furniture-models/1756822952462-Treadmill%201.glb"
-                    alt="Treadmill 3D Model"
-                    auto-rotate
-                    auto-rotate-delay="3000"
-                    rotation-per-second="30deg"
-                    camera-controls
-                    disable-zoom="false"
-                    max-camera-orbit="Infinity"
-                    min-camera-orbit="-Infinity"
-                    touch-action="pan-y"
-                    loading="eager">
-                </model-viewer>
-            </div>
+        <!-- Left floating furniture -->
+        <div class="furniture-left">
+            <model-viewer
+                src="https://res.cloudinary.com/djjixqxzy/raw/upload/v1756822952/furniture-models/1756822952462-Treadmill%201.glb"
+                alt="Treadmill 3D Model"
+                auto-rotate
+                auto-rotate-delay="3000"
+                rotation-per-second="30deg"
+                camera-controls
+                min-field-of-view="10deg"
+                max-field-of-view="120deg"
+                touch-action="pan-y"
+                loading="eager">
+            </model-viewer>
+        </div>
 
-            <!-- Right floating furniture -->
-            <div class="furniture-right">
-                <model-viewer
-                    src="https://res.cloudinary.com/djjixqxzy/raw/upload/v1756471573/furniture-models/1756471573286-wheelchair.glb"
-                    alt="Wheelchair 3D Model"
-                    auto-rotate
-                    auto-rotate-delay="3000"
-                    rotation-per-second="30deg"
-                    camera-controls
-                    disable-zoom="false"
-                    max-camera-orbit="Infinity"
-                    min-camera-orbit="-Infinity"
-                    touch-action="pan-y"
-                    loading="eager">
-                </model-viewer>
-            </div>
+        <!-- Right floating furniture -->
+        <div class="furniture-right">
+            <model-viewer
+                src="https://res.cloudinary.com/djjixqxzy/raw/upload/v1756471573/furniture-models/1756471573286-wheelchair.glb"
+                alt="Wheelchair 3D Model"
+                auto-rotate
+                auto-rotate-delay="3000"
+                rotation-per-second="30deg"
+                camera-controls
+                min-field-of-view="10deg"
+                max-field-of-view="120deg"
+                touch-action="pan-y"
+                loading="eager">
+            </model-viewer>
         </div>
 
         <!-- Central glass authentication portal -->
