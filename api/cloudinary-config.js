@@ -46,9 +46,9 @@ export default async function handler(req, res) {
       const timestamp = Math.round(new Date().getTime() / 1000);
       const { uploadType, filename } = req.body;
       
-      // Generate proper folder and public_id
+      // Generate proper folder and public_id (don't duplicate folder in public_id)
       const folder = 'furniture-models';
-      const publicId = `${folder}/${Date.now()}-${filename || 'model.glb'}`;
+      const publicId = `${Date.now()}-${filename || 'model.glb'}`;
       
       // Only include parameters that will be sent to Cloudinary for signature
       const signatureParams = {

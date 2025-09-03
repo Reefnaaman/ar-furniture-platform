@@ -1,4 +1,4 @@
-import { saveModel, createModelVariant, getModel } from '../lib/supabase.js';
+import { saveModel, saveModelVariant, getModel } from '../lib/supabase.js';
 
 /**
  * Save model/variant metadata to database after successful Cloudinary direct upload
@@ -40,21 +40,15 @@ export default async function handler(req, res) {
       }
 
       // Create variant in database
-      const result = await createModelVariant({
-        modelId: metadata.modelId,
+      const result = await saveModelVariant({
+        parentModelId: metadata.modelId,
         variantName: metadata.variantName || 'Untitled Variant',
         cloudinaryUrl: cloudinaryData.secure_url,
         cloudinaryPublicId: cloudinaryData.public_id,
         hexColor: metadata.hexColor || '#000000',
         variantType: 'upload',
         fileSize: cloudinaryData.bytes || 0,
-        isPrimary: metadata.isPrimary || false,
-        metadata: {
-          format: cloudinaryData.format || 'glb',
-          resourceType: cloudinaryData.resource_type || 'raw',
-          uploadedAt: new Date().toISOString(),
-          originalFilename: cloudinaryData.original_filename || metadata.filename
-        }
+        isPrimary: metadata.isPrimary || false
       });
 
       if (!result.success) {
