@@ -3728,7 +3728,11 @@
         }
         
         async function loadUsers() {
-            const userList = document.getElementById('userList');
+            const userList = document.getElementById('usersContainer');
+            if (!userList) {
+                console.error('usersContainer element not found');
+                return;
+            }
             userList.innerHTML = '<div class="loading-users" style="padding: 20px; text-align: center; color: #7d8590;">Loading users...</div>';
             
             try {
@@ -3746,7 +3750,7 @@
         }
         
         function displayUsers(users) {
-            const userList = document.getElementById('userList');
+            const userList = document.getElementById('usersContainer');
             
             if (users.length === 0) {
                 userList.innerHTML = '<div style="padding: 20px; text-align: center; color: #7d8590;">No users found</div>';
