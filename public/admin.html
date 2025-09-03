@@ -2544,11 +2544,10 @@
                 <input type="hidden" name="variantType" value="upload">
                 
                 <div class="modal-buttons">
-                    <button type="button" class="modal-button secondary" onclick="closeVariantModal()">Cancel</button>
-                    <button type="submit" class="modal-button primary futuristic-primary" id="variantUploadButton">
-                        <span class="button-text">Upload</span>
-                        <div class="button-glow"></div>
-                    </button>
+                    <button type="button" class="modal-button secondary" onclick="closeVariantModal()">Close</button>
+                    <div style="font-size: 0.9rem; color: #7d8590; text-align: center; margin-left: 10px;">
+                        File will upload automatically when selected
+                    </div>
                 </div>
             </form>
             
@@ -4246,6 +4245,11 @@
                         variantNameInput.value = nameWithoutExtension;
                         variantNameInput.placeholder = nameWithoutExtension;
                     }
+                    
+                    // Auto-upload the variant immediately after file selection
+                    setTimeout(() => {
+                        uploadVariantFile(file, variantNameInput.value || nameWithoutExtension);
+                    }, 500); // Small delay to let UI update
                 }
                 
                 // Update upload area appearance
@@ -4259,45 +4263,33 @@
             }
         }
 
-        // Handle variant creation form submission - DIRECT CLOUDINARY UPLOAD
-        document.getElementById('variantForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
+        // Auto-upload function for variants - DIRECT CLOUDINARY UPLOAD
+        async function uploadVariantFile(file, variantName) {
             // Capture the modelId early to ensure we have it
             const modelId = currentModelId;
-            console.log('📋 Form submission - modelId:', modelId);
+            console.log('📋 Auto-upload starting - modelId:', modelId);
             
             if (!modelId) {
                 alert('Error: No model selected');
                 return;
             }
+            
+            if (!file || !variantName.trim()) {
+                console.error('Missing file or variant name');
+                return;
+            }
 
-            const button = document.getElementById('variantUploadButton');
-            const buttonText = button.querySelector('.button-text');
-            const fileInput = document.getElementById('variantFile');
-            
-            // Validate required fields
-            const variantName = document.getElementById('variantName').value.trim();
+            // Update UI to show upload progress
+            const fileName = document.getElementById('variantFileName');
             const hexColor = '#000000'; // Default color
-            const file = fileInput.files[0];
-            
-            if (!variantName) {
-                alert('Please enter a variant name');
-                return;
-            }
-            
-            if (!file) {
-                alert('Please select a GLB file for the variant');
-                return;
-            }
 
             // Show file size for debugging
             const fileSizeMB = (file.size / (1024 * 1024)).toFixed(2);
-            console.log(`📦 File size: ${fileSizeMB}MB`);
+            console.log(`📦 Auto-uploading file: ${fileSizeMB}MB`);
 
             // Show loading state
-            button.disabled = true;
-            buttonText.textContent = `Uploading ${fileSizeMB}MB file...`;
+            fileName.textContent = `⏳ Uploading ${fileSizeMB}MB file...`;
+            fileName.style.color = '#f1c40f';
 
             try {
                 // Step 1: Get signed upload parameters from backend
@@ -4396,12 +4388,18 @@
                 
             } catch (error) {
                 console.error('❌ Error creating variant:', error);
-                alert(`Error creating variant: ${error.message}`);
-            } finally {
-                // Reset button state
-                button.disabled = false;
-                buttonText.textContent = 'Upload';
+                
+                // Show error in filename area
+                fileName.textContent = `❌ Upload failed: ${error.message}`;
+                fileName.style.color = '#f85149';
             }
+        }
+
+        // Keep the form submission handler for backwards compatibility (but it won't be used)
+        document.getElementById('variantForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            // Auto-upload is now handled in updateVariantFileName()
+            console.log('Form submission prevented - using auto-upload instead');
         });
 
         // Convert hex color to RGBA array (0-1 range) for model-viewer
