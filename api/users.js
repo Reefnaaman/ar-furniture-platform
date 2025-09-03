@@ -12,7 +12,10 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { user: pathSegments } = req.query;
+    // Parse route from URL path
+    const url = new URL(req.url, `https://${req.headers.host}`);
+    const pathParts = url.pathname.split('/').filter(Boolean); // ['api', 'users', 'ID', 'password']
+    const pathSegments = pathParts.slice(2); // Remove 'api' and 'users': ['ID', 'password']
     
     if (req.method === 'GET' && !pathSegments) {
       // GET /api/users - List all users with view counts
