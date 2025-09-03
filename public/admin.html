@@ -988,37 +988,6 @@
             color: #7d8590;
         }
         
-        .sidebar-stats {
-            padding: 20px;
-            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
-        }
-        
-        .sidebar-stats-title {
-            font-size: 0.9rem;
-            color: #7d8590;
-            margin-bottom: 15px;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            font-weight: 500;
-        }
-        
-        .sidebar-stat-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 12px;
-        }
-        
-        .sidebar-stat-label {
-            color: #e6edf3;
-            font-size: 0.85rem;
-        }
-        
-        .sidebar-stat-value {
-            color: #58a6ff;
-            font-weight: 600;
-            font-size: 0.85rem;
-        }
         
         .sidebar-section {
             padding: 20px;
@@ -1754,11 +1723,6 @@
             flex: 1;
         }
         
-        .header-subtitle {
-            color: #7d8590;
-            font-size: 0.9rem;
-            margin-top: 4px;
-        }
         
         .header-actions {
             display: flex;
@@ -2143,23 +2107,6 @@
                 </ul>
             </div>
             
-            <!-- Quick Stats moved to bottom -->
-            <div class="sidebar-stats">
-                <div class="sidebar-stats-title">Quick Stats</div>
-                <div class="sidebar-stat-item">
-                    <span class="sidebar-stat-label">Total Furniture</span>
-                    <span class="sidebar-stat-value" id="sidebarTotalModels">-</span>
-                </div>
-                <div class="sidebar-stat-item">
-                    <span class="sidebar-stat-label">Customers</span>
-                    <span class="sidebar-stat-value" id="sidebarTotalCustomers">-</span>
-                </div>
-                <div class="sidebar-stat-item">
-                    <span class="sidebar-stat-label">Total Views</span>
-                    <span class="sidebar-stat-value" id="sidebarTotalViews">-</span>
-                </div>
-            </div>
-            
             <!-- Logout Section -->
             <div class="sidebar-logout">
                 <div class="logout-user-info">
@@ -2177,7 +2124,6 @@
                 <div class="header">
                     <div class="header-content">
                         <h1>🏠 Dashboard</h1>
-                        <p class="header-subtitle">Furniture management overview</p>
                     </div>
                 </div>
                 
@@ -2218,7 +2164,6 @@
                 <div class="header">
                     <div class="header-content">
                         <h1>🖼️ Images Library</h1>
-                        <p class="header-subtitle">Manage logos and brand assets</p>
                     </div>
                     <div class="header-actions">
                         <button onclick="showImageUploadModal()" class="action-button primary">
@@ -2261,7 +2206,6 @@
                 <div class="header">
                     <div class="header-content">
                         <h1>👥 User Management</h1>
-                        <p class="header-subtitle">Manage admin and customer accounts</p>
                     </div>
                     <div class="header-actions">
                         <button onclick="toggleUserModal()" class="action-button primary">
@@ -2637,9 +2581,6 @@
                 document.getElementById('totalViews').textContent = data.stats.totalViews || 0;
                 document.getElementById('totalSize').textContent = formatFileSize(data.stats.totalSize || 0);
                 
-                // Update sidebar stats
-                document.getElementById('sidebarTotalModels').textContent = data.stats.totalModels || 0;
-                document.getElementById('sidebarTotalViews').textContent = data.stats.totalViews || 0;
                 
                 // Group models by customer
                 displayGroupedModels(data.models);
@@ -3373,9 +3314,6 @@
                 customerList.appendChild(item);
             });
             
-            // Update sidebar stats (excluding unassigned from customer count)
-            const actualCustomerCount = customers.filter(c => c.id !== 'unassigned').length;
-            document.getElementById('sidebarTotalCustomers').textContent = actualCustomerCount;
         }
         
         function filterByCustomer(customerId, customerName = null) {
@@ -3558,23 +3496,6 @@
             }
         };
         
-        // Update the existing loadModels function to also update sidebar stats
-        const originalLoadModels = loadModels;
-        loadModels = async function() {
-            await originalLoadModels();
-            
-            // Update sidebar stats
-            try {
-                const response = await fetch('/api/models');
-                if (response.ok) {
-                    const data = await response.json();
-                    document.getElementById('sidebarTotalModels').textContent = data.stats.totalModels || 0;
-                    document.getElementById('sidebarTotalViews').textContent = data.stats.totalViews || 0;
-                }
-            } catch (error) {
-                console.error('Error updating sidebar stats:', error);
-            }
-        };
         
         
         function updateCustomerBadges() {
