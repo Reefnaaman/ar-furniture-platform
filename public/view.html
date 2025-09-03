@@ -504,7 +504,7 @@
                                 
                                 <!-- QR Code with glassmorphism -->
                                 <div style="background: linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(163, 113, 247, 0.1) 100%); padding: 20px; border-radius: 20px; border: 1px solid rgba(240, 246, 252, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);">
-                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}" 
+                                    <img id="qrCodeImage" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}" 
                                          style="border-radius: 12px; display: block;">
                                 </div>
                                 
@@ -548,17 +548,13 @@
             
             console.log(`📱 Generating QR for ${variantName}: ${variantUrl}`);
             
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(variantUrl)}`;
-            const qrWindow = window.open('', '_blank', 'width=450,height=500');
-            qrWindow.document.write(`
-                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 20px; font-family: -apple-system, BlinkMacSystemFont, sans-serif;">
-                    <div style="background: white; padding: 30px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center;">
-                        <h3 style="margin: 0 0 15px 0; color: #333; font-size: 1.2rem;">${variantName} Variant</h3>
-                        <img src="${qrUrl}" style="max-width: 300px; border-radius: 10px; margin: 10px 0;">
-                        <p style="color: #666; font-size: 0.9rem; margin: 15px 0 0 0;">Scan to view in AR</p>
-                    </div>
-                </div>
-            `);
+            // Update the existing QR code image instead of opening a popup
+            const qrCodeImage = document.getElementById('qrCodeImage');
+            if (qrCodeImage) {
+                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
+                qrCodeImage.src = qrUrl;
+                console.log(`✅ Updated QR code to show ${variantName} variant`);
+            }
         }
 
 
