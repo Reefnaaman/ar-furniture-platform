@@ -5401,7 +5401,43 @@
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Modern page system initialized');
             // Dashboard is shown by default
+            
+            // Hide variant delete buttons for non-admin users
+            hideVariantDeletesForCustomers();
         });
+        
+        // Hide variant delete buttons for customer users
+        function hideVariantDeletesForCustomers() {
+            const currentUser = document.getElementById('loggedInUsername')?.textContent;
+            if (currentUser && currentUser !== 'admin') {
+                console.log('👤 Customer user detected, hiding variant delete buttons');
+                const deleteButtons = document.querySelectorAll('.variant-delete');
+                deleteButtons.forEach(btn => {
+                    btn.style.display = 'none';
+                });
+                
+                // Also hide when new models are loaded
+                const observer = new MutationObserver((mutations) => {
+                    mutations.forEach((mutation) => {
+                        if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                            // Check if new variant delete buttons were added
+                            const newDeleteButtons = document.querySelectorAll('.variant-delete');
+                            newDeleteButtons.forEach(btn => {
+                                if (btn.style.display !== 'none') {
+                                    btn.style.display = 'none';
+                                }
+                            });
+                        }
+                    });
+                });
+                
+                // Observe changes to the models container
+                const modelsContainer = document.getElementById('modelsContainer');
+                if (modelsContainer) {
+                    observer.observe(modelsContainer, { childList: true, subtree: true });
+                }
+            }
+        }
         
         // ========================================
         // CUSTOMER LOGO MANAGEMENT
