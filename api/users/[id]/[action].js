@@ -1,4 +1,4 @@
-import { query } from '../../lib/supabase.js';
+import { query } from '../../../lib/supabase.js';
 import bcrypt from 'bcryptjs';
 
 export default async function handler(req, res) {
@@ -12,22 +12,19 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { user: pathSegments } = req.query; // Vercel provides this automatically
+    const { id: userId, action } = req.query; // Vercel provides this automatically for [id]/[action] structure
     
     console.log('User route debug:', { 
       url: req.url, 
-      pathSegments,
-      pathSegmentsType: typeof pathSegments,
-      pathSegmentsArray: Array.isArray(pathSegments),
-      pathSegmentsLength: pathSegments?.length,
-      method: req.method 
+      userId,
+      action,
+      method: req.method,
+      query: req.query
     });
     
-    if (req.method === 'PUT' && pathSegments && pathSegments.length >= 2) {
-      const userId = pathSegments[0];
-      const action = pathSegments[1];
+    if (req.method === 'PUT' && userId && action) {
       
-      console.log('PUT request debug:', { userId, action, pathSegments });
+      console.log('PUT request debug:', { userId, action });
       
       if (action === 'password') {
         // PUT /api/users/{id}/password - Update user password
@@ -66,10 +63,10 @@ export default async function handler(req, res) {
       }
     }
     
-    console.log('No route matched:', { method: req.method, pathSegments, pathSegmentsLength: pathSegments?.length });
+    console.log('No route matched:', { method: req.method, userId, action });
     return res.status(404).json({ 
       error: 'Route not found',
-      debug: { method: req.method, pathSegments, url: req.url }
+      debug: { method: req.method, userId, action, url: req.url }
     });
     
   } catch (error) {
