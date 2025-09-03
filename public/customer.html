@@ -1398,6 +1398,12 @@
                     console.log('Using fallback customer ID:', customerId);
                 }
                 
+                // TEMPORARY: Add option to view unassigned models
+                if (window.location.search.includes('show_unassigned=true')) {
+                    customerId = 'unassigned';
+                    console.log('⚠️ SHOWING UNASSIGNED MODELS (debug mode)');
+                }
+                
                 console.log('Final customer ID resolved to:', customerId);
                 return customerId;
             } catch (error) {
@@ -1447,7 +1453,8 @@
             }
             
             try {
-                console.log(`Loading furniture for customer: ${customerId}`);
+                console.log(`🔍 Loading furniture for customer: ${customerId}`);
+                console.log(`📡 API URL: /api/customer?customer=${customerId}`);
                 const response = await fetch(`/api/customer?customer=${customerId}`);
                 
                 if (!response.ok) {
@@ -1456,10 +1463,40 @@
                 }
                 
                 const data = await response.json();
-                console.log('Furniture data received:', data);
+                console.log('📦 Furniture data received:', data);
+                console.log(`📊 Total models: ${data.models?.length || 0}`);
+                
+                // Debug: Check each model for variants
+                if (data.models && data.models.length > 0) {
+                    data.models.forEach((model, index) => {
+                        console.log(`Model ${index + 1}: ${model.title || 'Untitled'}`);
+                        console.log(`  - ID: ${model.id}`);
+                        console.log(`  - Customer: ${model.customer_id}`);
+                        console.log(`  - Variants: ${model.variants ? model.variants.length : 0}`);
+                        if (model.variants && model.variants.length > 0) {
+                            model.variants.forEach(v => {
+                                console.log(`    • ${v.variant_name}: ${v.hex_color}`);
+                            });
+                        }
+                    });
+                }
                 
                 // Update customer branding
                 updateCustomerBranding(customerId, data.models);
+                
+                // Show which customer we're viewing (for debugging)
+                console.log(`
+╔════════════════════════════════════════╗
+║  CUSTOMER VIEW DEBUG INFO              ║
+╠════════════════════════════════════════╣
+║  Customer ID: ${customerId.padEnd(25)}║
+║  Models Found: ${(data.models?.length || 0).toString().padEnd(24)}║
+║  Models with Variants: ${data.models?.filter(m => m.variants && m.variants.length > 0).length || 0}${' '.repeat(16)}║
+╠════════════════════════════════════════╣
+║  To view unassigned models, add:      ║
+║  ?show_unassigned=true to the URL     ║
+╚════════════════════════════════════════╝
+                `);
                 
                 // Update main stats cards
                 document.getElementById('totalFurniture').textContent = data.stats.totalModels || 0;
