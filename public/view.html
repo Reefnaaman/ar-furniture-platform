@@ -662,36 +662,13 @@
             modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
             document.body.appendChild(modelViewer);
 
-            // Try AR activation
-            let arActivated = false;
-            
-            // Method 1: Direct AR activation
+            // Direct AR activation - no fallback UI
             setTimeout(() => {
-                if (!arActivated && modelViewer.activateAR) {
-                    console.log('🎯 Trying direct AR activation...');
-                    modelViewer.activateAR().then(() => {
-                        arActivated = true;
-                        console.log('✅ AR activated successfully');
-                    }).catch(() => {
-                        console.log('❌ Direct AR activation failed');
-                    });
+                if (modelViewer.activateAR) {
+                    console.log('🚀 Launching AR directly...');
+                    modelViewer.activateAR();
                 }
-            }, 1000);
-
-            // Method 2: Fallback UI after delay
-            setTimeout(() => {
-                if (!arActivated) {
-                    console.log('⚠️ AR auto-launch failed, showing fallback UI');
-                    document.body.style.visibility = 'visible';
-                    document.body.innerHTML = `
-                        <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; background: #000; color: white;">
-                            <h2 style="margin-bottom: 20px;">Tap to view in AR</h2>
-                            <button onclick="document.getElementById('hiddenViewer').activateAR()" style="padding: 20px 40px; font-size: 1.2rem; background: #58a6ff; color: white; border: none; border-radius: 10px;">Open AR Camera</button>
-                            <model-viewer id="hiddenViewer" src="${modelUrl}" ar ar-modes="webxr scene-viewer quick-look" style="width: 1px; height: 1px; opacity: 0;"></model-viewer>
-                        </div>
-                    `;
-                }
-            }, 2000);
+            }, 500);
 
             // Track view
             fetch(`/api/model-view?id=${modelId}`, { method: 'POST' }).catch(() => {});
