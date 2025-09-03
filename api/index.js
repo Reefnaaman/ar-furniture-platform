@@ -3,7 +3,6 @@ import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCu
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
-import { nanoid } from 'nanoid';
 
 export const config = {
   api: {
@@ -235,6 +234,7 @@ export default async function handler(req, res) {
           }
           
           // Generate session
+          const { nanoid } = await import('nanoid');
           const sessionId = nanoid(32);
           
           // For now, skip database session storage and just set cookies
