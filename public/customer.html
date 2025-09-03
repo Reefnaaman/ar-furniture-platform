@@ -1658,7 +1658,7 @@
                             ` : ''}
                             
                             <div class="model-actions">
-                                <a href="/view?id=${model.id}" target="_blank" class="action-button">
+                                <a href="/view?id=${model.id}" target="_blank" class="action-button view-ar-link" data-model-id="${model.id}">
                                     👁️ View in AR
                                 </a>
                                 <button class="action-button copy-link-btn" onclick="copyToClipboard('${viewUrl}', this)">
@@ -1715,6 +1715,8 @@
 
             // Update the copy link URL to include variant parameter
             updateCopyLinkUrl(modelCard, modelId, variantId);
+            // Update the View AR link URL to include variant parameter
+            updateViewARUrl(modelCard, modelId, variantId);
 
             // Update active state of variant circles
             const variantCircles = modelCard.querySelectorAll('.variant-circle');
@@ -1745,6 +1747,24 @@
                 // Update the onclick attribute with the new URL
                 copyButton.setAttribute('onclick', `copyToClipboard('${newUrl}', this)`);
                 console.log('🔗 Updated copy link URL:', newUrl);
+            }
+        }
+
+        function updateViewARUrl(card, modelId, variantId) {
+            const viewARLink = card.querySelector('a.view-ar-link[data-model-id="' + modelId + '"]');
+            if (viewARLink) {
+                let newUrl;
+                if (variantId === 'original') {
+                    // Original variant - no variant parameter needed
+                    newUrl = `/view?id=${modelId}`;
+                } else {
+                    // Specific variant - include variant parameter
+                    newUrl = `/view?id=${modelId}&variant=${variantId}`;
+                }
+                
+                // Update the href attribute with the new URL
+                viewARLink.setAttribute('href', newUrl);
+                console.log('👁️ Updated View AR URL:', newUrl);
             }
         }
         
