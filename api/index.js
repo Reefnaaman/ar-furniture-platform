@@ -220,14 +220,17 @@ export default async function handler(req, res) {
             [username]
           );
           
-          console.log('Login debug - user query result:', { 
-            success: userResult.success, 
-            dataLength: userResult.data?.length,
-            username 
-          });
-          
+          // For debugging - return the query result
           if (!userResult.success || !userResult.data || userResult.data.length === 0) {
-            return res.status(401).json({ error: 'Invalid credentials - user not found' });
+            return res.status(401).json({ 
+              error: 'Invalid credentials - user not found',
+              debug: { 
+                success: userResult.success, 
+                dataLength: userResult.data?.length,
+                username,
+                error: userResult.error 
+              }
+            });
           }
           
           const user = userResult.data[0];
