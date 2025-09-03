@@ -17,17 +17,17 @@ export const config = {
  * Handles: upload, models, model/[id], model/[id]/info, model/[id]/view
  */
 export default async function handler(req, res) {
-  console.log('=== FUNCTION ENTRY ===');
+  console.log('=== FUNCTION ENTRY ===', new Date().toISOString());
   console.log('Request method:', req.method);
   console.log('Request URL:', req.url);
-  console.log('Request headers:', JSON.stringify(req.headers, null, 2));
+  console.log('User-Agent:', req.headers['user-agent']);
   
-  // Immediate response for password update test
-  if (req.url?.includes('/users/') && req.url?.includes('/password')) {
-    return res.status(200).json({ 
-      message: 'Password route reached!', 
+  // Log all requests that include 'users' for debugging
+  if (req.url?.includes('users')) {
+    console.log('🔍 USERS REQUEST DETECTED:', {
       url: req.url,
-      method: req.method 
+      method: req.method,
+      timestamp: new Date().toISOString()
     });
   }
   
