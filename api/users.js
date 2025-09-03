@@ -17,7 +17,15 @@ export default async function handler(req, res) {
     const pathParts = url.pathname.split('/').filter(Boolean); // ['api', 'users', 'ID', 'password']
     const pathSegments = pathParts.slice(2); // Remove 'api' and 'users': ['ID', 'password']
     
-    if (req.method === 'GET' && !pathSegments) {
+    console.log('Users API debug:', { 
+      url: req.url, 
+      pathname: url.pathname, 
+      pathParts, 
+      pathSegments, 
+      method: req.method 
+    });
+    
+    if (req.method === 'GET' && pathSegments.length === 0) {
       // GET /api/users - List all users with view counts
       const usersResult = await query(`
         SELECT 
