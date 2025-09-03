@@ -23,43 +23,6 @@ export default async function handler(req, res) {
       method: req.method 
     });
     
-    // Debug endpoint - return path segments info
-    if (req.method === 'GET' && req.url?.includes('debug')) {
-      return res.status(200).json({
-        pathSegments,
-        pathSegmentsType: typeof pathSegments,
-        pathSegmentsArray: Array.isArray(pathSegments),
-        pathSegmentsLength: pathSegments?.length,
-        url: req.url,
-        query: req.query
-      });
-    }
-    
-    // GET /api/users - List all users
-    if (req.method === 'GET' && (!pathSegments || pathSegments.length === 0)) {
-      const usersResult = await query(`
-        SELECT 
-          u.id,
-          u.username,
-          u.role,
-          u.customer_id,
-          u.customer_name,
-          u.is_active,
-          u.created_at,
-          COALESCE(SUM(m.view_count), 0) as total_views
-        FROM users u
-        LEFT JOIN models m ON (u.role = 'customer' AND m.customer_id = u.customer_id)
-        GROUP BY u.id, u.username, u.role, u.customer_id, u.customer_name, u.is_active, u.created_at
-        ORDER BY u.created_at DESC
-      `);
-      
-      if (!usersResult.success) {
-        return res.status(500).json({ error: 'Failed to fetch users' });
-      }
-      
-      return res.status(200).json(usersResult.data || []);
-    }
-    
     if (req.method === 'PUT' && pathSegments && pathSegments.length >= 2) {
       const userId = pathSegments[0];
       const action = pathSegments[1];
