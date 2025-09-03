@@ -1,5 +1,5 @@
 import { uploadModel } from '../lib/cloudinary.js';
-import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase } from '../lib/supabase.js';
+import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import multiparty from 'multiparty';
 
@@ -400,7 +400,7 @@ async function handleModelFile(req, res, modelId) {
 }
 
 /**
- * Handle model info
+ * Handle model info with variants
  */
 async function handleModelInfo(req, res, modelId) {
   try {
@@ -409,8 +409,19 @@ async function handleModelInfo(req, res, modelId) {
     if (!model) {
       return res.status(404).json({ error: 'Model not found' });
     }
+
+    // Get variants for this model
+    const { data: variants, error: variantsError } = await supabase
+      .from('model_variants')
+      .select('*')
+      .eq('parent_model_id', modelId)
+      .order('is_primary', { ascending: false });
+
+    if (variantsError) {
+      console.warn('Error fetching variants for model info:', variantsError);
+    }
     
-    // Return model info without the Cloudinary URL (for security)
+    // Return model info with variants (without Cloudinary URLs for security)
     res.status(200).json({
       id: model.id,
       title: model.title,
@@ -419,7 +430,16 @@ async function handleModelInfo(req, res, modelId) {
       file_size: model.file_size,
       upload_date: model.upload_date,
       view_count: model.view_count,
-      metadata: model.metadata
+      dominant_color: model.dominant_color,
+      metadata: model.metadata,
+      variants: (variants || []).map(variant => ({
+        id: variant.id,
+        variant_name: variant.variant_name,
+        hex_color: variant.hex_color,
+        is_primary: variant.is_primary,
+        variant_type: variant.variant_type || 'upload',
+        cloudinary_url: variant.cloudinary_url // Include for variant switching
+      }))
     });
     
   } catch (error) {
@@ -480,7 +500,7 @@ async function handleCustomerModels(req, res, customerId) {
     const limit = parseInt(req.query.limit) || 100;
     const offset = parseInt(req.query.offset) || 0;
     
-    const models = await getModelsByCustomer(customerId, limit, offset);
+    const models = await getModelsByCustomerWithVariants(customerId, limit, offset);
     
     // Get customer stats
     const totalViews = models.reduce((sum, model) => sum + (model.view_count || 0), 0);

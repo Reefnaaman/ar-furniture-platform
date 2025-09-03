@@ -232,6 +232,68 @@
         .toast.show {
             opacity: 1;
         }
+
+        /* Variant color styles */
+        .variant-colors {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            backdrop-filter: blur(10px);
+        }
+
+        .variant-colors-label {
+            font-size: 0.9rem;
+            color: #7d8590;
+            font-weight: 600;
+            margin-right: 5px;
+        }
+
+        .variant-circles {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .variant-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .variant-circle:hover {
+            transform: scale(1.15);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .variant-circle.active {
+            border-color: #58a6ff;
+            border-width: 4px;
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.5);
+        }
+
+        .variant-circle.primary {
+            border-color: #ffd700;
+            border-width: 4px;
+        }
+
+        .variant-circle.primary:hover {
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.7);
+        }
         
     </style>
 </head>
@@ -423,6 +485,7 @@
                                 <p style="color: #7d8590; margin-bottom: 25px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">Preview in 3D 👀</p>
                                 <div style="background: linear-gradient(135deg, rgba(13, 17, 23, 0.6) 0%, rgba(22, 27, 34, 0.4) 100%); padding: 20px; border-radius: 16px; border: 1px solid rgba(240, 246, 252, 0.08);">
                                     <model-viewer
+                                        id="desktopModelViewer"
                                         src="/api/model-file?id=${id}"
                                         alt="${modelInfo.title}"
                                         camera-controls
@@ -430,6 +493,30 @@
                                         style="width: 500px; height: 450px; background: linear-gradient(135deg, #0d1117, #161b22); border-radius: 12px;">
                                     </model-viewer>
                                 </div>
+                                
+                                <!-- Variant Colors Section -->
+                                ${modelInfo.variants && modelInfo.variants.length > 0 ? `
+                                <div class="variant-colors">
+                                    <span class="variant-colors-label">Available Colors:</span>
+                                    <div class="variant-circles">
+                                        <!-- Original variant -->
+                                        <div class="variant-circle ${!currentVariantId ? 'active' : ''}" 
+                                             style="background: ${modelInfo.dominant_color || '#6b7280'};" 
+                                             title="Original"
+                                             onclick="switchToVariant('original', '/api/model-file?id=${id}', '${modelInfo.dominant_color || '#6b7280'}')">
+                                        </div>
+                                        <!-- Variant colors -->
+                                        ${modelInfo.variants.map(variant => `
+                                            <div class="variant-circle ${variant.is_primary ? 'primary' : ''} ${currentVariantId === variant.id ? 'active' : ''}" 
+                                                 style="background-color: ${variant.hex_color};" 
+                                                 title="${variant.variant_name}"
+                                                 onclick="switchToVariant('${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}')">
+                                                 ${variant.is_primary ? '★' : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                </div>
+                                ` : ''}
                             </div>
                             
                             <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
@@ -472,6 +559,34 @@
             } catch (error) {
                 showError(error.message);
             }
+        }
+
+        // Global variable to track current variant
+        let currentVariantId = null;
+
+        // Function to switch between variants on desktop view
+        window.switchToVariant = function(variantId, modelUrl, hexColor) {
+            const modelViewer = document.getElementById('desktopModelViewer');
+            if (!modelViewer) {
+                console.warn('Model viewer not found for variant switching');
+                return;
+            }
+
+            // Update model source
+            modelViewer.src = modelUrl;
+            currentVariantId = variantId;
+
+            // Update active state of variant circles
+            const variantCircles = document.querySelectorAll('.variant-circle');
+            variantCircles.forEach(circle => {
+                circle.classList.remove('active');
+            });
+
+            // Add active class to clicked variant
+            event.target.classList.add('active');
+
+            // Optional: Show feedback
+            console.log(`Switched to variant: ${variantId} with color: ${hexColor}`);
         }
         
         function showError(message) {
