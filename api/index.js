@@ -264,6 +264,15 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
     
+    // Route: /api/customer?customer=id (for query parameter format)
+    if (routePath === 'customer') {
+      const customerId = url.searchParams.get('customer');
+      if (!customerId) {
+        return res.status(400).json({ error: 'Customer ID is required' });
+      }
+      return await handleCustomerModels(req, res, customerId);
+    }
+    
     // Route: /api/customer/[id]
     if (routePath?.startsWith('customer/')) {
       const customerId = routePath.split('/')[1];

@@ -859,6 +859,21 @@
             padding-right: 50px;
         }
         
+        .input-label {
+            display: block;
+            color: #7d8590;
+            font-size: 0.85rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .password-note {
+            margin-top: 6px;
+            padding-left: 4px;
+        }
+        
         .futuristic-primary {
             position: relative;
             overflow: hidden;
@@ -2381,20 +2396,49 @@
             <div class="user-edit-sections">
                 <!-- Password Reset Section -->
                 <div class="edit-section">
-                    <h4 class="section-title">🔑 Password Reset</h4>
-                    <div class="input-group password-input-group">
-                        <input type="password" id="editNewPassword" placeholder="New Password" class="futuristic-input">
-                        <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('editNewPassword')" title="Show/Hide Password">
-                            <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                                <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
-                                <circle class="eye-open" cx="12" cy="12" r="3"/>
-                                <path class="eye-closed" d="m9.88 9.88a3 3 0 1 0 4.24 4.24" style="display: none;"/>
-                                <path class="eye-closed" d="m2 2 20 20" style="display: none;"/>
-                                <path class="eye-closed" d="M6.71 6.71C4.5 8.82 2 12 2 12s4 8 11 8c1.78 0 3.3-.46 4.65-1.15" style="display: none;"/>
-                                <path class="eye-closed" d="M17.29 17.29C19.5 15.18 22 12 22 12s-4-8-11-8c-1.78 0-3.3.46-4.65 1.15" style="display: none;"/>
-                            </svg>
-                        </button>
-                        <div class="input-line"></div>
+                    <h4 class="section-title">🔑 Password Management</h4>
+                    
+                    <!-- Current Password Display -->
+                    <div class="input-group">
+                        <label class="input-label">Current Password:</label>
+                        <div class="input-group password-input-group">
+                            <input type="password" id="currentPasswordDisplay" value="••••••••••••" class="futuristic-input" readonly>
+                            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('currentPasswordDisplay')" title="Show/Hide Password">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle class="eye-open" cx="12" cy="12" r="3"/>
+                                    <path class="eye-closed" d="m9.88 9.88a3 3 0 1 0 4.24 4.24" style="display: none;"/>
+                                    <path class="eye-closed" d="m2 2 20 20" style="display: none;"/>
+                                    <path class="eye-closed" d="M6.71 6.71C4.5 8.82 2 12 2 12s4 8 11 8c1.78 0 3.3-.46 4.65-1.15" style="display: none;"/>
+                                    <path class="eye-closed" d="M17.29 17.29C19.5 15.18 22 12 22 12s-4-8-11-8c-1.78 0-3.3.46-4.65 1.15" style="display: none;"/>
+                                </svg>
+                            </button>
+                            <div class="input-line"></div>
+                        </div>
+                        <div class="password-note">
+                            <small style="color: #7d8590; font-style: italic;">
+                                ⚠️ Passwords are securely hashed - original password cannot be displayed
+                            </small>
+                        </div>
+                    </div>
+                    
+                    <!-- New Password Field -->
+                    <div class="input-group">
+                        <label class="input-label">New Password (optional):</label>
+                        <div class="input-group password-input-group">
+                            <input type="password" id="editNewPassword" placeholder="Enter new password to change" class="futuristic-input">
+                            <button type="button" class="password-toggle-btn" onclick="togglePasswordVisibility('editNewPassword')" title="Show/Hide Password">
+                                <svg class="eye-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path class="eye-open" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                                    <circle class="eye-open" cx="12" cy="12" r="3"/>
+                                    <path class="eye-closed" d="m9.88 9.88a3 3 0 1 0 4.24 4.24" style="display: none;"/>
+                                    <path class="eye-closed" d="m2 2 20 20" style="display: none;"/>
+                                    <path class="eye-closed" d="M6.71 6.71C4.5 8.82 2 12 2 12s4 8 11 8c1.78 0 3.3-.46 4.65-1.15" style="display: none;"/>
+                                    <path class="eye-closed" d="M17.29 17.29C19.5 15.18 22 12 22 12s-4-8-11-8c-1.78 0-3.3.46-4.65 1.15" style="display: none;"/>
+                                </svg>
+                            </button>
+                            <div class="input-line"></div>
+                        </div>
                     </div>
                     <button type="button" class="modal-button secondary" onclick="resetUserPassword()" style="width: 100%; margin-top: 10px;">
                         Generate Random Password
