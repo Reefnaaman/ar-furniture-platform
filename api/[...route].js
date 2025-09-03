@@ -119,6 +119,16 @@ export default async function handler(req, res) {
     
     // Route: /api/users (delegate to users.js for all user operations)
     if (routePath === 'users' || routePath?.startsWith('users/')) {
+      // For debugging - return direct response
+      if (routePath?.includes('debug-direct')) {
+        return res.status(200).json({
+          message: 'Direct from catch-all',
+          routePath,
+          url: req.url,
+          method: req.method
+        });
+      }
+      
       console.log('Delegating to users.js:', { routePath, method: req.method, url: req.url });
       const usersHandler = await import('./users.js');
       return usersHandler.default(req, res);
