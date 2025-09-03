@@ -220,17 +220,29 @@ export default async function handler(req, res) {
             [username]
           );
           
+          console.log('Login debug - user query result:', { 
+            success: userResult.success, 
+            dataLength: userResult.data?.length,
+            username 
+          });
+          
           if (!userResult.success || !userResult.data || userResult.data.length === 0) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            return res.status(401).json({ error: 'Invalid credentials - user not found' });
           }
           
           const user = userResult.data[0];
+          console.log('Login debug - found user:', { 
+            id: user.id, 
+            username: user.username, 
+            hasPassword: !!user.password_hash 
+          });
           
           // Verify password
           const passwordMatch = await bcrypt.compare(password, user.password_hash);
+          console.log('Login debug - password match:', passwordMatch);
           
           if (!passwordMatch) {
-            return res.status(401).json({ error: 'Invalid credentials' });
+            return res.status(401).json({ error: 'Invalid credentials - password mismatch' });
           }
           
           // Set basic session cookie (simplified)
