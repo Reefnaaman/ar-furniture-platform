@@ -214,18 +214,11 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Username and password are required' });
           }
           
-          // Simple test - just return username to verify flow
-          return res.status(200).json({
-            debug: 'Login flow reached',
-            received: { username, passwordLength: password?.length },
-            timestamp: new Date().toISOString()
-          });
-          
-          // Find user by username
-          const userResult = await query(
-            'SELECT * FROM users WHERE username = $1 AND is_active = true',
-            [username]
-          );
+          // Find user by username (using template literal like other queries)
+          const userResult = await query(`
+            SELECT * FROM users 
+            WHERE username = '${username}' AND is_active = true
+          `);
           
           // For debugging - return the query result
           if (!userResult.success || !userResult.data || userResult.data.length === 0) {
