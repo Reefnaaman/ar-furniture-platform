@@ -117,12 +117,6 @@ export default async function handler(req, res) {
       return await handleCreateUser(req, res);
     }
     
-    // Route: /api/users (delegate to users.js handler)
-    if (routePath === 'users' || routePath?.startsWith('users/')) {
-      console.log('Delegating to users.js:', { routePath, method: req.method, url: req.url });
-      const usersHandler = await import('./users.js');
-      return usersHandler.default(req, res);
-    }
     
     // Route: /api/customer/[id]
     if (routePath?.startsWith('customer/')) {
