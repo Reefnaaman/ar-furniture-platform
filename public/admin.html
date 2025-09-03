@@ -4752,8 +4752,29 @@
                     // All variants are GLB file variants now - no color changing
                     console.log('Loading GLB variant:', variantUrl);
                     modelViewer.src = variantUrl;
+                    
+                    // Update the copy link URL to include variant parameter
+                    updateCopyLinkUrl(card, modelId, variantId);
                 }
             });
+        }
+        
+        function updateCopyLinkUrl(card, modelId, variantId) {
+            const copyButton = card.querySelector('button[onclick*="copyToClipboard"]');
+            if (copyButton) {
+                let newUrl;
+                if (variantId === 'original') {
+                    // Original variant - no variant parameter needed
+                    newUrl = `https://newfurniture.live/view?id=${modelId}`;
+                } else {
+                    // Specific variant - include variant parameter
+                    newUrl = `https://newfurniture.live/view?id=${modelId}&variant=${variantId}`;
+                }
+                
+                // Update the onclick attribute with the new URL
+                copyButton.setAttribute('onclick', `copyToClipboard('${newUrl}', this)`);
+                console.log('🔗 Updated copy link URL:', newUrl);
+            }
         }
         
         // Update original variant colors ONLY for models without saved colors
