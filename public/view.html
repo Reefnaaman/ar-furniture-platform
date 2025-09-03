@@ -233,6 +233,51 @@
             opacity: 1;
         }
 
+        /* Variant color styles */
+        .variant-circles {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            margin: 20px 0;
+            padding: 0;
+        }
+
+        .variant-circle {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            color: white;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        .variant-circle:hover {
+            transform: scale(1.15);
+            border-color: rgba(255, 255, 255, 0.6);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+        }
+
+        .variant-circle.active {
+            border-color: #58a6ff;
+            border-width: 4px;
+            box-shadow: 0 0 20px rgba(88, 166, 255, 0.5);
+        }
+
+        .variant-circle.primary {
+            border-color: #ffd700;
+            border-width: 4px;
+        }
+
+        .variant-circle.primary:hover {
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.7);
+        }
         
     </style>
 </head>
@@ -294,28 +339,48 @@
     <div class="toast" id="toast"></div>
     
     <script>
-        // Get model ID and variant ID from URL
+        // Get model ID from URL
         const urlParams = new URLSearchParams(window.location.search);
         const modelId = urlParams.get('id');
-        const variantId = urlParams.get('variant');
         
         console.log('🔍 Current URL:', window.location.href);
         console.log('🔍 URL params:', Object.fromEntries(urlParams));
         console.log('🔍 Model ID from URL:', modelId);
-        console.log('🔍 Variant ID from URL:', variantId);
         
         if (!modelId) {
             console.error('❌ No model ID in URL parameters');
             showError('No model ID provided');
         } else {
             console.log('✅ Loading model with ID:', modelId);
-            loadModel(modelId, variantId);
+            loadModel(modelId);
         }
         
-        async function loadModel(id, variantId = null) {
+        async function loadModel(id) {
             try {
-                console.log(`🌐 Making API call: /api/model/${id}/info`);
-                const response = await fetch(`/api/model/${id}/info`);
+                // For mobile - show variant selection before AR
+                if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                    // Fetch model info to get variants
+                    const response = await fetch(`/api/model-info?id=${id}`);
+                    if (!response.ok) {
+                        throw new Error('Model not found');
+                    }
+                    const modelInfo = await response.json();
+                    
+                    // If no variants, go straight to AR
+                    if (!modelInfo.variants || modelInfo.variants.length === 0) {
+                        launchDirectAR(id, `/api/model-file?id=${id}`);
+                        return;
+                    }
+                    
+                    // Show mobile variant selection screen
+                    showMobileVariantSelection(id, modelInfo);
+                    return;
+                    
+                }
+                
+                // Desktop - fetch model info and show preview with QR
+                console.log(`🌐 Making API call: /api/model-info?id=${id}`);
+                const response = await fetch(`/api/model-info?id=${id}`);
                 
                 console.log('📡 API Response status:', response.status);
                 console.log('📡 API Response ok:', response.ok);
@@ -323,99 +388,136 @@
                 if (!response.ok) {
                     const errorData = await response.text();
                     console.error('❌ API Error response:', errorData);
-                    throw new Error(`Model not found`);
+                    throw new Error(`API Error ${response.status}: ${errorData}`);
                 }
                 
                 const modelInfo = await response.json();
-                console.log('📊 Model info received:', modelInfo);
                 
-                // Detect mobile
-                if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                    // Mobile - go straight to AR with specific variant if provided
-                    document.body.style.visibility = 'hidden';
-                    document.body.style.background = '#000';
-                    
-                    let modelUrl = `/api/model-file?id=${id}`;
-                    
-                    // If variant specified, find the variant and use its URL
-                    if (variantId && modelInfo.variants) {
-                        const variant = modelInfo.variants.find(v => v.id === variantId);
-                        if (variant) {
-                            modelUrl = variant.cloudinary_url;
-                            console.log(`🎨 Loading variant: ${variant.variant_name} (${variant.hex_color})`);
-                        }
-                    }
-                    
-                    launchDirectAR(id, modelUrl, modelInfo);
-                    return;
+                // Debug: Log model info and variants
+                console.log('🖥️ Desktop model info:', modelInfo);
+                console.log('🎨 Variants found:', modelInfo.variants?.length || 0);
+                if (modelInfo.variants) {
+                    modelInfo.variants.forEach(v => console.log(`  • ${v.variant_name}: ${v.hex_color}`));
                 }
                 
-                // Desktop - show preview
-                document.title = `${modelInfo.title} - 3D Preview`;
-                document.getElementById('modelTitle').textContent = modelInfo.title;
-                document.getElementById('modelDescription').textContent = modelInfo.description || 'Interactive 3D model';
+                // Desktop - show 3D viewer with QR code
+                document.title = `${modelInfo.title} - 3D View`;
                 
-                // Create 3D viewer
-                const viewerHTML = `
-                    <model-viewer
-                        id="modelViewer"
-                        src="/api/model-file?id=${id}"
-                        alt="${modelInfo.title}"
-                        camera-controls
-                        auto-rotate
-                        ar
-                        ar-modes="webxr scene-viewer quick-look"
-                        style="width: 100%; height: 450px; background: linear-gradient(to bottom, #f5f5f5, #e0e0e0);">
-                    </model-viewer>
+                // Hide the old container and create new layout
+                document.querySelector('.container').style.display = 'none';
+                
+                // Create new desktop layout with luxury dark theme
+                // First, reset the body to remove any existing styles
+                document.body.style = '';
+                document.body.className = '';
+                
+                const desktopHTML = `
+                    <style>
+                        body {
+                            margin: 0;
+                            padding: 0;
+                            background: #0d1117;
+                            min-height: 100vh;
+                            overflow-x: hidden;
+                        }
+                        .gradient-text {
+                            background: linear-gradient(90deg, #58a6ff 0%, #79c0ff 25%, #a371f7 50%, #ff7b72 75%, #ffa657 100%);
+                            -webkit-background-clip: text;
+                            -webkit-text-fill-color: transparent;
+                            background-clip: text;
+                            font-weight: 700;
+                        }
+                        .main-container {
+                            position: fixed;
+                            top: 0;
+                            left: 0;
+                            right: 0;
+                            bottom: 0;
+                            background: #0d1117;
+                            background-image: 
+                                radial-gradient(circle at 25% 25%, rgba(88, 166, 255, 0.04) 0%, transparent 50%),
+                                radial-gradient(circle at 75% 75%, rgba(163, 113, 247, 0.04) 0%, transparent 50%),
+                                linear-gradient(180deg, #0d1117 0%, #161b22 100%);
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            padding: 20px;
+                        }
+                    </style>
+                    <div class="main-container">
+                        <div style="display: flex; gap: 40px; background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%); backdrop-filter: blur(20px); padding: 50px; border-radius: 24px; border: 1px solid rgba(240, 246, 252, 0.1); box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.05) inset; max-width: 1200px; position: relative; overflow: hidden;">
+                            <!-- Top gradient line -->
+                            <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.5), rgba(163, 113, 247, 0.5), transparent);"></div>
+                            
+                            <div style="flex: 1;">
+                                <h2 class="gradient-text" style="margin-bottom: 10px; font-size: 2.5rem; font-weight: 700;">${modelInfo.title}</h2>
+                                <p style="color: #7d8590; margin-bottom: 25px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">Preview in 3D 👀</p>
+                                <div style="background: linear-gradient(135deg, rgba(13, 17, 23, 0.6) 0%, rgba(22, 27, 34, 0.4) 100%); padding: 20px; border-radius: 16px; border: 1px solid rgba(240, 246, 252, 0.08);">
+                                    <model-viewer
+                                        id="desktopModelViewer"
+                                        src="/api/model-file?id=${id}"
+                                        alt="${modelInfo.title}"
+                                        camera-controls
+                                        auto-rotate
+                                        style="width: 500px; height: 450px; background: linear-gradient(135deg, #0d1117, #161b22); border-radius: 12px;">
+                                    </model-viewer>
+                                </div>
+                                
+                                <!-- Variant Colors Section -->
+                                ${modelInfo.variants && modelInfo.variants.length > 0 ? `
+                                    <div class="variant-circles">
+                                        <!-- Original variant -->
+                                        <div class="variant-circle active" 
+                                             style="background: ${modelInfo.dominant_color || '#6b7280'};" 
+                                             title="Original"
+                                             onclick="switchToVariant('original', '/api/model-file?id=${id}', '${modelInfo.dominant_color || '#6b7280'}')">
+                                        </div>
+                                        <!-- Variant colors -->
+                                        ${modelInfo.variants.map(variant => `
+                                            <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
+                                                 style="background-color: ${variant.hex_color};" 
+                                                 title="${variant.variant_name}"
+                                                 onclick="switchToVariant('${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}')">
+                                                 ${variant.is_primary ? '★' : ''}
+                                            </div>
+                                        `).join('')}
+                                    </div>
+                                ` : ''}
+                            </div>
+                            
+                            <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px;">
+                                <h3 class="gradient-text" style="margin-bottom: 20px; font-size: 1.8rem; font-weight: 600;">Almost there! 🎉</h3>
+                                
+                                <!-- QR Code with glassmorphism -->
+                                <div style="background: linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(163, 113, 247, 0.1) 100%); padding: 20px; border-radius: 20px; border: 1px solid rgba(240, 246, 252, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);">
+                                    <img src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}" 
+                                         style="border-radius: 12px; display: block;">
+                                </div>
+                                
+                                <p style="margin-top: 30px; text-align: center; color: #e6edf3; font-size: 1.3rem; line-height: 1.8;">
+                                    <span style="color: #7d8590;">Scan me with your phone</span><br>
+                                    <span style="color: #58a6ff; font-weight: 600;">to see ${modelInfo.title}</span><br>
+                                    <span style="color: #7d8590;">in your space! 😊</span>
+                                </p>
+                                
+                                <!-- Instructions card with glassmorphism -->
+                                <div style="margin-top: 25px; padding: 20px; background: linear-gradient(135deg, rgba(22, 27, 34, 0.7) 0%, rgba(30, 35, 42, 0.6) 100%); border-radius: 16px; border: 1px solid rgba(240, 246, 252, 0.1); backdrop-filter: blur(10px);">
+                                    <p style="color: #7d8590; font-size: 0.95rem; margin: 0; line-height: 1.8;">
+                                        <span style="color: #58a6ff;">📱</span> Open your camera app<br>
+                                        <span style="color: #79c0ff;">👆</span> Point at the QR code<br>
+                                        <span style="color: #a371f7;">✨</span> See the magic happen!
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                 `;
                 
-                document.getElementById('viewerContainer').innerHTML = viewerHTML;
-                document.querySelector('.container').style.display = 'block';
-                
-                // Show AR button and stats
-                const arButton = document.getElementById('arButton');
-                arButton.style.display = 'block';
-                arButton.onclick = () => activateAR();
-                
-                // Display variant colors if available
-                if (modelInfo.variants && modelInfo.variants.length > 0) {
-                    const variantsHTML = `
-                        <div style="margin: 20px 0;">
-                            <div style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                                <!-- Original variant -->
-                                <div onclick="generateQRForVariant('${id}', null)" 
-                                     style="width: 40px; height: 40px; border-radius: 50%; border: 3px solid #667eea; cursor: pointer; transition: all 0.3s ease; background: ${modelInfo.dominant_color || '#6b7280'};" 
-                                     title="Original">
-                                </div>
-                                <!-- Variant colors -->
-                                ${modelInfo.variants.map(variant => `
-                                    <div onclick="generateQRForVariant('${id}', '${variant.id}')" 
-                                         style="width: 40px; height: 40px; border-radius: 50%; border: ${variant.is_primary ? '3px solid #ffd700' : '3px solid rgba(0,0,0,0.2)'}; cursor: pointer; transition: all 0.3s ease; background-color: ${variant.hex_color}; display: flex; align-items: center; justify-content: center; color: white; font-size: 12px; text-shadow: 1px 1px 2px rgba(0,0,0,0.8);" 
-                                         title="${variant.variant_name}">
-                                         ${variant.is_primary ? '★' : ''}
-                                    </div>
-                                `).join('')}
-                            </div>
-                            <p style="color: #666; font-size: 0.9rem; margin-top: 10px;">Tap a color to generate its QR code</p>
-                        </div>
-                    `;
-                    
-                    // Insert variants after the model viewer
-                    document.getElementById('viewerContainer').insertAdjacentHTML('afterend', variantsHTML);
-                }
-                
-                // Update stats
-                if (modelInfo.view_count !== undefined) {
-                    document.getElementById('viewCount').textContent = modelInfo.view_count || 0;
-                }
-                if (modelInfo.file_size) {
-                    document.getElementById('fileSize').textContent = (modelInfo.file_size / (1024 * 1024)).toFixed(1) + ' MB';
-                }
-                if (modelInfo.upload_date) {
-                    const date = new Date(modelInfo.upload_date);
-                    document.getElementById('uploadDate').textContent = date.toLocaleDateString();
-                }
-                document.getElementById('stats').style.display = 'flex';
+                // Set the HTML and ensure body has no residual styles
+                document.body.innerHTML = desktopHTML;
+                document.body.style.margin = '0';
+                document.body.style.padding = '0';
+                document.body.style.background = 'none';
                 
                 // Track view
                 fetch(`/api/model-view?id=${id}`, { method: 'POST' }).catch(() => {});
@@ -425,14 +527,149 @@
             }
         }
 
-        function activateAR() {
-            const modelViewer = document.getElementById('modelViewer');
-            if (modelViewer && modelViewer.activateAR) {
-                modelViewer.activateAR();
+        // Global variable to track current variant
+        let currentVariantId = null;
+
+        // Function to switch between variants on desktop view
+        window.switchToVariant = function(variantId, modelUrl, hexColor) {
+            const modelViewer = document.getElementById('desktopModelViewer');
+            if (!modelViewer) {
+                console.warn('Model viewer not found for variant switching');
+                return;
             }
+
+            // Update model source
+            modelViewer.src = modelUrl;
+            currentVariantId = variantId;
+
+            // Update active state of variant circles
+            const variantCircles = document.querySelectorAll('.variant-circle');
+            variantCircles.forEach(circle => {
+                circle.classList.remove('active');
+            });
+
+            // Add active class to clicked variant
+            event.target.classList.add('active');
+
+            // Optional: Show feedback
+            console.log(`Switched to variant: ${variantId} with color: ${hexColor}`);
         }
-        
-        function launchDirectAR(modelId, modelUrl, modelInfo = null) {
+
+        // Mobile AR variant selection
+        function showMobileVariantSelection(modelId, modelInfo) {
+            document.body.style.visibility = 'visible';
+            document.body.innerHTML = `
+                <div style="
+                    display: flex; 
+                    flex-direction: column; 
+                    align-items: center; 
+                    justify-content: center; 
+                    min-height: 100vh; 
+                    background: linear-gradient(135deg, #0d1117 0%, #161b22 100%); 
+                    color: white; 
+                    padding: 20px; 
+                    text-align: center;
+                    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+                ">
+                    <div style="
+                        background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%); 
+                        backdrop-filter: blur(20px); 
+                        padding: 30px; 
+                        border-radius: 20px; 
+                        border: 1px solid rgba(240, 246, 252, 0.2); 
+                        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+                        max-width: 400px;
+                        width: 100%;
+                    ">
+                        <h2 style="margin: 0 0 10px 0; font-size: 1.8rem; font-weight: 700; color: #e6edf3;">
+                            ${modelInfo.title}
+                        </h2>
+                        <p style="margin: 0 0 30px 0; color: #7d8590; font-size: 1rem;">
+                            Choose your color to view in AR
+                        </p>
+                        
+                        <div style="
+                            display: flex; 
+                            gap: 12px; 
+                            justify-content: center; 
+                            flex-wrap: wrap; 
+                            margin-bottom: 30px;
+                        ">
+                            <!-- Original variant -->
+                            <div class="mobile-variant-circle" 
+                                 style="
+                                    width: 48px; 
+                                    height: 48px; 
+                                    border-radius: 50%; 
+                                    border: 3px solid rgba(240, 246, 252, 0.3); 
+                                    cursor: pointer; 
+                                    transition: all 0.3s ease;
+                                    background: ${modelInfo.dominant_color || '#6b7280'};
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
+                                    color: white;
+                                    font-size: 14px;
+                                    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+                                 " 
+                                 title="Original"
+                                 onclick="launchAR('${modelId}', '/api/model-file?id=${modelId}', 'Original')">
+                            </div>
+                            
+                            ${modelInfo.variants.map(variant => `
+                                <div class="mobile-variant-circle ${variant.is_primary ? 'primary' : ''}" 
+                                     style="
+                                        width: 48px; 
+                                        height: 48px; 
+                                        border-radius: 50%; 
+                                        border: ${variant.is_primary ? '3px solid #ffd700' : '3px solid rgba(240, 246, 252, 0.3)'}; 
+                                        cursor: pointer; 
+                                        transition: all 0.3s ease;
+                                        background-color: ${variant.hex_color};
+                                        display: flex;
+                                        align-items: center;
+                                        justify-content: center;
+                                        color: white;
+                                        font-size: 14px;
+                                        text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+                                     " 
+                                     title="${variant.variant_name}"
+                                     onclick="launchAR('${modelId}', '${variant.cloudinary_url}', '${variant.variant_name}')">
+                                     ${variant.is_primary ? '★' : ''}
+                                </div>
+                            `).join('')}
+                        </div>
+                        
+                        <p style="margin: 0; color: #58a6ff; font-size: 0.9rem;">
+                            Tap a color to view in your space
+                        </p>
+                    </div>
+                </div>
+                
+                <style>
+                .mobile-variant-circle:hover {
+                    transform: scale(1.1);
+                    border-color: rgba(88, 166, 255, 0.8) !important;
+                    box-shadow: 0 0 20px rgba(88, 166, 255, 0.4);
+                }
+                </style>
+            `;
+        }
+
+        // Launch AR with selected variant
+        function launchAR(modelId, modelUrl, variantName) {
+            console.log('🚀 Launching AR for:', variantName, 'URL:', modelUrl);
+            launchDirectAR(modelId, modelUrl);
+        }
+
+        // Direct AR launch with optional variant data
+        function launchDirectAR(modelId, modelUrl, variantData = null) {
+            // If we have variant data, create AR with variant switching
+            if (variantData) {
+                createARWithVariantSwitching(modelId, modelUrl, variantData);
+                return;
+            }
+            
             // Keep body completely black and hidden
             document.body.style.cssText = 'visibility: hidden; background: #000 !important; margin: 0; padding: 0;';
             
@@ -449,11 +686,6 @@
             modelViewer.setAttribute('camera-controls', '');
             modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
             document.body.appendChild(modelViewer);
-            
-            // Add variant switching controls if variants exist
-            if (modelInfo && modelInfo.variants && modelInfo.variants.length > 0) {
-                createARVariantControls(modelId, modelInfo, modelViewer);
-            }
 
             // Wait for model to load, then activate AR
             let arActivated = false;
@@ -477,131 +709,6 @@
 
             // Track view
             fetch(`/api/model-view?id=${modelId}`, { method: 'POST' }).catch(() => {});
-        }
-        
-        function createARVariantControls(modelId, modelInfo, modelViewer) {
-            // Create floating variant controls for AR
-            const variantControls = document.createElement('div');
-            variantControls.id = 'arVariantControls';
-            variantControls.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                display: flex;
-                gap: 12px;
-                padding: 15px 20px;
-                background: rgba(0, 0, 0, 0.8);
-                backdrop-filter: blur(10px);
-                border-radius: 50px;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                z-index: 9999;
-                visibility: hidden;
-            `;
-            
-            // Original variant
-            const originalCircle = document.createElement('div');
-            originalCircle.style.cssText = `
-                width: 44px;
-                height: 44px;
-                border-radius: 50%;
-                border: 3px solid rgba(255, 255, 255, 0.8);
-                cursor: pointer;
-                transition: all 0.3s ease;
-                background: ${modelInfo.dominant_color || '#6b7280'};
-            `;
-            originalCircle.title = 'Original';
-            originalCircle.onclick = () => switchARVariant(modelViewer, `/api/model-file?id=${modelId}`, 'Original');
-            variantControls.appendChild(originalCircle);
-            
-            // Variant colors
-            modelInfo.variants.forEach(variant => {
-                const circle = document.createElement('div');
-                circle.style.cssText = `
-                    width: 44px;
-                    height: 44px;
-                    border-radius: 50%;
-                    border: ${variant.is_primary ? '3px solid #ffd700' : '3px solid rgba(255, 255, 255, 0.5)'};
-                    cursor: pointer;
-                    transition: all 0.3s ease;
-                    background-color: ${variant.hex_color};
-                    display: flex;
-                    align-items: center;
-                    justify-content: center;
-                    color: white;
-                    font-size: 14px;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-                `;
-                circle.title = variant.variant_name;
-                circle.innerHTML = variant.is_primary ? '★' : '';
-                circle.onclick = () => switchARVariant(modelViewer, variant.cloudinary_url, variant.variant_name);
-                variantControls.appendChild(circle);
-            });
-            
-            document.body.appendChild(variantControls);
-            
-            // Show controls after AR is active (with delay)
-            setTimeout(() => {
-                if (variantControls) {
-                    variantControls.style.visibility = 'visible';
-                }
-            }, 3000);
-        }
-        
-        function switchARVariant(modelViewer, newUrl, variantName) {
-            console.log(`🎨 Switching AR to: ${variantName}`);
-            if (modelViewer) {
-                modelViewer.src = newUrl;
-            }
-        }
-        
-        function copyLink() {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                showToast('Link copied to clipboard!');
-            }).catch(() => {
-                showToast('Could not copy link');
-            });
-        }
-        
-        function shareModel() {
-            if (navigator.share) {
-                navigator.share({
-                    title: document.getElementById('modelTitle').textContent,
-                    url: window.location.href
-                });
-            } else {
-                copyLink();
-            }
-        }
-        
-        function showQR() {
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(window.location.href)}`;
-            const qrWindow = window.open('', '_blank', 'width=400,height=400');
-            qrWindow.document.write(`
-                <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: #f5f5f5;">
-                    <img src="${qrUrl}" style="max-width: 300px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                </div>
-            `);
-        }
-        
-        function generateQRForVariant(modelId, variantId) {
-            const baseUrl = window.location.origin + window.location.pathname;
-            const variantUrl = variantId ? `${baseUrl}?id=${modelId}&variant=${variantId}` : `${baseUrl}?id=${modelId}`;
-            
-            const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(variantUrl)}`;
-            const qrWindow = window.open('', '_blank', 'width=400,height=400');
-            qrWindow.document.write(`
-                <div style="display: flex; align-items: center; justify-content: center; height: 100vh; background: #f5f5f5;">
-                    <img src="${qrUrl}" style="max-width: 300px; border-radius: 10px; box-shadow: 0 10px 30px rgba(0,0,0,0.2);">
-                </div>
-            `);
-        }
-        
-        function showToast(message) {
-            const toast = document.getElementById('toast');
-            toast.textContent = message;
-            toast.classList.add('show');
-            setTimeout(() => toast.classList.remove('show'), 3000);
         }
         
         function showError(message) {
