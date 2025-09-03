@@ -4,6 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AR Furniture Viewer - newfurniture.live</title>
+    <!-- Inter Font -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <style>
         * {
@@ -26,7 +30,7 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: 'Inter', sans-serif;
             background: #000;
             min-height: 100vh;
             display: flex;
@@ -53,7 +57,14 @@
         }
         
         .header h1 {
-            font-size: 1.8rem;
+            font-family: 'Inter', sans-serif;
+            font-size: 32px;
+            font-weight: 300;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, #ffffff 0%, #a8a8a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
             margin-bottom: 10px;
         }
         
@@ -422,11 +433,13 @@
                             overflow-x: hidden;
                         }
                         .gradient-text {
-                            background: linear-gradient(90deg, #58a6ff 0%, #79c0ff 25%, #a371f7 50%, #ff7b72 75%, #ffa657 100%);
+                            font-family: 'Inter', sans-serif;
+                            font-weight: 300;
+                            letter-spacing: 3px;
+                            background: linear-gradient(135deg, #ffffff 0%, #a8a8a8 100%);
                             -webkit-background-clip: text;
                             -webkit-text-fill-color: transparent;
                             background-clip: text;
-                            font-weight: 700;
                         }
                         .main-container {
                             position: fixed;
@@ -451,7 +464,7 @@
                             <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.5), rgba(163, 113, 247, 0.5), transparent);"></div>
                             
                             <div style="flex: 1;">
-                                <h2 class="gradient-text" style="margin-bottom: 10px; font-size: 2.5rem; font-weight: 700;">${modelInfo.title}</h2>
+                                <h2 class="gradient-text" style="margin-bottom: 10px; font-size: 32px;">${modelInfo.title}</h2>
                                 <p style="color: #7d8590; margin-bottom: 25px; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 1px;">Preview in 3D 👀</p>
                                 <div style="background: linear-gradient(135deg, rgba(13, 17, 23, 0.6) 0%, rgba(22, 27, 34, 0.4) 100%); padding: 20px; border-radius: 16px; border: 1px solid rgba(240, 246, 252, 0.08);">
                                     <model-viewer
