@@ -19,7 +19,14 @@
 
         body {
             font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #000000 0%, #0a0e1a 25%, #0f1419 50%, #1a1f2e 100%);
+            background: 
+                /* Grid pattern */
+                linear-gradient(rgba(255, 255, 255, 0.25) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.25) 1px, transparent 1px),
+                /* Main gradient background */
+                linear-gradient(135deg, #000000 0%, #0a0e1a 25%, #0f1419 50%, #1a1f2e 100%);
+            background-size: 40px 40px, 40px 40px, 100% 100%;
+            background-position: 0 0, 0 0, 0 0;
             color: #ffffff;
             min-height: 100vh;
             overflow: hidden;
