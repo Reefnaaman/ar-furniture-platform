@@ -598,24 +598,50 @@
         }
         
         function createARVariantControls(modelId, modelInfo, selectedVariant, modelViewer) {
-            // Create floating variant controls for AR camera
-            const variantControls = document.createElement('div');
-            variantControls.id = 'arVariantControls';
-            variantControls.style.cssText = `
+            // Create main container for variant controls
+            const variantContainer = document.createElement('div');
+            variantContainer.id = 'arVariantContainer';
+            variantContainer.style.cssText = `
                 position: fixed;
-                bottom: 80px;
+                bottom: 60px;
                 left: 50%;
                 transform: translateX(-50%);
                 display: flex;
-                gap: 12px;
-                padding: 15px 20px;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(10px);
-                border-radius: 50px;
+                flex-direction: column;
+                align-items: center;
+                gap: 15px;
+                padding: 20px;
+                background: rgba(0, 0, 0, 0.75);
+                backdrop-filter: blur(15px);
+                border-radius: 20px;
                 border: 1px solid rgba(255, 255, 255, 0.2);
                 z-index: 9999;
                 visibility: hidden;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+                max-width: 90vw;
+            `;
+            
+            // Add "Want to see in more colors?" text
+            const instructionText = document.createElement('div');
+            instructionText.style.cssText = `
+                color: #ffffff;
+                font-size: 16px;
+                font-weight: 600;
+                text-align: center;
+                margin-bottom: 5px;
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
+            `;
+            instructionText.textContent = 'Want to see in more colors?';
+            variantContainer.appendChild(instructionText);
+            
+            // Create variant circles container
+            const variantControls = document.createElement('div');
+            variantControls.id = 'arVariantControls';
+            variantControls.style.cssText = `
+                display: flex;
+                gap: 12px;
+                flex-wrap: wrap;
+                justify-content: center;
             `;
             
             // Original variant circle
@@ -664,13 +690,48 @@
                 variantControls.appendChild(circle);
             });
             
-            document.body.appendChild(variantControls);
+            // Add variant controls to container
+            variantContainer.appendChild(variantControls);
+            
+            // Add Back button if there's a referrer
+            if (document.referrer && document.referrer !== window.location.href) {
+                const backButton = document.createElement('button');
+                backButton.style.cssText = `
+                    background: rgba(255, 255, 255, 0.2);
+                    border: 1px solid rgba(255, 255, 255, 0.3);
+                    color: #ffffff;
+                    padding: 8px 16px;
+                    border-radius: 20px;
+                    font-size: 14px;
+                    cursor: pointer;
+                    backdrop-filter: blur(10px);
+                    transition: all 0.2s ease;
+                    margin-top: 5px;
+                `;
+                backButton.textContent = '← Back';
+                backButton.onclick = () => {
+                    console.log('🔙 Going back to:', document.referrer);
+                    window.location.href = document.referrer;
+                };
+                
+                // Add hover effect
+                backButton.onmouseenter = () => {
+                    backButton.style.background = 'rgba(255, 255, 255, 0.3)';
+                };
+                backButton.onmouseleave = () => {
+                    backButton.style.background = 'rgba(255, 255, 255, 0.2)';
+                };
+                
+                variantContainer.appendChild(backButton);
+            }
+            
+            document.body.appendChild(variantContainer);
             
             // Show controls after AR is activated (with delay for AR to fully load)
             setTimeout(() => {
-                if (variantControls) {
-                    variantControls.style.visibility = 'visible';
-                    variantControls.style.animation = 'fadeIn 0.5s ease-in-out';
+                if (variantContainer) {
+                    variantContainer.style.visibility = 'visible';
+                    variantContainer.style.animation = 'fadeIn 0.5s ease-in-out';
                 }
             }, 3000);
         }
