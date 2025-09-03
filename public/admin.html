@@ -4263,7 +4263,11 @@
         document.getElementById('variantForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            if (!currentModelId) {
+            // Capture the modelId early to ensure we have it
+            const modelId = currentModelId;
+            console.log('📋 Form submission - modelId:', modelId);
+            
+            if (!modelId) {
                 alert('Error: No model selected');
                 return;
             }
@@ -4356,7 +4360,7 @@
                         type: 'variant',
                         cloudinaryData: cloudinaryData,
                         metadata: {
-                            modelId: currentModelId,
+                            modelId: modelId,
                             variantName: variantName,
                             hexColor: hexColor,
                             filename: file.name,
@@ -4373,21 +4377,22 @@
                 
                 console.log('✅ Variant saved successfully:', saveResult);
                 
-                alert(`Variant "${variantName}" created successfully!`);
+                // No popup alert - just close modal and reload
                 closeVariantModal();
-                
-                // Reload immediately to show the new variant
-                location.reload();
                 
                 // Extract and save dominant color for the new variant AFTER page reload
                 // This will run on the new page load and update the color
                 if (saveResult.success && saveResult.id) {
                     // Store the variant ID for color extraction after reload
+                    console.log('💾 Storing color extraction data:', { variantId: saveResult.id, modelId: modelId });
                     sessionStorage.setItem('extractColorForVariant', JSON.stringify({
                         variantId: saveResult.id,
-                        modelId: currentModelId
+                        modelId: modelId
                     }));
                 }
+                
+                // Reload immediately to show the new variant
+                location.reload();
                 
             } catch (error) {
                 console.error('❌ Error creating variant:', error);
