@@ -632,7 +632,8 @@
         // Enhanced floating animation for furniture models
         function enhanceFurnitureAnimations() {
             const leftFurniture = document.querySelector('.furniture-left model-viewer');
-            const rightFurniture = document.querySelector('.furniture-right model-viewer');
+            const rightTopFurniture = document.querySelector('.furniture-right-top model-viewer');
+            const rightBottomFurniture = document.querySelector('.furniture-right-bottom model-viewer');
             
             if (leftFurniture) {
                 leftFurniture.addEventListener('load', () => {
@@ -640,9 +641,15 @@
                 });
             }
             
-            if (rightFurniture) {
-                rightFurniture.addEventListener('load', () => {
-                    rightFurniture.style.filter = 'drop-shadow(0 10px 30px rgba(120, 200, 255, 0.15))';
+            if (rightTopFurniture) {
+                rightTopFurniture.addEventListener('load', () => {
+                    rightTopFurniture.style.filter = 'drop-shadow(0 10px 30px rgba(120, 200, 255, 0.15))';
+                });
+            }
+            
+            if (rightBottomFurniture) {
+                rightBottomFurniture.addEventListener('load', () => {
+                    rightBottomFurniture.style.filter = 'drop-shadow(0 10px 30px rgba(163, 113, 247, 0.18))';
                 });
             }
         }
