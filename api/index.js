@@ -236,19 +236,8 @@ export default async function handler(req, res) {
           
           // Generate session
           const sessionId = nanoid(32);
-          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours
           
-          // Create session
-          const sessionResult = await query(
-            'INSERT INTO user_sessions (session_id, user_id, expires_at) VALUES ($1, $2, $3)',
-            [sessionId, user.id, expiresAt.toISOString()]
-          );
-          
-          if (!sessionResult.success) {
-            console.error('Session creation error:', sessionResult.error);
-            return res.status(500).json({ error: 'Failed to create session' });
-          }
-          
+          // For now, skip database session storage and just set cookies
           // Set session cookie
           res.setHeader('Set-Cookie', [
             `session=${sessionId}; HttpOnly; Path=/; Max-Age=86400; SameSite=Strict`,
