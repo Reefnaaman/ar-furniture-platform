@@ -603,19 +603,20 @@
             variantControls.id = 'arVariantControls';
             variantControls.style.cssText = `
                 position: fixed;
-                bottom: 80px;
+                bottom: 120px;
                 left: 50%;
                 transform: translateX(-50%);
                 display: flex;
-                gap: 12px;
-                padding: 15px 20px;
-                background: rgba(0, 0, 0, 0.7);
-                backdrop-filter: blur(10px);
-                border-radius: 50px;
-                border: 1px solid rgba(255, 255, 255, 0.2);
-                z-index: 9999;
+                gap: 8px;
+                padding: 8px 12px;
+                background: rgba(0, 0, 0, 0.8);
+                backdrop-filter: blur(20px);
+                border-radius: 24px;
+                border: 1px solid rgba(255, 255, 255, 0.15);
+                z-index: 9998;
                 visibility: hidden;
-                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+                font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', system-ui, sans-serif;
             `;
             
             // Original variant circle
@@ -623,14 +624,14 @@
             originalCircle.className = 'ar-variant-circle';
             const isOriginalActive = !selectedVariant;
             originalCircle.style.cssText = `
-                width: 48px;
-                height: 48px;
+                width: 36px;
+                height: 36px;
                 border-radius: 50%;
-                border: ${isOriginalActive ? '4px solid #58a6ff' : '3px solid rgba(255, 255, 255, 0.6)'};
+                border: ${isOriginalActive ? '2px solid #007AFF' : '1px solid rgba(255, 255, 255, 0.4)'};
                 cursor: pointer;
-                transition: all 0.3s ease;
+                transition: all 0.2s ease;
                 background: ${modelInfo.dominant_color || '#6b7280'};
-                box-shadow: ${isOriginalActive ? '0 0 20px rgba(88, 166, 255, 0.5)' : 'none'};
+                box-shadow: ${isOriginalActive ? '0 0 8px rgba(0, 122, 255, 0.6)' : '0 2px 8px rgba(0, 0, 0, 0.3)'};
             `;
             originalCircle.title = 'Original';
             originalCircle.onclick = () => switchARVariant(modelViewer, `/api/model-file?id=${modelId}`, 'Original', originalCircle);
@@ -643,20 +644,20 @@
                 const isActive = selectedVariant && selectedVariant.id === variant.id;
                 
                 circle.style.cssText = `
-                    width: 48px;
-                    height: 48px;
+                    width: 36px;
+                    height: 36px;
                     border-radius: 50%;
-                    border: ${isActive ? '4px solid #58a6ff' : (variant.is_primary ? '3px solid #ffd700' : '3px solid rgba(255, 255, 255, 0.6)')};
+                    border: ${isActive ? '2px solid #007AFF' : (variant.is_primary ? '2px solid #FF9500' : '1px solid rgba(255, 255, 255, 0.4)')};
                     cursor: pointer;
-                    transition: all 0.3s ease;
+                    transition: all 0.2s ease;
                     background-color: ${variant.hex_color};
                     display: flex;
                     align-items: center;
                     justify-content: center;
                     color: white;
-                    font-size: 16px;
-                    text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
-                    box-shadow: ${isActive ? '0 0 20px rgba(88, 166, 255, 0.5)' : 'none'};
+                    font-size: 12px;
+                    text-shadow: 0 1px 2px rgba(0,0,0,0.8);
+                    box-shadow: ${isActive ? '0 0 8px rgba(0, 122, 255, 0.6)' : '0 2px 8px rgba(0, 0, 0, 0.3)'};
                 `;
                 circle.title = variant.variant_name;
                 circle.innerHTML = variant.is_primary ? '★' : '';
@@ -682,18 +683,18 @@
                 modelViewer.src = newUrl;
             }
             
-            // Update active state of circles
+            // Update active state of circles  
             const allCircles = document.querySelectorAll('.ar-variant-circle');
             allCircles.forEach(circle => {
-                circle.style.border = circle.style.border.includes('ffd700') ? 
-                    '3px solid #ffd700' : '3px solid rgba(255, 255, 255, 0.6)';
-                circle.style.boxShadow = 'none';
+                circle.style.border = circle.style.border.includes('FF9500') ? 
+                    '2px solid #FF9500' : '1px solid rgba(255, 255, 255, 0.4)';
+                circle.style.boxShadow = '0 2px 8px rgba(0, 0, 0, 0.3)';
             });
             
             // Highlight selected circle
             if (clickedCircle) {
-                clickedCircle.style.border = '4px solid #58a6ff';
-                clickedCircle.style.boxShadow = '0 0 20px rgba(88, 166, 255, 0.5)';
+                clickedCircle.style.border = '2px solid #007AFF';
+                clickedCircle.style.boxShadow = '0 0 8px rgba(0, 122, 255, 0.6)';
             }
         }
         
