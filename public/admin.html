@@ -4313,7 +4313,8 @@
                 
                 // Step 2: Upload directly to Cloudinary with signature
                 console.log('☁️ Uploading directly to Cloudinary...');
-                buttonText.textContent = 'Uploading to Cloudinary...';
+                fileName.textContent = 'Uploading to Cloudinary...';
+                fileName.style.color = '#58a6ff';
                 
                 const formData = new FormData();
                 formData.append('file', file);
@@ -4340,7 +4341,8 @@
                 console.log('✅ Cloudinary upload successful:', cloudinaryData);
                 
                 // Step 3: Save metadata to database
-                buttonText.textContent = 'Saving to database...';
+                fileName.textContent = 'Saving to database...';
+                fileName.style.color = '#58a6ff';
                 console.log('💾 Saving variant to database...');
                 
                 const saveResponse = await fetch('/api/cloudinary-save', {
