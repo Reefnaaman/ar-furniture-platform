@@ -415,6 +415,19 @@
                 // Desktop - show 3D viewer with QR code
                 document.title = `${modelInfo.title} - 3D View`;
                 
+                // Determine which model/variant to load for desktop
+                let desktopModelUrl = `/api/model/${id}`;
+                let selectedVariant = null;
+                
+                // If variant specified, find the variant and use its URL  
+                if (variantId && modelInfo.variants) {
+                    selectedVariant = modelInfo.variants.find(v => v.id === variantId);
+                    if (selectedVariant) {
+                        desktopModelUrl = selectedVariant.cloudinary_url;
+                        console.log(`🖥️ Desktop loading variant: ${selectedVariant.variant_name} (${selectedVariant.hex_color})`);
+                    }
+                }
+                
                 // Hide the old container and create new layout
                 document.querySelector('.container').style.display = 'none';
                 
@@ -469,7 +482,7 @@
                                 <div style="background: linear-gradient(135deg, rgba(13, 17, 23, 0.6) 0%, rgba(22, 27, 34, 0.4) 100%); padding: 20px; border-radius: 16px; border: 1px solid rgba(240, 246, 252, 0.08);">
                                     <model-viewer
                                         id="desktopModelViewer"
-                                        src="/api/model/${id}"
+                                        src="${desktopModelUrl}"
                                         alt="${modelInfo.title}"
                                         camera-controls
                                         auto-rotate
@@ -481,14 +494,14 @@
                                 ${modelInfo.variants && modelInfo.variants.length > 0 ? `
                                     <div class="variant-circles">
                                         <!-- Original variant -->
-                                        <div class="variant-circle active" 
+                                        <div class="variant-circle ${!selectedVariant ? 'active' : ''}" 
                                              style="background: ${modelInfo.dominant_color || '#6b7280'};" 
                                              title="Original - Click for QR"
                                              onclick="generateVariantQR('${id}', null, 'Original')">
                                         </div>
                                         <!-- Variant colors -->
                                         ${modelInfo.variants.map(variant => `
-                                            <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
+                                            <div class="variant-circle ${variant.is_primary ? 'primary' : ''} ${selectedVariant && selectedVariant.id === variant.id ? 'active' : ''}" 
                                                  style="background-color: ${variant.hex_color};" 
                                                  title="${variant.variant_name} - Click for QR"
                                                  onclick="generateVariantQR('${id}', '${variant.id}', '${variant.variant_name}')">
@@ -504,7 +517,7 @@
                                 
                                 <!-- QR Code with glassmorphism -->
                                 <div style="background: linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(163, 113, 247, 0.1) 100%); padding: 20px; border-radius: 20px; border: 1px solid rgba(240, 246, 252, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);">
-                                    <img id="qrCodeImage" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(window.location.href)}" 
+                                    <img id="qrCodeImage" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(selectedVariant ? window.location.href : window.location.origin + window.location.pathname + '?id=' + id)}" 
                                          style="border-radius: 12px; display: block;">
                                 </div>
                                 
