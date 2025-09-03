@@ -4901,15 +4901,19 @@
                     if (hiddenModelId && hiddenModelId.textContent === modelId) {
                         targetModelViewer = card.querySelector('model-viewer');
                         // Find the specific variant element and get its URL
-                        const variants = card.querySelectorAll('.variant-item');
+                        const variants = card.querySelectorAll('.variant-circle');
                         for (const variant of variants) {
                             const onclick = variant.getAttribute('onclick');
                             if (onclick && onclick.includes(variantId)) {
                                 targetVariantElement = variant;
-                                // Extract the variant URL from the onclick attribute
-                                const match = onclick.match(/'([^']*\.glb)'/);
+                                // Extract the variant URL from the onclick attribute (3rd parameter in switchToVariant call)
+                                // Format: switchToVariant('modelId', 'variantId', 'variantUrl', 'hexColor', 'variantType')
+                                const match = onclick.match(/switchToVariant\('[^']*',\s*'[^']*',\s*'([^']*)'/);
                                 if (match) {
                                     variantUrl = match[1];
+                                    console.log('✅ Extracted variant URL:', variantUrl);
+                                } else {
+                                    console.warn('❌ Could not extract variant URL from onclick:', onclick);
                                 }
                                 break;
                             }
