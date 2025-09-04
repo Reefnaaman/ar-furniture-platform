@@ -460,6 +460,20 @@
                             -webkit-text-fill-color: transparent;
                             background-clip: text;
                         }
+                        .desktop-customer-logo {
+                            position: absolute;
+                            top: 20px;
+                            left: 20px;
+                            max-width: 150px;
+                            max-height: 60px;
+                            object-fit: contain;
+                            border-radius: 8px;
+                            background: rgba(240, 246, 252, 0.1);
+                            padding: 8px;
+                            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+                            backdrop-filter: blur(10px);
+                            border: 1px solid rgba(240, 246, 252, 0.15);
+                        }
                         .main-container {
                             position: fixed;
                             top: 0;
@@ -478,6 +492,7 @@
                         }
                     </style>
                     <div class="main-container">
+                        <img id="desktopCustomerLogo" class="desktop-customer-logo" style="display: none;" alt="Customer Logo" />
                         <div style="display: flex; gap: 40px; background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%); backdrop-filter: blur(20px); padding: 50px; border-radius: 24px; border: 1px solid rgba(240, 246, 252, 0.1); box-shadow: 0 20px 80px rgba(0, 0, 0, 0.8), 0 1px 0 rgba(255, 255, 255, 0.05) inset; max-width: 1200px; position: relative; overflow: hidden;">
                             <!-- Top gradient line -->
                             <div style="position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(88, 166, 255, 0.5), rgba(163, 113, 247, 0.5), transparent);"></div>
@@ -555,8 +570,42 @@
                 // Track view
                 fetch(`/api/model/${id}/view`, { method: 'POST' }).catch(() => {});
                 
+                // Load customer logo for desktop
+                loadDesktopCustomerLogo(modelInfo);
+                
             } catch (error) {
                 showError(error.message);
+            }
+        }
+        
+        async function loadDesktopCustomerLogo(modelInfo) {
+            if (!modelInfo || !modelInfo.customer_id || modelInfo.customer_id === 'unassigned') return;
+            
+            try {
+                console.log('🎨 Loading customer logo for desktop view:', modelInfo.customer_id);
+                const response = await fetch(`/api/images?imageType=customer_logo&customerId=${modelInfo.customer_id}`);
+                
+                if (!response.ok) {
+                    console.log('No logo response or error fetching logo');
+                    return;
+                }
+                
+                const data = await response.json();
+                console.log('🎨 Desktop logo data received:', data);
+                
+                if (data.images && data.images.length > 0) {
+                    const logo = data.images[0]; // Use the first (most recent) logo
+                    const logoElement = document.getElementById('desktopCustomerLogo');
+                    if (logoElement) {
+                        logoElement.src = logo.cloudinary_url;
+                        logoElement.style.display = 'block';
+                        console.log('✅ Desktop customer logo loaded:', logo.cloudinary_url);
+                    }
+                } else {
+                    console.log('📝 No customer logo found for desktop view:', modelInfo.customer_id);
+                }
+            } catch (error) {
+                console.error('Error loading desktop customer logo:', error);
             }
         }
 

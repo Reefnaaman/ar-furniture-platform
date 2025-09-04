@@ -263,9 +263,13 @@
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(2, minmax(250px, 1fr));
             gap: 20px;
             margin-bottom: 40px;
+            margin-top: 20px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
         }
         
         .stat-card {
@@ -1200,11 +1204,6 @@
                 <div class="stat-label">Total Views</div>
                 <div class="stat-value" id="totalViews">-</div>
             </div>
-            <div class="stat-card">
-                <div class="stat-icon">💾</div>
-                <div class="stat-label">Collection Size</div>
-                <div class="stat-value" id="totalSize">-</div>
-            </div>
         </div>
         
         <div class="furniture-section">
@@ -1244,16 +1243,10 @@
                         </button>
                     </div>
                     <button class="color-guide-btn" onclick="openColorGuide()" title="Change furniture preview background color">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                            <rect x="2" y="2" width="20" height="20" rx="2" ry="2" fill="none" stroke="currentColor" stroke-width="2"/>
-                            <circle cx="8" cy="8" r="2" fill="currentColor"/>
-                            <path d="M14 14l6-6M8 16l2-2"/>
-                        </svg>
                         <div class="color-preview" id="colorPreview"></div>
                         <span>Furniture Background</span>
                         <input type="color" class="color-picker-input" id="backgroundColorPicker" oninput="updateFurnitureBackground(this.value)" onchange="updateFurnitureBackground(this.value)">
                     </button>
-                    <button class="refresh-button" onclick="loadFurniture()">Refresh</button>
                 </div>
             </div>
             
@@ -1555,7 +1548,6 @@
                 // Update main stats cards
                 document.getElementById('totalFurniture').textContent = data.stats.totalModels || 0;
                 document.getElementById('totalViews').textContent = data.stats.totalViews || 0;
-                document.getElementById('totalSize').textContent = formatFileSize(data.stats.totalSize || 0);
                 
                 // Display furniture
                 displayFurniture(data.models);
@@ -1630,10 +1622,6 @@
                                 <div class="stat-item">
                                     <div class="stat-value">${model.view_count || 0}</div>
                                     <div class="stat-label">Views</div>
-                                </div>
-                                <div class="stat-item">
-                                    <div class="stat-value">${formatFileSize(model.file_size)}</div>
-                                    <div class="stat-label">Size</div>
                                 </div>
                             </div>
                             
