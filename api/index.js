@@ -117,6 +117,11 @@ export default async function handler(req, res) {
       return await handleCreateModelViewsTable(req, res);
     }
     
+    // Route: /api/reset-view-counts
+    if (routePath === 'reset-view-counts') {
+      return await handleResetViewCounts(req, res);
+    }
+    
     // Route: /api/init-models-db
     if (routePath === 'init-models-db') {
       return await handleInitModelsDB(req, res);
@@ -1302,4 +1307,63 @@ GRANT USAGE, SELECT ON SEQUENCE model_views_id_seq TO service_role;
       '5. This enables detailed per-variant view analytics'
     ]
   });
+}
+
+/**
+ * Handle resetting all view counts to 0
+ */
+async function handleResetViewCounts(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    console.log('🔄 Resetting all view counts to 0...');
+    
+    // Reset view_count in models table
+    const { error: modelsError } = await supabase
+      .from('models')
+      .update({ view_count: 0 });
+
+    if (modelsError) {
+      console.error('Error resetting models view counts:', modelsError);
+      return res.status(500).json({ 
+        error: 'Failed to reset model view counts',
+        details: modelsError.message 
+      });
+    }
+
+    // Clear all records from model_views table (if it exists)
+    let viewsCleared = 0;
+    try {
+      const { error: viewsError, count } = await supabase
+        .from('model_views')
+        .delete()
+        .neq('id', 0); // Delete all records
+
+      if (!viewsError) {
+        viewsCleared = count || 0;
+        console.log(`✅ Cleared ${viewsCleared} detailed view records`);
+      }
+    } catch (viewsTableError) {
+      console.log('📝 model_views table not found (this is okay for first setup)');
+    }
+
+    console.log('✅ All view counts reset to 0');
+
+    return res.status(200).json({
+      success: true,
+      message: 'All view counts reset to 0',
+      modelsReset: true,
+      detailedViewsCleared: viewsCleared,
+      instructions: 'You can now test the per-variant view tracking system from a clean state'
+    });
+
+  } catch (error) {
+    console.error('💥 Reset view counts error:', error);
+    return res.status(500).json({ 
+      error: error.message,
+      solution: 'Check your Supabase configuration and try again'
+    });
+  }
 }
