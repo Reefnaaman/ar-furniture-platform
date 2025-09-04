@@ -600,6 +600,8 @@ async function handleModelInfo(req, res, modelId) {
       upload_date: model.upload_date,
       view_count: model.view_count,
       dominant_color: model.dominant_color,
+      customer_id: model.customer_id, // Include for logo loading
+      customer_name: model.customer_name, // Include for logo loading
       metadata: model.metadata,
       variants: (variants || []).map(variant => ({
         id: variant.id,
