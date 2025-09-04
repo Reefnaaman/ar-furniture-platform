@@ -112,6 +112,11 @@ export default async function handler(req, res) {
       return await handleCreateImagesTable(req, res);
     }
     
+    // Route: /api/create-model-views-table
+    if (routePath === 'create-model-views-table') {
+      return await handleCreateModelViewsTable(req, res);
+    }
+    
     // Route: /api/init-models-db
     if (routePath === 'init-models-db') {
       return await handleInitModelsDB(req, res);
@@ -608,7 +613,7 @@ async function handleModelInfo(req, res, modelId) {
 }
 
 /**
- * Handle model view tracking
+ * Handle model view tracking with variant support
  */
 async function handleModelView(req, res, modelId) {
   if (req.method !== 'POST') {
@@ -616,7 +621,13 @@ async function handleModelView(req, res, modelId) {
   }
   
   try {
-    const result = await incrementViewCount(modelId);
+    // Get variant ID from query parameter
+    const url = new URL(req.url, `https://${req.headers.host}`);
+    const variantId = url.searchParams.get('variant');
+    
+    console.log(`📊 Tracking view for model ${modelId}, variant: ${variantId || 'original'}`);
+    
+    const result = await incrementViewCount(modelId, variantId);
     
     if (!result.success) {
       return res.status(404).json({ error: 'Model not found' });
@@ -1249,4 +1260,46 @@ async function handleCreateUser(req, res) {
     console.error('Create user error:', error);
     return res.status(500).json({ error: error.message });
   }
+}
+
+/**
+ * Handle creating model_views table for variant tracking
+ */
+async function handleCreateModelViewsTable(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  return res.status(200).json({
+    message: 'Please run the following SQL in your Supabase SQL editor to enable per-variant view tracking',
+    sql: `
+-- Create model_views table for detailed view tracking per variant
+CREATE TABLE IF NOT EXISTS model_views (
+  id BIGSERIAL PRIMARY KEY,
+  model_id TEXT NOT NULL,
+  variant_id TEXT NULL, -- NULL for original variant
+  viewed_at TIMESTAMPTZ DEFAULT NOW(),
+  user_agent TEXT,
+  ip_hash TEXT
+);
+
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_model_views_model ON model_views(model_id);
+CREATE INDEX IF NOT EXISTS idx_model_views_variant ON model_views(variant_id);
+CREATE INDEX IF NOT EXISTS idx_model_views_date ON model_views(viewed_at);
+
+-- Grant permissions
+GRANT ALL ON model_views TO authenticated;
+GRANT ALL ON model_views TO service_role;
+GRANT USAGE, SELECT ON SEQUENCE model_views_id_seq TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE model_views_id_seq TO service_role;
+    `,
+    instructions: [
+      '1. Go to your Supabase dashboard',
+      '2. Navigate to SQL Editor', 
+      '3. Copy and paste the SQL above',
+      '4. Click "Run" to create the table',
+      '5. This enables detailed per-variant view analytics'
+    ]
+  });
 }

@@ -757,6 +757,98 @@ async function handleUpdateColor(req, res) {
 }
 
 /**
+ * Validate image access permissions
+ */
+async function validateImageAccess(req, imageType, customerId) {
+  if (imageType === 'customer_logo') {
+    const authHeader = req.headers['x-admin-password'];
+    
+    if (authHeader === process.env.ADMIN_PASSWORD) {
+      return { authorized: true, role: 'admin' };
+    }
+    
+    // For now, only admins can manage customer logos
+    // TODO: Add customer session validation when customer auth is implemented
+    return { authorized: false, error: 'Unauthorized: Customer logos require admin access' };
+  }
+  
+  return { authorized: true };
+}
+
+/**
+ * Validate and normalize customer ID
+ */
+async function validateCustomerId(customerId) {
+  if (!customerId) return { valid: false, error: 'Customer ID required for customer logos' };
+  
+  const normalizedId = customerId.toLowerCase().trim();
+  
+  // Check if customer exists in models table
+  const { data, error } = await supabase
+    .from('models')
+    .select('customer_id')
+    .ilike('customer_id', normalizedId)
+    .limit(1);
+    
+  if (error || !data || data.length === 0) {
+    return { valid: false, error: `Customer '${normalizedId}' not found in system` };
+  }
+  
+  return { valid: true, normalizedId };
+}
+
+/**
+ * Enforce one logo per customer by cleaning up existing logos
+ */
+async function enforceOneLogoPerCustomer(customerId) {
+  const { data: existingLogos } = await supabase
+    .from('images')
+    .select('id, cloudinary_public_id')
+    .eq('image_type', 'customer_logo')
+    .ilike('customer_id', customerId);
+    
+  if (existingLogos && existingLogos.length > 0) {
+    console.log(`🧹 Replacing ${existingLogos.length} existing logo(s) for customer: ${customerId}`);
+    
+    // Delete from Cloudinary first
+    const { deleteImage } = await import('../lib/cloudinary.js');
+    for (const logo of existingLogos) {
+      try {
+        await deleteImage(logo.cloudinary_public_id);
+      } catch (e) {
+        console.warn('Failed to delete old logo from Cloudinary:', e.message);
+      }
+    }
+    
+    // Delete from database
+    await supabase
+      .from('images')
+      .delete()
+      .eq('image_type', 'customer_logo')
+      .ilike('customer_id', customerId);
+  }
+}
+
+/**
+ * Standardize image types to prevent variations
+ */
+const ALLOWED_IMAGE_TYPES = {
+  'customer_logo': 'customer_logo',
+  'Customer_logo': 'customer_logo',
+  'CUSTOMER_LOGO': 'customer_logo',
+  'general': 'general',
+  'brand_asset': 'brand_asset'
+};
+
+function normalizeImageType(rawType) {
+  const normalized = ALLOWED_IMAGE_TYPES[rawType || 'general'];
+  if (!normalized) {
+    throw new Error(`Invalid image type: ${rawType}. Allowed: ${Object.keys(ALLOWED_IMAGE_TYPES).join(', ')}`);
+  }
+  return normalized;
+}
+
+/**
  * Handle image upload (logos, brand assets, etc.)
  */
 async function handleImageUpload(req, res) {
@@ -800,11 +892,36 @@ async function handleImageUpload(req, res) {
     const { uploadImage } = await import('../lib/cloudinary.js');
     const cloudinaryResult = await uploadImage(fileBuffer, uploadedFile.originalFilename);
 
-    // Save to database
-    console.log('Saving image to database...');
-    const imageType = fields.imageType?.[0] || 'general';
-    const customerId = fields.customerId?.[0] || null;
+    // Validate and normalize input data
+    console.log('Validating image upload data...');
+    const rawImageType = fields.imageType?.[0] || 'general';
+    const rawCustomerId = fields.customerId?.[0] || null;
     const customerName = fields.customerName?.[0] || null;
+    
+    // Normalize and validate image type
+    const imageType = normalizeImageType(rawImageType);
+    
+    // Validate permissions for this image type
+    const accessCheck = await validateImageAccess(req, imageType, rawCustomerId);
+    if (!accessCheck.authorized) {
+      return res.status(403).json({ error: accessCheck.error });
+    }
+    
+    let customerId = rawCustomerId;
+    
+    // For customer logos, validate customer ID and normalize it
+    if (imageType === 'customer_logo') {
+      const customerValidation = await validateCustomerId(rawCustomerId);
+      if (!customerValidation.valid) {
+        return res.status(400).json({ error: customerValidation.error });
+      }
+      customerId = customerValidation.normalizedId;
+      
+      // Enforce one logo per customer
+      await enforceOneLogoPerCustomer(customerId);
+    }
+    
+    console.log('Saving image to database...');
     
     // Generate a UUID for the image
     const imageId = `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
@@ -866,11 +983,14 @@ async function handleImages(req, res) {
       let query = supabase.from('images').select('*');
       
       if (imageType) {
-        query = query.eq('image_type', imageType);
+        // Normalize image type for consistent searching
+        const normalizedType = normalizeImageType(imageType);
+        query = query.eq('image_type', normalizedType);
       }
       
       if (customerId) {
-        query = query.eq('customer_id', customerId);
+        // Use case-insensitive matching for customer ID
+        query = query.ilike('customer_id', customerId.toLowerCase().trim());
       }
       
       query = query.order('created_at', { ascending: false });
@@ -895,6 +1015,25 @@ async function handleImages(req, res) {
       if (!id || !cloudinaryPublicId) {
         return res.status(400).json({ error: 'Image ID and Cloudinary ID required' });
       }
+      
+      // First, get the image to validate permissions
+      const { data: image, error: fetchError } = await supabase
+        .from('images')
+        .select('*')
+        .eq('id', id)
+        .single();
+        
+      if (fetchError || !image) {
+        return res.status(404).json({ error: 'Image not found' });
+      }
+      
+      // Validate permissions for deletion
+      const accessCheck = await validateImageAccess(req, image.image_type, image.customer_id);
+      if (!accessCheck.authorized) {
+        return res.status(403).json({ error: accessCheck.error });
+      }
+      
+      console.log(`🗑️ Deleting ${image.image_type} image for customer: ${image.customer_id || 'general'}`);
       
       // Delete from Cloudinary
       const { deleteImage } = await import('../lib/cloudinary.js');

@@ -1,4 +1,10 @@
-import { supabase } from '../lib/supabase.js';
+const { createClient } = require('@supabase/supabase-js');
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.SUPABASE_URL || 'your-supabase-url',
+  process.env.SUPABASE_ANON_KEY || 'your-supabase-key'
+);
 
 async function checkCustomerLogos() {
   try {

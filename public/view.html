@@ -388,6 +388,11 @@
                 // Store globally for variant switching
                 globalModelInfo = modelInfo;
                 
+                // Track view once per page load with variant info
+                const viewVariantParam = variantId ? `?variant=${variantId}` : '';
+                fetch(`/api/model/${id}/view${viewVariantParam}`, { method: 'POST' }).catch(() => {});
+                console.log(`📊 View tracked for model ${id}, variant: ${variantId || 'original'}`);
+                
                 // For mobile - go straight to AR with variant support
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
                     document.body.style.visibility = 'hidden';
@@ -567,8 +572,7 @@
                 document.body.style.padding = '0';
                 document.body.style.background = 'none';
                 
-                // Track view
-                fetch(`/api/model/${id}/view`, { method: 'POST' }).catch(() => {});
+                // View already tracked once per page load
                 
                 // Load customer logo for desktop
                 loadDesktopCustomerLogo(modelInfo);
@@ -702,8 +706,7 @@
                 }
             }, 2000);
 
-            // Track view
-            fetch(`/api/model/${modelId}/view`, { method: 'POST' }).catch(() => {});
+            // View already tracked once per page load
         }
         
         function createARVariantControls(modelId, modelInfo, selectedVariant, modelViewer) {
