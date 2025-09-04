@@ -360,6 +360,9 @@
         const modelId = urlParams.get('id');
         const variantId = urlParams.get('variant');
         
+        // Store model info globally for variant switching
+        let globalModelInfo = null;
+        
         console.log('🔍 Current URL:', window.location.href);
         console.log('🔍 URL params:', Object.fromEntries(urlParams));
         console.log('🔍 Model ID from URL:', modelId);
@@ -381,6 +384,9 @@
                     throw new Error('Model not found');
                 }
                 const modelInfo = await response.json();
+                
+                // Store globally for variant switching
+                globalModelInfo = modelInfo;
                 
                 // For mobile - go straight to AR with variant support
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
@@ -497,14 +503,14 @@
                                         <div class="variant-circle ${!selectedVariant ? 'active' : ''}" 
                                              style="background: ${modelInfo.dominant_color || '#6b7280'};" 
                                              title="Original - Click for QR"
-                                             onclick="generateVariantQR('${id}', null, 'Original')">
+                                             onclick="generateVariantQR('${id}', null, 'Original', this)">
                                         </div>
                                         <!-- Variant colors -->
                                         ${modelInfo.variants.map(variant => `
                                             <div class="variant-circle ${variant.is_primary ? 'primary' : ''} ${selectedVariant && selectedVariant.id === variant.id ? 'active' : ''}" 
                                                  style="background-color: ${variant.hex_color};" 
                                                  title="${variant.variant_name} - Click for QR"
-                                                 onclick="generateVariantQR('${id}', '${variant.id}', '${variant.variant_name}')">
+                                                 onclick="generateVariantQR('${id}', '${variant.id}', '${variant.variant_name}', this)">
                                                  ${variant.is_primary ? '★' : ''}
                                             </div>
                                         `).join('')}
@@ -555,7 +561,7 @@
         }
 
         // Generate QR code for specific variant
-        function generateVariantQR(modelId, variantId, variantName) {
+        function generateVariantQR(modelId, variantId, variantName, clickedElement) {
             const baseUrl = window.location.origin + window.location.pathname;
             const variantUrl = variantId ? `${baseUrl}?id=${modelId}&variant=${variantId}` : `${baseUrl}?id=${modelId}`;
             
@@ -567,6 +573,38 @@
                 const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
                 qrCodeImage.src = qrUrl;
                 console.log(`✅ Updated QR code to show ${variantName} variant`);
+            }
+            
+            // Update the 3D model viewer to show the selected variant
+            const modelViewer = document.getElementById('desktopModelViewer');
+            if (modelViewer && globalModelInfo) {
+                let newModelUrl;
+                
+                if (!variantId) {
+                    // Original variant - use the base model URL
+                    newModelUrl = `/api/model/${modelId}`;
+                } else {
+                    // Find the variant and use its cloudinary URL
+                    const variant = globalModelInfo.variants.find(v => v.id === variantId);
+                    if (variant && variant.cloudinary_url) {
+                        newModelUrl = variant.cloudinary_url;
+                    } else {
+                        console.warn(`Variant ${variantId} not found or missing cloudinary_url`);
+                        return;
+                    }
+                }
+                
+                // Update model viewer source
+                modelViewer.src = newModelUrl;
+                console.log(`🎨 Updated 3D preview to show ${variantName} variant`);
+                
+                // Update active state of variant circles
+                document.querySelectorAll('.variant-circle').forEach(circle => {
+                    circle.classList.remove('active');
+                });
+                if (clickedElement) {
+                    clickedElement.classList.add('active');
+                }
             }
         }
 
