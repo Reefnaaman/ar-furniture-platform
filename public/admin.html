@@ -996,7 +996,7 @@
             top: 0;
             left: 0;
             height: 100vh;
-            overflow-y: auto;
+            overflow: hidden; /* Prevent sidebar itself from scrolling */
             z-index: 1000;
             transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             display: flex;
@@ -1056,6 +1056,9 @@
         .sidebar-customers {
             padding: 20px;
             flex: 1;
+            overflow: hidden; /* Prevent this section from expanding */
+            display: flex;
+            flex-direction: column;
         }
         
         .sidebar-customers-header {
@@ -1090,6 +1093,12 @@
         
         .customer-list {
             list-style: none;
+            padding: 0;
+            margin: 10px 0 0 0;
+            max-height: 200px; /* Smaller height to keep logout visible */
+            overflow-y: auto;
+            flex: 1; /* Allow it to grow within available space */
+            min-height: 0; /* Important for flex scrolling */
         }
         
         .customer-item {
@@ -1569,6 +1578,7 @@
             padding: 20px;
             border-top: 1px solid rgba(240, 246, 252, 0.1);
             background: linear-gradient(135deg, rgba(22, 27, 34, 0.5) 0%, rgba(30, 35, 42, 0.3) 100%);
+            flex-shrink: 0; /* Prevent logout from shrinking */
         }
         
         .logout-user-info {
