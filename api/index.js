@@ -122,6 +122,16 @@ export default async function handler(req, res) {
       return await handleResetViewCounts(req, res);
     }
     
+    // Route: /api/feedback
+    if (routePath === 'feedback') {
+      return await handleFeedback(req, res);
+    }
+    
+    // Route: /api/create-feedback-table
+    if (routePath === 'create-feedback-table') {
+      return await handleCreateFeedbackTable(req, res);
+    }
+    
     // Route: /api/init-models-db
     if (routePath === 'init-models-db') {
       return await handleInitModelsDB(req, res);
@@ -1368,4 +1378,164 @@ async function handleResetViewCounts(req, res) {
       solution: 'Check your Supabase configuration and try again'
     });
   }
+}
+
+/**
+ * Handle feedback submission and retrieval
+ */
+async function handleFeedback(req, res) {
+  if (req.method === 'POST') {
+    // Submit new feedback
+    try {
+      const {
+        type,
+        categories,
+        comment,
+        customerId,
+        itemId,
+        itemName,
+        userAgent
+      } = req.body;
+
+      if (!type || !customerId || !itemId) {
+        return res.status(400).json({
+          error: 'Missing required fields: type, customerId, itemId'
+        });
+      }
+
+      // Generate feedback ID
+      const feedbackId = `feedback_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+      // Save feedback to database
+      const { data, error } = await supabase
+        .from('feedback')
+        .insert({
+          id: feedbackId,
+          feedback_type: type,
+          categories: categories || [],
+          comment: comment || null,
+          customer_id: customerId,
+          model_id: itemId,
+          model_name: itemName,
+          user_agent: userAgent,
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving feedback:', error);
+        return res.status(500).json({
+          error: 'Failed to save feedback',
+          details: error.message
+        });
+      }
+
+      console.log(`✅ Feedback saved: ${type} for ${itemName} by customer ${customerId}`);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Feedback submitted successfully',
+        feedbackId: feedbackId
+      });
+
+    } catch (error) {
+      console.error('Error handling feedback submission:', error);
+      return res.status(500).json({
+        error: 'Failed to process feedback',
+        details: error.message
+      });
+    }
+  } else if (req.method === 'GET') {
+    // Retrieve feedback (for admin)
+    try {
+      const url = new URL(req.url, `https://${req.headers.host}`);
+      const customerId = url.searchParams.get('customer');
+      const modelId = url.searchParams.get('model');
+      const limit = parseInt(url.searchParams.get('limit')) || 100;
+
+      let query = supabase
+        .from('feedback')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (customerId) {
+        query = query.eq('customer_id', customerId);
+      }
+
+      if (modelId) {
+        query = query.eq('model_id', modelId);
+      }
+
+      query = query.limit(limit);
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching feedback:', error);
+        return res.status(500).json({
+          error: 'Failed to fetch feedback',
+          details: error.message
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        feedback: data || []
+      });
+
+    } catch (error) {
+      console.error('Error handling feedback retrieval:', error);
+      return res.status(500).json({
+        error: 'Failed to retrieve feedback',
+        details: error.message
+      });
+    }
+  } else {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+/**
+ * Handle creating feedback table
+ */
+async function handleCreateFeedbackTable(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  return res.status(200).json({
+    message: 'Please run the following SQL in your Supabase SQL editor to create the feedback system',
+    sql: `
+-- Create feedback table
+CREATE TABLE IF NOT EXISTS feedback (
+  id TEXT PRIMARY KEY,
+  feedback_type VARCHAR(20) NOT NULL CHECK (feedback_type IN ('positive', 'negative')),
+  categories TEXT[] DEFAULT '{}',
+  comment TEXT,
+  customer_id VARCHAR(100) NOT NULL,
+  model_id TEXT NOT NULL,
+  model_name VARCHAR(255),
+  user_agent TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_feedback_customer ON feedback(customer_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_model ON feedback(model_id);
+CREATE INDEX IF NOT EXISTS idx_feedback_type ON feedback(feedback_type);
+CREATE INDEX IF NOT EXISTS idx_feedback_date ON feedback(created_at);
+
+-- Grant permissions
+GRANT ALL ON feedback TO authenticated;
+GRANT ALL ON feedback TO service_role;
+    `,
+    instructions: [
+      '1. Go to your Supabase dashboard',
+      '2. Navigate to SQL Editor',
+      '3. Copy and paste the SQL above',
+      '4. Click "Run" to create the feedback table',
+      '5. This enables customer feedback collection and admin viewing'
+    ]
+  });
 }

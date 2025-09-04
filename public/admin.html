@@ -1314,6 +1314,126 @@
             display: block;
         }
         
+        /* Feedback Management Styles */
+        .feedback-table {
+            background: rgba(22, 27, 34, 0.9);
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(240, 246, 252, 0.15);
+        }
+        
+        .feedback-header {
+            display: grid;
+            grid-template-columns: 120px 150px 1fr 100px 200px 1fr;
+            gap: 15px;
+            background: rgba(13, 17, 23, 0.8);
+            padding: 15px;
+            font-weight: 600;
+            color: #e6edf3;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
+        }
+        
+        .feedback-row {
+            display: grid;
+            grid-template-columns: 120px 150px 1fr 100px 200px 1fr;
+            gap: 15px;
+            padding: 15px;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.05);
+            transition: background-color 0.2s ease;
+        }
+        
+        .feedback-row:hover {
+            background: rgba(240, 246, 252, 0.03);
+        }
+        
+        .feedback-row.positive {
+            border-left: 3px solid rgba(46, 160, 67, 0.6);
+        }
+        
+        .feedback-row.negative {
+            border-left: 3px solid rgba(248, 81, 73, 0.6);
+        }
+        
+        .feedback-col {
+            color: #e6edf3;
+            display: flex;
+            align-items: center;
+        }
+        
+        .feedback-date {
+            font-size: 0.85rem;
+        }
+        
+        .feedback-time {
+            display: block;
+            font-size: 0.75rem;
+            color: #7d8590;
+            margin-top: 2px;
+        }
+        
+        .feedback-customer {
+            font-weight: 500;
+            color: #58a6ff;
+        }
+        
+        .feedback-model {
+            font-size: 0.9rem;
+            max-width: 200px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .feedback-type-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            font-size: 0.75rem;
+            font-weight: 500;
+            text-transform: uppercase;
+        }
+        
+        .feedback-type-badge.positive {
+            background: rgba(46, 160, 67, 0.15);
+            color: #2ea043;
+            border: 1px solid rgba(46, 160, 67, 0.3);
+        }
+        
+        .feedback-type-badge.negative {
+            background: rgba(248, 81, 73, 0.15);
+            color: #f85149;
+            border: 1px solid rgba(248, 81, 73, 0.3);
+        }
+        
+        .feedback-categories {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 4px;
+        }
+        
+        .category-tag {
+            background: rgba(88, 166, 255, 0.15);
+            color: #58a6ff;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            border: 1px solid rgba(88, 166, 255, 0.2);
+        }
+        
+        .feedback-comment {
+            font-size: 0.85rem;
+            line-height: 1.4;
+            color: #c9d1d9;
+            max-height: 60px;
+            overflow-y: auto;
+        }
+        
+        .feedback-comment em {
+            color: #7d8590;
+        }
+        
         /* User Management Styles */
         .user-management-list {
             max-height: 0;
@@ -2143,6 +2263,10 @@
                         <span class="nav-icon">👥</span>
                         <span class="nav-label">User Management</span>
                     </button>
+                    <button class="sidebar-nav-link" data-page="feedback" onclick="navigateToPage('feedback')">
+                        <span class="nav-icon">💬</span>
+                        <span class="nav-label">Customer Feedback</span>
+                    </button>
                 </div>
             </div>
             
@@ -2278,6 +2402,71 @@
                     <div class="users-section">
                         <div id="usersContainer">
                             <div class="loading">Loading users...</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Feedback Page -->
+            <div class="page" id="feedbackPage" style="display: none;">
+                <div class="header">
+                    <div class="header-content">
+                        <h1>💬 Customer Feedback</h1>
+                    </div>
+                    <div class="header-actions">
+                        <button onclick="loadFeedback()" class="action-button primary">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="dashboard-content">
+                    <!-- Filter Section -->
+                    <div class="stats-grid" style="margin-bottom: 30px;">
+                        <div class="stat-card">
+                            <div class="stat-icon">📊</div>
+                            <div class="stat-label">Total Feedback</div>
+                            <div class="stat-value" id="totalFeedback">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">👍</div>
+                            <div class="stat-label">Positive</div>
+                            <div class="stat-value" id="positiveFeedback">-</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⚠️</div>
+                            <div class="stat-label">Negative</div>
+                            <div class="stat-value" id="negativeFeedback">-</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Filters -->
+                    <div class="section" style="margin-bottom: 30px;">
+                        <div class="section-header">
+                            <h2 class="section-title">Filter Feedback</h2>
+                        </div>
+                        <div style="display: flex; gap: 15px; flex-wrap: wrap; margin-top: 15px;">
+                            <select id="customerFilter" onchange="loadFeedback()" class="futuristic-input" style="width: auto; min-width: 200px;">
+                                <option value="">All Customers</option>
+                            </select>
+                            <select id="typeFilter" onchange="loadFeedback()" class="futuristic-input" style="width: auto; min-width: 150px;">
+                                <option value="">All Types</option>
+                                <option value="positive">👍 Positive</option>
+                                <option value="negative">⚠️ Negative</option>
+                            </select>
+                            <select id="modelFilter" onchange="loadFeedback()" class="futuristic-input" style="width: auto; min-width: 200px;">
+                                <option value="">All Products</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <!-- Feedback Table -->
+                    <div class="section">
+                        <div class="section-header">
+                            <h2 class="section-title">Feedback Details</h2>
+                        </div>
+                        <div id="feedbackContainer">
+                            <div class="loading">Loading feedback...</div>
                         </div>
                     </div>
                 </div>
@@ -3809,6 +3998,153 @@
             await assignFurnitureToCustomer(modelId, customerId, customerName);
         }
 
+        // Feedback Management Functions
+        async function loadFeedback() {
+            try {
+                console.log('💬 Loading feedback...');
+                
+                // Get filter values
+                const customerFilter = document.getElementById('customerFilter')?.value || '';
+                const typeFilter = document.getElementById('typeFilter')?.value || '';
+                const modelFilter = document.getElementById('modelFilter')?.value || '';
+                
+                // Build query string
+                let queryParams = new URLSearchParams();
+                if (customerFilter) queryParams.append('customer', customerFilter);
+                if (typeFilter) queryParams.append('type', typeFilter);
+                if (modelFilter) queryParams.append('model', modelFilter);
+                
+                const queryString = queryParams.toString();
+                const url = `/api/feedback${queryString ? '?' + queryString : ''}`;
+                
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to load feedback');
+                
+                const data = await response.json();
+                console.log('💬 Feedback data:', data);
+                
+                displayFeedback(data.feedback || []);
+                updateFeedbackStats(data.feedback || []);
+                
+            } catch (error) {
+                console.error('Error loading feedback:', error);
+                document.getElementById('feedbackContainer').innerHTML = `
+                    <div class="error-message">
+                        <p>❌ Failed to load feedback</p>
+                        <p>Error: ${error.message}</p>
+                    </div>
+                `;
+            }
+        }
+        
+        function displayFeedback(feedback) {
+            const container = document.getElementById('feedbackContainer');
+            
+            if (!feedback || feedback.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>No feedback found</h3>
+                        <p>No customer feedback matches your current filters.</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            const html = `
+                <div class="feedback-table">
+                    <div class="feedback-header">
+                        <div class="feedback-col">Date</div>
+                        <div class="feedback-col">Customer</div>
+                        <div class="feedback-col">Product</div>
+                        <div class="feedback-col">Type</div>
+                        <div class="feedback-col">Categories</div>
+                        <div class="feedback-col">Comment</div>
+                    </div>
+                    ${feedback.map(fb => `
+                        <div class="feedback-row ${fb.feedback_type}">
+                            <div class="feedback-col">
+                                <div class="feedback-date">
+                                    ${new Date(fb.created_at).toLocaleDateString()}
+                                    <span class="feedback-time">${new Date(fb.created_at).toLocaleTimeString()}</span>
+                                </div>
+                            </div>
+                            <div class="feedback-col">
+                                <span class="feedback-customer">${fb.customer_id}</span>
+                            </div>
+                            <div class="feedback-col">
+                                <span class="feedback-model" title="${fb.model_id}">${fb.model_name || 'Unknown'}</span>
+                            </div>
+                            <div class="feedback-col">
+                                <span class="feedback-type-badge ${fb.feedback_type}">
+                                    ${fb.feedback_type === 'positive' ? '👍' : '⚠️'} ${fb.feedback_type}
+                                </span>
+                            </div>
+                            <div class="feedback-col">
+                                <div class="feedback-categories">
+                                    ${(fb.categories || []).map(cat => `<span class="category-tag">${cat}</span>`).join('')}
+                                </div>
+                            </div>
+                            <div class="feedback-col">
+                                <div class="feedback-comment">${fb.comment || '<em>No comment</em>'}</div>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            
+            container.innerHTML = html;
+        }
+        
+        function updateFeedbackStats(feedback) {
+            const total = feedback.length;
+            const positive = feedback.filter(fb => fb.feedback_type === 'positive').length;
+            const negative = feedback.filter(fb => fb.feedback_type === 'negative').length;
+            
+            document.getElementById('totalFeedback').textContent = total;
+            document.getElementById('positiveFeedback').textContent = positive;
+            document.getElementById('negativeFeedback').textContent = negative;
+        }
+        
+        async function loadFeedbackFilters() {
+            try {
+                // Load customers for filter
+                const customersResponse = await fetch('/api/customers');
+                if (customersResponse.ok) {
+                    const customersData = await customersResponse.json();
+                    const customerFilter = document.getElementById('customerFilter');
+                    if (customerFilter && customersData.customers) {
+                        customersData.customers.forEach(customer => {
+                            const option = document.createElement('option');
+                            option.value = customer.customer_id;
+                            option.textContent = `${customer.customer_name} (${customer.customer_id})`;
+                            customerFilter.appendChild(option);
+                        });
+                    }
+                }
+                
+                // Load models for filter
+                const modelsResponse = await fetch('/api/models');
+                if (modelsResponse.ok) {
+                    const modelsData = await modelsResponse.json();
+                    const modelFilter = document.getElementById('modelFilter');
+                    if (modelFilter && modelsData.models) {
+                        const uniqueModels = {};
+                        modelsData.models.forEach(model => {
+                            if (!uniqueModels[model.id]) {
+                                uniqueModels[model.id] = model.title;
+                                const option = document.createElement('option');
+                                option.value = model.id;
+                                option.textContent = model.title;
+                                modelFilter.appendChild(option);
+                            }
+                        });
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading feedback filters:', error);
+            }
+        }
+        
         // User Management Functions - Moved to dedicated page
         
         function toggleUserModal() {
@@ -5184,6 +5520,11 @@
                 case 'users':
                     console.log(`👥 Loading users page...`);
                     loadUsersPage();
+                    break;
+                case 'feedback':
+                    console.log(`💬 Loading feedback page...`);
+                    loadFeedbackFilters();
+                    loadFeedback();
                     break;
                 case 'dashboard':
                     console.log(`🏠 Dashboard page (no initialization needed)`);

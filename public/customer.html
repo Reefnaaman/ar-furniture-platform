@@ -2143,11 +2143,24 @@
                 submitBtn.disabled = true;
                 submitBtn.textContent = 'Sending...';
                 
-                // In a real implementation, you'd send this to your backend
-                console.log('Feedback submitted:', feedback);
+                // Send feedback to backend API
+                console.log('Submitting feedback:', feedback);
                 
-                // Simulate API call
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                const response = await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(feedback)
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    throw new Error(errorData.error || `HTTP ${response.status}`);
+                }
+                
+                const result = await response.json();
+                console.log('Feedback saved successfully:', result);
                 
                 // Show success message
                 alert(`🎉 Thank you for feedback on "${currentFeedbackItem.name}"! This helps us improve.`);
