@@ -77,6 +77,11 @@ export default async function handler(req, res) {
       return await handleUpload(req, res);
     }
     
+    // Route: /api/test-variant
+    if (routePath === 'test-variant') {
+      return res.status(200).json({ message: 'Test variant route working!' });
+    }
+    
     // Route: /api/upload-variant
     if (routePath === 'upload-variant') {
       return await handleVariantUpload(req, res);
