@@ -122,6 +122,11 @@ export default async function handler(req, res) {
       return await handleCreateRequestsTable(req, res);
     }
     
+    // Route: /api/create-brand-settings-table
+    if (routePath === 'create-brand-settings-table') {
+      return await handleCreateBrandSettingsTable(req, res);
+    }
+    
     // Route: /api/requests
     if (routePath === 'requests') {
       return await handleRequests(req, res);
@@ -1610,6 +1615,138 @@ async function handleRequests(req, res) {
         success: true,
         message: 'Request updated successfully',
         request: data
+      });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  else {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+/**
+ * Handle brand settings table creation instructions
+ */
+async function handleCreateBrandSettingsTable(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  return res.status(200).json({
+    message: 'Please run the following SQL in your Supabase SQL editor to create the customer_brand_settings table',
+    sql: `
+-- Create customer_brand_settings table for RTL/LTR and future theming options
+CREATE TABLE IF NOT EXISTS customer_brand_settings (
+  id SERIAL PRIMARY KEY,
+  customer_id VARCHAR(100) NOT NULL UNIQUE,
+  text_direction VARCHAR(3) DEFAULT 'ltr', -- 'ltr' or 'rtl'
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add indexes for faster queries
+CREATE INDEX IF NOT EXISTS idx_brand_settings_customer ON customer_brand_settings(customer_id);
+
+-- Grant permissions
+GRANT ALL ON customer_brand_settings TO authenticated;
+GRANT ALL ON customer_brand_settings TO service_role;
+
+-- Add comments for documentation
+COMMENT ON TABLE customer_brand_settings IS 'Stores brand customization settings for each customer';
+COMMENT ON COLUMN customer_brand_settings.text_direction IS 'Text direction: ltr (Left-to-Right) or rtl (Right-to-Left)';
+    `,
+    instructions: [
+      '1. Go to your Supabase dashboard',
+      '2. Navigate to SQL Editor',
+      '3. Copy and paste the SQL above',
+      '4. Click "Run" to create the customer_brand_settings table',
+      '5. Test by visiting /api/customers/[customer-id]/brand-settings'
+    ]
+  });
+}
+
+/**
+ * Handle customer brand settings CRUD operations
+ */
+async function handleCustomerBrandSettings(req, res, customerId) {
+  console.log(`Brand settings request for customer: ${customerId}, method: ${req.method}`);
+  
+  if (req.method === 'GET') {
+    // Get customer brand settings
+    try {
+      const { data, error } = await supabase
+        .from('customer_brand_settings')
+        .select('*')
+        .eq('customer_id', customerId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') { // PGRST116 = no rows found
+        console.error('Error fetching brand settings:', error);
+        return res.status(500).json({ error: 'Failed to fetch brand settings' });
+      }
+      
+      // If no settings found, return defaults
+      if (!data) {
+        return res.status(200).json({
+          textDirection: 'ltr'
+        });
+      }
+      
+      return res.status(200).json({
+        textDirection: data.text_direction || 'ltr',
+        updatedAt: data.updated_at
+      });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  else if (req.method === 'PUT') {
+    // Update customer brand settings
+    try {
+      const { textDirection } = req.body;
+      
+      if (!textDirection || !['ltr', 'rtl'].includes(textDirection)) {
+        return res.status(400).json({ error: 'Valid textDirection (ltr or rtl) is required' });
+      }
+      
+      // Validate that customer exists
+      const customerValidation = await validateCustomerId(customerId);
+      if (!customerValidation.valid) {
+        return res.status(400).json({ error: customerValidation.error });
+      }
+      
+      const normalizedCustomerId = customerValidation.normalizedId;
+      
+      // Upsert brand settings
+      const { data, error } = await supabase
+        .from('customer_brand_settings')
+        .upsert({
+          customer_id: normalizedCustomerId,
+          text_direction: textDirection,
+          updated_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error saving brand settings:', error);
+        return res.status(500).json({ error: 'Failed to save brand settings' });
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Brand settings saved successfully',
+        settings: {
+          textDirection: data.text_direction,
+          updatedAt: data.updated_at
+        }
       });
       
     } catch (error) {
