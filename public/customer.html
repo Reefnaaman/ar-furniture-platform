@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title id="pageTitle">Furniture Collection - AR Experience</title>
+    <title id="pageTitle">Collection - AR Experience</title>
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1450,21 +1450,21 @@
         }
         
         .save-settings-btn {
-            background: linear-gradient(135deg, rgba(88, 166, 255, 0.9) 0%, rgba(120, 200, 255, 0.8) 100%);
+            background: linear-gradient(135deg, #58a6ff, #79c0ff);
             color: white;
             border: none;
-            padding: 14px 28px;
-            border-radius: 12px;
+            padding: 12px 24px;
+            border-radius: 8px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
             font-size: 1rem;
-            min-width: 180px;
+            min-width: 160px;
         }
         
         .save-settings-btn:hover {
             transform: translateY(-2px);
-            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
+            box-shadow: 0 4px 20px rgba(88, 166, 255, 0.4);
         }
         
         /* Request Cards */
@@ -1607,9 +1607,6 @@
                     <button class="nav-item" onclick="showSection('requests')" id="nav-requests">
                         📝 My Requests
                     </button>
-                    <button class="nav-item" onclick="showSection('brand-settings')" id="nav-brand-settings">
-                        🎨 Brand Settings
-                    </button>
                 </div>
             </div>
             
@@ -1630,7 +1627,7 @@
     <div class="main-content">
         <div class="header">
             <div class="header-content">
-                <h1 id="customerName">🪑 Furniture Collection</h1>
+                <h1 id="customerName">🪑 Collection</h1>
             </div>
             <div class="header-stats">
                 <div class="header-stat-item">
@@ -3118,7 +3115,7 @@
         // Load brand settings when brand settings section is shown
         function showSection(sectionName) {
             // Hide all sections
-            const sections = ['furniture-section', 'requests-section', 'brand-settings-section'];
+            const sections = ['furniture-section', 'requests-section'];
             sections.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
@@ -3150,8 +3147,6 @@
             // Load data for the section
             if (sectionName === 'requests') {
                 loadRequests();
-            } else if (sectionName === 'brand-settings') {
-                loadBrandSettings();
             } else if (sectionName === 'furniture') {
                 // Furniture is already loaded on page load
             }
