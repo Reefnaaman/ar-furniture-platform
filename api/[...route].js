@@ -1,5 +1,5 @@
 import { uploadModel } from '../lib/cloudinary.js';
-import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase, query } from '../lib/supabase.js';
+import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, saveModelVariant, supabase, query } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
@@ -77,6 +77,11 @@ export default async function handler(req, res) {
       return await handleUpload(req, res);
     }
     
+    // Route: /api/upload-variant
+    if (routePath === 'upload-variant') {
+      return await handleVariantUpload(req, res);
+    }
+    
     // Route: /api/models
     if (routePath === 'models') {
       return await handleModels(req, res);
@@ -110,6 +115,16 @@ export default async function handler(req, res) {
     // Route: /api/create-images-table
     if (routePath === 'create-images-table') {
       return await handleCreateImagesTable(req, res);
+    }
+    
+    // Route: /api/create-requests-table
+    if (routePath === 'create-requests-table') {
+      return await handleCreateRequestsTable(req, res);
+    }
+    
+    // Route: /api/requests
+    if (routePath === 'requests') {
+      return await handleRequests(req, res);
     }
     
     // Route: /api/init-models-db
@@ -344,6 +359,105 @@ async function handleUpload(req, res) {
     console.error('Upload error:', error);
     return res.status(500).json({ 
       error: 'Upload failed', 
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Handle variant upload
+ */
+async function handleVariantUpload(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+  
+  try {
+    // Parse multipart form data
+    const form = new multiparty.Form();
+    
+    const { fields, files } = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve({ fields, files });
+      });
+    });
+
+    // Get required fields
+    const parentModelId = fields.parentModelId?.[0];
+    const variantName = fields.variantName?.[0];
+    const hexColor = fields.hexColor?.[0] || '#000000';
+
+    if (!parentModelId || !variantName) {
+      return res.status(400).json({ error: 'Missing required fields: parentModelId, variantName' });
+    }
+
+    // Get file
+    const uploadedFile = files.file?.[0];
+    if (!uploadedFile) {
+      return res.status(400).json({ error: 'No file provided' });
+    }
+
+    // Validate file type
+    if (!uploadedFile.originalFilename?.match(/\.(glb|gltf)$/i)) {
+      return res.status(400).json({ error: 'Only GLB and GLTF files are allowed' });
+    }
+
+    // Check file size (100MB)
+    if (uploadedFile.size > 100 * 1024 * 1024) {
+      return res.status(400).json({ error: 'File too large. Maximum size is 100MB' });
+    }
+
+    // Read file
+    const fs = await import('fs');
+    const fileBuffer = fs.readFileSync(uploadedFile.path);
+
+    // Upload to Cloudinary
+    console.log('Uploading variant to Cloudinary...');
+    const cloudinaryResult = await uploadModel(fileBuffer, uploadedFile.originalFilename);
+
+    // Save variant to database
+    console.log('Saving variant to database...');
+    const variantResult = await saveModelVariant({
+      parentModelId: parentModelId,
+      variantName: variantName,
+      hexColor: hexColor,
+      cloudinaryUrl: cloudinaryResult.url,
+      cloudinaryPublicId: cloudinaryResult.publicId,
+      fileSize: cloudinaryResult.size,
+      isPrimary: false,
+      variantType: 'upload'
+    });
+
+    if (!variantResult.success) {
+      console.error('Variant save failed:', variantResult.error);
+      return res.status(500).json({ 
+        error: 'Failed to save variant to database',
+        details: variantResult.error || 'Unknown database error'
+      });
+    }
+
+    // Clean up temp file
+    fs.unlinkSync(uploadedFile.path);
+
+    // Return success
+    const domain = process.env.DOMAIN || 'newfurniture.live';
+    
+    res.status(200).json({
+      success: true,
+      id: variantResult.id,
+      parentModelId: parentModelId,
+      variantName: variantName,
+      hexColor: hexColor,
+      cloudinaryUrl: cloudinaryResult.url,
+      viewUrl: `https://${domain}/view?id=${parentModelId}&variant=${variantResult.id}`,
+      message: 'Variant uploaded successfully!'
+    });
+
+  } catch (error) {
+    console.error('Variant upload error:', error);
+    return res.status(500).json({ 
+      error: 'Variant upload failed', 
       details: error.message
     });
   }
@@ -1320,5 +1434,185 @@ async function handleCreateUser(req, res) {
   } catch (error) {
     console.error('Create user error:', error);
     return res.status(500).json({ error: error.message });
+  }
+}
+
+/**
+ * Handle requests table creation instructions
+ */
+async function handleCreateRequestsTable(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  return res.status(200).json({
+    message: 'Please run the following SQL in your Supabase SQL editor to create the customer_requests table',
+    sql: `
+-- Create customer_requests table for the requests feature
+CREATE TABLE IF NOT EXISTS customer_requests (
+  id TEXT PRIMARY KEY,
+  customer_id VARCHAR(100) NOT NULL,
+  product_url TEXT NOT NULL,
+  title VARCHAR(255),
+  description TEXT,
+  reference_images TEXT[], -- Array of Cloudinary image URLs
+  status VARCHAR(50) DEFAULT 'pending', -- pending, in_progress, completed, cancelled
+  priority VARCHAR(20) DEFAULT 'normal', -- low, normal, high
+  estimated_completion DATE,
+  notes TEXT, -- Customer notes
+  admin_notes TEXT, -- Admin-only notes
+  model_id TEXT, -- References models(id) when completed
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add indexes for faster queries
+CREATE INDEX IF NOT EXISTS idx_requests_customer ON customer_requests(customer_id);
+CREATE INDEX IF NOT EXISTS idx_requests_status ON customer_requests(status);
+CREATE INDEX IF NOT EXISTS idx_requests_created ON customer_requests(created_at);
+
+-- Grant permissions
+GRANT ALL ON customer_requests TO authenticated;
+GRANT ALL ON customer_requests TO service_role;
+    `,
+    instructions: [
+      '1. Go to your Supabase dashboard',
+      '2. Navigate to SQL Editor',
+      '3. Copy and paste the SQL above',
+      '4. Click "Run" to create the customer_requests table'
+    ]
+  });
+}
+
+/**
+ * Handle customer requests CRUD operations
+ */
+async function handleRequests(req, res) {
+  // GET /api/requests?customer={id} - Get customer requests
+  if (req.method === 'GET') {
+    try {
+      const { customer } = req.query;
+      
+      if (!customer) {
+        return res.status(400).json({ error: 'Customer ID required' });
+      }
+      
+      const { data, error } = await supabase
+        .from('customer_requests')
+        .select(`
+          *,
+          models!customer_requests_model_id_fkey(title, id)
+        `)
+        .eq('customer_id', customer)
+        .order('created_at', { ascending: false });
+      
+      if (error) {
+        console.error('Error fetching requests:', error);
+        return res.status(500).json({ error: 'Failed to fetch requests' });
+      }
+      
+      return res.status(200).json({
+        requests: data || [],
+        success: true
+      });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  // POST /api/requests - Submit new request
+  else if (req.method === 'POST') {
+    try {
+      const { customerId, productUrl, title, description, notes, referenceImages } = req.body;
+      
+      if (!customerId || !productUrl) {
+        return res.status(400).json({ error: 'Customer ID and product URL are required' });
+      }
+      
+      // Generate request ID
+      const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+      
+      const { data, error } = await supabase
+        .from('customer_requests')
+        .insert({
+          id: requestId,
+          customer_id: customerId,
+          product_url: productUrl,
+          title: title || 'Custom Furniture Request',
+          description: description || '',
+          notes: notes || '',
+          reference_images: referenceImages || [],
+          status: 'pending',
+          priority: 'normal',
+          metadata: {
+            submitted_at: new Date().toISOString(),
+            user_agent: req.headers['user-agent']
+          }
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating request:', error);
+        return res.status(500).json({ error: 'Failed to create request' });
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Request submitted successfully!',
+        request: data
+      });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  // PUT /api/requests - Update request (admin only for now)
+  else if (req.method === 'PUT') {
+    try {
+      const { id, status, adminNotes, estimatedCompletion, modelId } = req.body;
+      
+      if (!id) {
+        return res.status(400).json({ error: 'Request ID required' });
+      }
+      
+      const updateData = { updated_at: new Date().toISOString() };
+      
+      if (status) updateData.status = status;
+      if (adminNotes) updateData.admin_notes = adminNotes;
+      if (estimatedCompletion) updateData.estimated_completion = estimatedCompletion;
+      if (modelId) updateData.model_id = modelId;
+      
+      const { data, error } = await supabase
+        .from('customer_requests')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating request:', error);
+        return res.status(500).json({ error: 'Failed to update request' });
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Request updated successfully',
+        request: data
+      });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  else {
+    return res.status(405).json({ error: 'Method not allowed' });
   }
 }

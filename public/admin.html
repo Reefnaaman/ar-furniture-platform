@@ -3331,88 +3331,27 @@
                 const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
                 console.log(`📦 Uploading file: ${fileSizeMB}MB`);
                 
-                // Step 1: Get signed upload parameters
-                document.getElementById('uploadStatus').textContent = 'Getting upload signature...';
-                const signatureResponse = await fetch('/api/cloudinary-config', {
+                // Upload directly to API (FormData already prepared above)
+                document.getElementById('uploadStatus').textContent = `Uploading ${fileSizeMB}MB file...`;
+                document.getElementById('progressBar').style.width = '50%';
+                document.getElementById('progressPercentage').textContent = '50%';
+                
+                const response = await fetch('/api/upload-simple', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        uploadType: 'model',
-                        filename: selectedFile.name
-                    })
+                    body: formData
                 });
                 
-                const signatureData = await signatureResponse.json();
-                if (!signatureResponse.ok) {
-                    throw new Error(signatureData.error || 'Failed to get upload signature');
-                }
-                
-                // Step 2: Upload directly to Cloudinary
-                document.getElementById('uploadStatus').textContent = `Uploading ${fileSizeMB}MB file to cloud...`;
-                document.getElementById('progressBar').style.width = '30%';
-                document.getElementById('progressPercentage').textContent = '30%';
-                
-                const cloudinaryForm = new FormData();
-                cloudinaryForm.append('file', selectedFile);
-                cloudinaryForm.append('api_key', signatureData.apiKey);
-                cloudinaryForm.append('timestamp', signatureData.timestamp);
-                cloudinaryForm.append('signature', signatureData.signature);
-                // Only send parameters that were used to generate the signature
-                cloudinaryForm.append('folder', signatureData.params.folder);
-                cloudinaryForm.append('public_id', signatureData.params.public_id);
-                // Don't send resource_type in form data - it's specified in the URL
-                
-                const cloudinaryResponse = await fetch(signatureData.uploadUrl, {
-                    method: 'POST',
-                    body: cloudinaryForm
-                });
-                
-                document.getElementById('progressBar').style.width = '60%';
-                document.getElementById('progressPercentage').textContent = '60%';
-                
-                if (!cloudinaryResponse.ok) {
-                    const errorText = await cloudinaryResponse.text();
-                    console.error('❌ Cloudinary upload failed:', errorText);
-                    throw new Error('Failed to upload file to Cloudinary');
-                }
-                
-                const cloudinaryData = await cloudinaryResponse.json();
-                console.log('✅ Cloudinary upload successful:', cloudinaryData);
-                
-                // Step 3: Save metadata to database
-                document.getElementById('uploadStatus').textContent = 'Saving to database...';
-                document.getElementById('progressBar').style.width = '80%';
-                document.getElementById('progressPercentage').textContent = '80%';
-                
-                const saveResponse = await fetch('/api/cloudinary-save', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        type: 'model',
-                        cloudinaryData: cloudinaryData,
-                        metadata: {
-                            title: titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''),
-                            description: descriptionInput.value || '',
-                            filename: selectedFile.name,
-                            customerId: customerId,
-                            customerName: customerName
-                        }
-                    })
-                });
-                
-                const result = await saveResponse.json();
+                const result = await response.json();
                 
                 document.getElementById('progressBar').style.width = '100%';
                 document.getElementById('progressPercentage').textContent = '100%';
                 
-                if (!saveResponse.ok) {
-                    throw new Error(result.error || 'Failed to save model to database');
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to upload model');
                 }
+                
                 document.getElementById('uploadStatus').textContent = '✅ Upload successful!';
+                console.log('✅ Model uploaded successfully:', result);
                 
                 // Extract and save dominant color after successful upload
                 if (result.success && result.id) {
@@ -4657,7 +4596,7 @@
             }
         }
 
-        // Auto-upload function for variants - DIRECT CLOUDINARY UPLOAD
+        // Auto-upload function for variants - SIMPLIFIED API UPLOAD
         async function uploadVariantFile(file, variantName) {
             // Capture the modelId early to ensure we have it
             const modelId = currentModelId;
@@ -4686,95 +4625,40 @@
             fileName.style.color = '#f1c40f';
 
             try {
-                // Step 1: Get signed upload parameters from backend
-                console.log('🔧 Getting upload signature...');
-                const signatureResponse = await fetch('/api/cloudinary-config', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        uploadType: 'variant',
-                        filename: file.name
-                    })
-                });
-                
-                const signatureData = await signatureResponse.json();
-                
-                if (!signatureResponse.ok) {
-                    throw new Error(signatureData.error || 'Failed to get upload signature');
-                }
-                
-                // Step 2: Upload directly to Cloudinary with signature
-                console.log('☁️ Uploading directly to Cloudinary...');
-                fileName.textContent = 'Uploading to Cloudinary...';
-                fileName.style.color = '#58a6ff';
-                
+                // Create form data for the upload
                 const formData = new FormData();
                 formData.append('file', file);
-                formData.append('api_key', signatureData.apiKey);
-                formData.append('timestamp', signatureData.timestamp);
-                formData.append('signature', signatureData.signature);
-                // Only send parameters that were used to generate the signature
-                formData.append('folder', signatureData.params.folder);
-                formData.append('public_id', signatureData.params.public_id);
-                // Don't send resource_type - it's specified in the URL
+                formData.append('parentModelId', modelId);
+                formData.append('variantName', variantName);
+                formData.append('hexColor', hexColor);
                 
-                const cloudinaryResponse = await fetch(signatureData.uploadUrl, {
+                console.log('☁️ Uploading variant to API...');
+                fileName.textContent = 'Uploading variant...';
+                fileName.style.color = '#58a6ff';
+                
+                const response = await fetch('/api/upload-variant', {
                     method: 'POST',
                     body: formData
                 });
                 
-                if (!cloudinaryResponse.ok) {
-                    const errorText = await cloudinaryResponse.text();
-                    console.error('❌ Cloudinary upload failed:', errorText);
-                    throw new Error('Failed to upload file to Cloudinary');
+                const result = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(result.error || 'Failed to upload variant');
                 }
                 
-                const cloudinaryData = await cloudinaryResponse.json();
-                console.log('✅ Cloudinary upload successful:', cloudinaryData);
-                
-                // Step 3: Save metadata to database
-                fileName.textContent = 'Saving to database...';
-                fileName.style.color = '#58a6ff';
-                console.log('💾 Saving variant to database...');
-                
-                const saveResponse = await fetch('/api/cloudinary-save', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        type: 'variant',
-                        cloudinaryData: cloudinaryData,
-                        metadata: {
-                            modelId: modelId,
-                            variantName: variantName,
-                            hexColor: hexColor,
-                            filename: file.name,
-                            isPrimary: false
-                        }
-                    })
-                });
-                
-                const saveResult = await saveResponse.json();
-                
-                if (!saveResponse.ok) {
-                    throw new Error(saveResult.error || 'Failed to save variant to database');
-                }
-                
-                console.log('✅ Variant saved successfully:', saveResult);
+                console.log('✅ Variant uploaded successfully:', result);
                 
                 // No popup alert - just close modal and reload
                 closeVariantModal();
                 
                 // Extract and save dominant color for the new variant AFTER page reload
                 // This will run on the new page load and update the color
-                if (saveResult.success && saveResult.id) {
+                if (result.success && result.id) {
                     // Store the variant ID for color extraction after reload
-                    console.log('💾 Storing color extraction data:', { variantId: saveResult.id, modelId: modelId });
+                    console.log('💾 Storing color extraction data:', { variantId: result.id, modelId: modelId });
                     sessionStorage.setItem('extractColorForVariant', JSON.stringify({
-                        variantId: saveResult.id,
+                        variantId: result.id,
                         modelId: modelId
                     }));
                 }
