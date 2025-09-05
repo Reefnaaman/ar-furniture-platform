@@ -505,6 +505,20 @@
             loadModel(modelId, variantId);
         }
         
+        // Generate gradient background from hex color (matches customer dashboard)
+        function generateBackgroundGradient(hexColor) {
+            if (!hexColor) return 'linear-gradient(135deg, #0d1117, #161b22)';
+            
+            // Convert hex to RGB for transparency effects
+            const hex = hexColor.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            
+            // Create same gradient as customer dashboard
+            return `linear-gradient(135deg, rgba(${r}, ${g}, ${b}, 0.4) 0%, rgba(${r}, ${g}, ${b}, 0.2) 100%)`;
+        }
+        
         async function loadModel(id, variantId = null) {
             try {
                 // Fetch model info first (needed for both desktop and mobile)
