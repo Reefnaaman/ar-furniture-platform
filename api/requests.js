@@ -10,20 +10,22 @@ export default async function handler(req, res) {
     return res.status(200).end();
   }
 
-  // GET /api/requests?customer={id} - Get customer requests
+  // GET /api/requests?customer={id} - Get customer requests (or all requests if no customer specified for admin)
   if (req.method === 'GET') {
     try {
       const { customer } = req.query;
       
-      if (!customer) {
-        return res.status(400).json({ error: 'Customer ID required' });
-      }
-      
-      const { data, error } = await supabase
+      let query = supabase
         .from('customer_requests')
         .select('*')
-        .eq('customer_id', customer)
         .order('created_at', { ascending: false });
+      
+      // If customer specified, filter by customer_id
+      if (customer) {
+        query = query.eq('customer_id', customer);
+      }
+      
+      const { data, error } = await query;
       
       if (error) {
         console.error('Error fetching requests:', error);
