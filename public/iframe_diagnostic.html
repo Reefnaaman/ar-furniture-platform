@@ -111,7 +111,7 @@
         // Test functions
         function testDataURI() {
             log('🧪 Testing Data URI (should always work)...', 'info');
-            iframe.src = 'data:text/html,<html><body style="background:lime;color:black;padding:20px;text-align:center;"><h1>DATA URI TEST</h1><p>If you see this, Data URI works!</p><script>window.parent.postMessage({type:"dataUriTest", success:true}, "*");</script></body></html>';
+            iframe.src = 'data:text/html,<html><body style="background:lime;color:black;padding:20px;text-align:center;"><h1>DATA URI TEST</h1><p>If you see this, Data URI works!</p><script>window.parent.postMessage({type:"dataUriTest", success:true}, "*");<\/script></body></html>';
             requestCount++;
         }
 

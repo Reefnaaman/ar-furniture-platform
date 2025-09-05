@@ -48,6 +48,10 @@
     {
       "source": "/header-test",
       "destination": "/header_test.html"
+    },
+    {
+      "source": "/iframe-simple-test",
+      "destination": "/iframe_simple_test.html"
     }
   ],
   "headers": [
