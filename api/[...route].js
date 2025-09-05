@@ -14,7 +14,7 @@ export const config = {
 
 /**
  * Single catch-all API handler for all routes
- * Handles: upload, models, model/[id], model/[id]/info, model/[id]/view
+ * Handles: upload, models, model/[id], model/[id]/info, model/[id]/view, upload-variant
  */
 export default async function handler(req, res) {
   console.log('=== FUNCTION ENTRY ===', new Date().toISOString());
@@ -219,6 +219,12 @@ export default async function handler(req, res) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
     
+    // Route: /api/customers/[id]/brand-settings
+    if (routePath?.match(/^customers\/[^\/]+\/brand-settings$/)) {
+      const customerId = routePath.split('/')[1];
+      return await handleCustomerBrandSettings(req, res, customerId);
+    }
+
     // Route: /api/customer/[id]
     if (routePath?.startsWith('customer/')) {
       const customerId = routePath.split('/')[1];
