@@ -1,13 +1,13 @@
 {
   "functions": {
-    "api/[...route].js": {
+    "api/index.js": {
       "maxDuration": 30
     }
   },
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "/api/[...route].js"
+      "destination": "/api/index.js"
     },
     {
       "source": "/",
