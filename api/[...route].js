@@ -274,7 +274,7 @@ export default async function handler(req, res) {
 }
 
 /**
- * Handle file upload
+ * Handle file upload (models and variants)
  */
 async function handleUpload(req, res) {
   if (req.method !== 'POST') {
@@ -291,6 +291,11 @@ async function handleUpload(req, res) {
         else resolve({ fields, files });
       });
     });
+
+    // Check if this is a variant upload (has parentModelId field)
+    const parentModelId = fields.parentModelId?.[0];
+    const variantName = fields.variantName?.[0];
+    const isVariantUpload = parentModelId && variantName;
 
     // Get file
     const uploadedFile = files.file?.[0];
@@ -316,18 +321,36 @@ async function handleUpload(req, res) {
     console.log('Uploading to Cloudinary...');
     const cloudinaryResult = await uploadModel(fileBuffer, uploadedFile.originalFilename);
 
-    // Save to database
-    console.log('Saving to database...');
-    console.log('Data to save:', {
-      title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
-      description: fields.description?.[0] || '',
-      filename: uploadedFile.originalFilename,
-      cloudinaryUrl: cloudinaryResult.url,
-      cloudinaryPublicId: cloudinaryResult.publicId,
-      fileSize: cloudinaryResult.size
-    });
+    let dbResult;
     
-    const dbResult = await saveModel({
+    if (isVariantUpload) {
+      // Handle variant upload
+      console.log('Saving variant to database...');
+      const hexColor = fields.hexColor?.[0] || '#000000';
+      
+      dbResult = await saveModelVariant({
+        parentModelId: parentModelId,
+        variantName: variantName,
+        hexColor: hexColor,
+        cloudinaryUrl: cloudinaryResult.url,
+        cloudinaryPublicId: cloudinaryResult.publicId,
+        fileSize: cloudinaryResult.size,
+        isPrimary: false,
+        variantType: 'upload'
+      });
+    } else {
+      // Handle regular model upload
+      console.log('Saving model to database...');
+      console.log('Data to save:', {
+        title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
+        description: fields.description?.[0] || '',
+        filename: uploadedFile.originalFilename,
+        cloudinaryUrl: cloudinaryResult.url,
+        cloudinaryPublicId: cloudinaryResult.publicId,
+        fileSize: cloudinaryResult.size
+      });
+      
+      dbResult = await saveModel({
       title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
       description: fields.description?.[0] || '',
       filename: uploadedFile.originalFilename,

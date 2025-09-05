@@ -8,6 +8,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@300;400;500;600&family=Noto+Sans+Hebrew:wght@300;400;500;600&display=swap" rel="stylesheet">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <style>
         * {
@@ -19,6 +20,31 @@
         /* Hide container by default to prevent flash */
         .container {
             display: none;
+        }
+        
+        /* RTL Support using CSS logical properties */
+        .rtl-container {
+            direction: rtl;
+        }
+        
+        .rtl-container .title-section {
+            text-align: start; /* Right-aligned in RTL */
+        }
+        
+        .rtl-container .logo-container {
+            margin-inline-start: auto;
+            margin-inline-end: 0;
+        }
+        
+        /* Ensure QR instructions remain centered regardless of direction */
+        .qr-instructions {
+            text-align: center !important;
+            direction: inherit;
+        }
+        
+        /* Hebrew/RTL font support */
+        .rtl-container {
+            font-family: 'Noto Sans Hebrew', 'Noto Sans', 'Inter', sans-serif;
         }
         
         /* Hide everything on mobile initially */
@@ -540,7 +566,7 @@
                                          style="border-radius: 12px; display: block;">
                                 </div>
                                 
-                                <p style="margin-top: 30px; text-align: center; color: #e6edf3; font-size: 1.3rem; line-height: 1.8;">
+                                <p class="qr-instructions" style="margin-top: 30px; text-align: center; color: #e6edf3; font-size: 1.3rem; line-height: 1.8;">
                                     <span style="color: #7d8590;">Scan me with your phone</span><br>
                                     <span style="color: #58a6ff; font-weight: 600;">to see ${modelInfo.title}</span><br>
                                     <span style="color: #7d8590;">in your space! 😊</span>
@@ -569,6 +595,9 @@
                 
                 // Load customer logo for desktop
                 loadDesktopCustomerLogo(modelInfo);
+                
+                // Load customer brand settings and apply RTL if needed
+                await loadCustomerBrandSettings(modelInfo.customer_id);
                 
             } catch (error) {
                 showError(error.message);
@@ -604,6 +633,98 @@
                 }
             } catch (error) {
                 console.error('Error loading desktop customer logo:', error);
+            }
+        }
+
+        // Load customer brand settings and apply RTL/LTR direction
+        async function loadCustomerBrandSettings(customerId) {
+            if (!customerId || customerId === 'unassigned') {
+                console.log('📝 No customer ID, using default LTR direction');
+                return;
+            }
+            
+            try {
+                console.log('🌍 Loading brand settings for customer:', customerId);
+                const response = await fetch(`/api/customers/${customerId}/brand-settings`);
+                
+                if (!response.ok) {
+                    console.log('📝 No brand settings found, using defaults');
+                    return;
+                }
+                
+                const settings = await response.json();
+                console.log('✅ Brand settings loaded:', settings);
+                
+                // Apply RTL direction to the QR screen container
+                applyDirectionToQRScreen(settings.textDirection || 'ltr');
+                
+            } catch (error) {
+                console.error('Error loading brand settings:', error);
+                console.log('📝 Using default LTR direction due to error');
+            }
+        }
+        
+        // Apply RTL/LTR direction to the QR screen
+        function applyDirectionToQRScreen(direction) {
+            console.log(`🔄 Applying ${direction.toUpperCase()} direction to QR screen`);
+            
+            // Find the QR screen container (the main desktop container)
+            const desktopContainer = document.querySelector('.desktop-container') || 
+                                   document.querySelector('[style*="display: flex"][style*="height: 100vh"]') ||
+                                   document.querySelector('body > div');
+            
+            if (desktopContainer) {
+                desktopContainer.dir = direction;
+                desktopContainer.style.direction = direction;
+                
+                // Add/remove RTL container class
+                if (direction === 'rtl') {
+                    desktopContainer.classList.add('rtl-container');
+                } else {
+                    desktopContainer.classList.remove('rtl-container');
+                }
+                
+                // Apply RTL-specific styling
+                if (direction === 'rtl') {
+                    // Adjust logo positioning for RTL
+                    const logoContainer = document.getElementById('desktopCustomerLogoContainer');
+                    if (logoContainer) {
+                        // In RTL, logo should be on the right side of text
+                        logoContainer.style.order = '1'; // Move after text in flex layout
+                    }
+                    
+                    // Adjust text alignment
+                    const titleContainer = logoContainer ? logoContainer.nextElementSibling : null;
+                    if (titleContainer) {
+                        titleContainer.style.textAlign = 'right';
+                        titleContainer.style.order = '0'; // Ensure text comes first visually (right side in RTL)
+                    }
+                    
+                    // Apply RTL to QR instructions
+                    const instructionElements = document.querySelectorAll('p[style*="text-align: center"]');
+                    instructionElements.forEach(el => {
+                        el.style.direction = 'rtl';
+                        el.style.textAlign = 'center'; // Keep center alignment for QR instructions
+                    });
+                    
+                    console.log('✅ RTL styling applied to QR screen');
+                } else {
+                    // Reset to LTR defaults
+                    const logoContainer = document.getElementById('desktopCustomerLogoContainer');
+                    if (logoContainer) {
+                        logoContainer.style.order = '0';
+                    }
+                    
+                    const titleContainer = logoContainer ? logoContainer.nextElementSibling : null;
+                    if (titleContainer) {
+                        titleContainer.style.textAlign = 'left';
+                        titleContainer.style.order = '1';
+                    }
+                    
+                    console.log('✅ LTR styling applied to QR screen');
+                }
+            } else {
+                console.warn('🚨 Could not find desktop container to apply direction');
             }
         }
 
