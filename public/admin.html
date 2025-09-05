@@ -2487,11 +2487,9 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-    
-    <!-- Requests Page -->
-    <div class="page" id="requestsPage" style="display: none;">
+            
+            <!-- Requests Page -->
+            <div class="page" id="requestsPage" style="display: none;">
                 <div class="header">
                     <div class="header-content">
                         <h1>📝 Customer Requests</h1>
@@ -2502,58 +2500,56 @@
                         </button>
                     </div>
                 </div>
-        
                 
                 <div class="dashboard-content">
-                    <!-- Requests Stats -->
                     <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-icon">📝</div>
-                        <div class="stat-label">Total Requests</div>
-                        <div class="stat-value" id="totalRequestsAdmin">0</div>
+                        <div class="stat-card">
+                            <div class="stat-icon">📝</div>
+                            <div class="stat-label">Total Requests</div>
+                            <div class="stat-value" id="totalRequestsAdmin">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">⏳</div>
+                            <div class="stat-label">Pending</div>
+                            <div class="stat-value" id="pendingRequestsAdmin">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">🔄</div>
+                            <div class="stat-label">In Progress</div>
+                            <div class="stat-value" id="inProgressRequestsAdmin">0</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-icon">✅</div>
+                            <div class="stat-label">Completed</div>
+                            <div class="stat-value" id="completedRequestsAdmin">0</div>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">⏳</div>
-                        <div class="stat-label">Pending</div>
-                        <div class="stat-value" id="pendingRequestsAdmin">0</div>
+                    
+                    <div class="filters-section">
+                        <div class="filter-group">
+                            <label class="filter-label">Filter by Status:</label>
+                            <select id="statusFilterAdmin" onchange="loadRequests()" class="filter-select">
+                                <option value="">All Statuses</option>
+                                <option value="pending">Pending</option>
+                                <option value="in_progress">In Progress</option>
+                                <option value="completed">Completed</option>
+                                <option value="cancelled">Cancelled</option>
+                            </select>
+                        </div>
+                        <div class="filter-group">
+                            <label class="filter-label">Filter by Customer:</label>
+                            <select id="customerFilterAdmin" onchange="loadRequests()" class="filter-select">
+                                <option value="">All Customers</option>
+                            </select>
+                        </div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">🔄</div>
-                        <div class="stat-label">In Progress</div>
-                        <div class="stat-value" id="inProgressRequestsAdmin">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-icon">✅</div>
-                        <div class="stat-label">Completed</div>
-                        <div class="stat-value" id="completedRequestsAdmin">0</div>
+                    
+                    <div id="requestsContainer">
+                        <div class="loading">Loading requests...</div>
                     </div>
                 </div>
-                
-                <!-- Filters Section -->
-                <div class="filters-section">
-                    <div class="filter-group">
-                        <label class="filter-label">Filter by Status:</label>
-                        <select id="statusFilterAdmin" onchange="loadRequests()" class="filter-select">
-                            <option value="">All Statuses</option>
-                            <option value="pending">Pending</option>
-                            <option value="in_progress">In Progress</option>
-                            <option value="completed">Completed</option>
-                            <option value="cancelled">Cancelled</option>
-                        </select>
-                    </div>
-                    <div class="filter-group">
-                        <label class="filter-label">Filter by Customer:</label>
-                        <select id="customerFilterAdmin" onchange="loadRequests()" class="filter-select">
-                            <option value="">All Customers</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Requests List -->
-                <div id="requestsContainer">
-                    <div class="loading">Loading requests...</div>
-                </div>
-                </div>
+            </div>
+        </div>
     </div>
     
     
