@@ -5488,8 +5488,13 @@
         let filteredImages = [];
         
         // Universal Page Navigation
-        function navigateToPage(pageName) {
+        function navigateToPage(pageName, updateURL = true) {
             console.log(`🧭 Navigation requested to: ${pageName}`);
+            
+            // Update URL hash to preserve state on refresh
+            if (updateURL) {
+                window.location.hash = pageName;
+            }
             
             // Hide all pages
             const allPages = document.querySelectorAll('.page');
@@ -5825,10 +5830,24 @@
         // INITIALIZE PAGE SYSTEM
         // ========================================
         
+        // Restore page from URL hash on page load
+        function restorePageFromURL() {
+            const hash = window.location.hash.substring(1); // Remove # from hash
+            const validPages = ['dashboard', 'images', 'users', 'feedback', 'requests'];
+            
+            if (hash && validPages.includes(hash)) {
+                navigateToPage(hash, false); // Don't update URL since we're reading from it
+            } else {
+                navigateToPage('dashboard', false); // Default to dashboard
+            }
+        }
+        
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
             console.log('🚀 Modern page system initialized');
-            // Dashboard is shown by default
+            
+            // Restore current page from URL
+            restorePageFromURL();
             
             // Hide variant delete buttons for non-admin users
             hideVariantDeletesForCustomers();
