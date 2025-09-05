@@ -2701,10 +2701,29 @@
             }
             
             try {
-                // TODO: Add API call to update title
-                // For now, just update the display
+                // Show loading state
+                input.disabled = true;
+                input.style.opacity = '0.7';
+                
+                // API call to update title
+                const response = await fetch('/api/models', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: modelId,
+                        title: newTitle
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('Failed to update title');
+                }
+                
+                // Update the display
                 currentEditElement.textContent = newTitle;
-                console.log(`Would update model ${modelId} title to: ${newTitle}`);
+                console.log(`Updated model ${modelId} title to: ${newTitle}`);
                 
                 currentEditElement = null;
                 
