@@ -1845,27 +1845,9 @@
                 </div>
                 
                 <div class="form-group" style="margin-top: 20px;">
-                    <label for="requestTitle">Title (optional)</label>
-                    <input type="text" id="requestTitle" placeholder="e.g. Modern Office Chair" 
-                           style="width: 100%; padding: 12px; background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(240, 246, 252, 0.2); border-radius: 8px; color: #e6edf3; margin-top: 8px;">
-                </div>
-                
-                <div class="form-group" style="margin-top: 20px;">
-                    <label for="requestDescription">Description</label>
-                    <textarea id="requestDescription" placeholder="Describe what you're looking for, specific requirements, colors, etc." 
+                    <label for="requestNotes">Notes</label>
+                    <textarea id="requestNotes" placeholder="Any specific requirements, colors, or details about this furniture piece..." 
                               style="width: 100%; min-height: 80px; padding: 12px; background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(240, 246, 252, 0.2); border-radius: 8px; color: #e6edf3; margin-top: 8px; resize: vertical;"></textarea>
-                </div>
-                
-                <div class="form-group" style="margin-top: 20px;">
-                    <label for="requestNotes">Additional Notes</label>
-                    <textarea id="requestNotes" placeholder="Any other details, preferences, or special requirements..." 
-                              style="width: 100%; min-height: 60px; padding: 12px; background: rgba(22, 27, 34, 0.8); border: 1px solid rgba(240, 246, 252, 0.2); border-radius: 8px; color: #e6edf3; margin-top: 8px; resize: vertical;"></textarea>
-                </div>
-                
-                <!-- TODO: Add image upload section in next phase -->
-                <div class="form-group" style="margin-top: 20px; opacity: 0.5;">
-                    <label>Reference Images</label>
-                    <p style="font-size: 0.8rem; color: #7d8590; margin-top: 5px;">📷 Image upload coming soon - for now, please include image links in the description</p>
                 </div>
             </form>
             
@@ -2943,10 +2925,10 @@
                 const requestData = {
                     customerId: customerId,
                     productUrl: productUrl,
-                    title: document.getElementById('requestTitle').value.trim(),
-                    description: document.getElementById('requestDescription').value.trim(),
+                    title: '', // Generate title from URL
+                    description: '',
                     notes: document.getElementById('requestNotes').value.trim(),
-                    referenceImages: [] // TODO: Implement image upload
+                    referenceImages: []
                 };
                 
                 console.log('Submitting request:', requestData);
