@@ -287,6 +287,10 @@ async function handleUpload(req, res) {
     const parentModelId = fields.parentModelId?.[0];
     const variantName = fields.variantName?.[0];
     const isVariantUpload = parentModelId && variantName;
+    
+    // Debug log the form fields to see what we're receiving
+    console.log('📋 Form fields received:', Object.keys(fields).map(key => `${key}: ${fields[key]?.[0] || 'undefined'}`));
+    console.log('📋 Variant upload detection:', { parentModelId, variantName, isVariantUpload });
 
     // Get file
     const uploadedFile = files.file?.[0];
