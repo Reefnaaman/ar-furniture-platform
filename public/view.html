@@ -424,6 +424,70 @@
         const modelId = urlParams.get('id');
         const variantId = urlParams.get('variant');
         
+        // ==============================================
+        // IFRAME DETECTION - RUN IMMEDIATELY
+        // ==============================================
+        
+        console.log('🚀 Starting iframe detection...');
+        
+        // Detect if running in iframe for live preview
+        const isInIframe = window.parent !== window.self;
+        
+        console.log('🔍 Iframe detection:', { 
+            isInIframe, 
+            windowParent: window.parent, 
+            windowSelf: window.self,
+            parentExists: window.parent !== undefined,
+            href: window.location.href,
+            modelId: modelId
+        });
+        
+        if (isInIframe) {
+            console.log('🖼️ AR View loaded in iframe - Live Preview Mode activated');
+            
+            // Add iframe-specific styling immediately
+            document.body.classList.add('iframe-mode');
+            
+            // Signal to parent that iframe is ready
+            try {
+                console.log('📡 Sending iframe ready signal to parent');
+                window.parent.postMessage({
+                    type: 'iframeReady',
+                    timestamp: Date.now(),
+                    url: window.location.href,
+                    modelId: modelId
+                }, '*');
+                console.log('✅ Iframe ready signal sent successfully');
+            } catch (error) {
+                console.error('❌ Failed to send iframe ready signal:', error);
+            }
+            
+            // Force container visibility for iframe after DOM loads
+            setTimeout(() => {
+                const container = document.querySelector('.container');
+                if (container) {
+                    console.log('📦 Setting container visibility for iframe');
+                    container.style.display = 'flex';
+                    container.style.minHeight = '100vh';
+                    container.style.visibility = 'visible';
+                } else {
+                    console.warn('⚠️ Container not found for iframe mode');
+                }
+                
+                const desktopContainer = document.querySelector('.desktop-container');
+                if (desktopContainer) {
+                    console.log('🖥️ Setting desktop container visibility for iframe');
+                    desktopContainer.style.display = 'flex';
+                    desktopContainer.style.visibility = 'visible';
+                } else {
+                    console.warn('⚠️ Desktop container not found for iframe mode');
+                }
+            }, 100);
+            
+        } else {
+            console.log('🌍 Running in standalone mode (not in iframe)');
+        }
+        
         // Store model info globally for variant switching
         let globalModelInfo = null;
         
@@ -1145,79 +1209,9 @@
         });
 
         // ==============================================
-        // IFRAME & LIVE PREVIEW SUPPORT
+        // IFRAME & LIVE PREVIEW SUPPORT (MAIN HANDLERS)
         // ==============================================
-        
-        // Initialize iframe support when DOM is ready
-        function initializeIframeSupport() {
-            // Detect if running in iframe for live preview
-            const isInIframe = window.parent !== window.self;
-            
-            console.log('🔍 Iframe detection:', { 
-                isInIframe, 
-                windowParent: window.parent, 
-                windowSelf: window.self,
-                parentExists: window.parent !== undefined
-            });
-            
-            if (isInIframe) {
-                console.log('🖼️ AR View loaded in iframe - Live Preview Mode activated');
-                
-                // Add iframe-specific styling
-                document.body.classList.add('iframe-mode');
-                
-                // Ensure container is visible in iframe
-                const container = document.querySelector('.container');
-                if (container) {
-                    console.log('📦 Setting container visibility for iframe');
-                    container.style.display = 'flex';
-                    container.style.minHeight = '100vh';
-                    container.style.visibility = 'visible';
-                } else {
-                    console.warn('⚠️ Container not found for iframe mode');
-                }
-                
-                // Force desktop container to show
-                const desktopContainer = document.querySelector('.desktop-container');
-                if (desktopContainer) {
-                    console.log('🖥️ Setting desktop container visibility for iframe');
-                    desktopContainer.style.display = 'flex';
-                    desktopContainer.style.visibility = 'visible';
-                } else {
-                    console.warn('⚠️ Desktop container not found for iframe mode');
-                }
-                
-                // Signal to parent that iframe is ready
-                try {
-                    console.log('📡 Sending iframe ready signal to parent');
-                    window.parent.postMessage({
-                        type: 'iframeReady',
-                        timestamp: Date.now(),
-                        url: window.location.href,
-                        userAgent: navigator.userAgent.substring(0, 100)
-                    }, '*');
-                    console.log('✅ Iframe ready signal sent successfully');
-                } catch (error) {
-                    console.error('❌ Failed to send iframe ready signal:', error);
-                }
-                
-            } else {
-                console.log('🌍 Running in standalone mode (not in iframe)');
-            }
-        }
-        
-        // Run iframe initialization when DOM is ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initializeIframeSupport);
-        } else {
-            initializeIframeSupport();
-        }
-        
-        // Also run when window loads as fallback
-        window.addEventListener('load', function() {
-            console.log('🔄 Window loaded, re-checking iframe support...');
-            setTimeout(initializeIframeSupport, 100);
-        });
+        // Note: Iframe detection happens at top of script for immediate execution
         
         // Listen for brand setting updates from parent
         window.addEventListener('message', function(event) {
