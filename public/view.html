@@ -419,10 +419,11 @@
     <div class="toast" id="toast"></div>
     
     <script>
-        // Get model ID and variant ID from URL
+        // Get model ID, variant ID, and background color from URL
         const urlParams = new URLSearchParams(window.location.search);
         const modelId = urlParams.get('id');
         const variantId = urlParams.get('variant');
+        const backgroundColorParam = urlParams.get('bg');
         
         // ==============================================
         // IFRAME DETECTION - RUN IMMEDIATELY
@@ -635,7 +636,7 @@
                                         alt="${modelInfo.title}"
                                         camera-controls
                                         auto-rotate
-                                        style="width: 500px; height: 450px; background: linear-gradient(135deg, #0d1117, #161b22); border-radius: 12px;">
+                                        style="width: 500px; height: 450px; background: ${backgroundColorParam ? backgroundColorParam : 'linear-gradient(135deg, #0d1117, #161b22)'}; border-radius: 12px;">
                                     </model-viewer>
                                 </div>
                                 
@@ -841,7 +842,13 @@
         // Generate QR code for specific variant
         function generateVariantQR(modelId, variantId, variantName, clickedElement) {
             const baseUrl = window.location.origin + window.location.pathname;
-            const variantUrl = variantId ? `${baseUrl}?id=${modelId}&variant=${variantId}` : `${baseUrl}?id=${modelId}`;
+            let variantUrl = variantId ? `${baseUrl}?id=${modelId}&variant=${variantId}` : `${baseUrl}?id=${modelId}`;
+            
+            // Add background color parameter if present
+            if (backgroundColorParam) {
+                const separator = variantUrl.includes('?') ? '&' : '?';
+                variantUrl += `${separator}bg=${encodeURIComponent(backgroundColorParam)}`;
+            }
             
             console.log(`📱 Generating QR for ${variantName}: ${variantUrl}`);
             

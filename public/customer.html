@@ -2034,44 +2034,15 @@
                         </div>
                     </div>
                     
-                    <!-- Preview Panel -->
-                    <div class="preview-panel">
-                        <div class="preview-header">
-                            <div class="preview-title">
-                                👁️ Live Preview
+                    
+                    <!-- Settings Note -->
+                    <div class="settings-note">
+                        <div style="background: rgba(88, 166, 255, 0.1); border: 1px solid rgba(88, 166, 255, 0.2); border-radius: 12px; padding: 20px; text-align: center; margin-top: 20px;">
+                            <div style="color: #58a6ff; font-size: 1.1rem; margin-bottom: 8px;">💡 Brand Settings Applied</div>
+                            <div style="color: #7d8590; font-size: 0.9rem;">
+                                Your brand customizations will be applied to all customer-facing AR view pages.<br>
+                                Changes take effect immediately after saving.
                             </div>
-                            <div class="preview-status">
-                                Updates in real-time
-                            </div>
-                        </div>
-                        <div class="ar-preview" id="brandPreview" style="position: relative;">
-                            <div class="iframe-loading" id="iframeLoading" style="
-                                position: absolute;
-                                top: 0;
-                                left: 0;
-                                right: 0;
-                                bottom: 0;
-                                display: flex;
-                                align-items: center;
-                                justify-content: center;
-                                background: rgba(22, 27, 34, 0.9);
-                                color: #e6edf3;
-                                z-index: 10;
-                                border-radius: 8px;
-                            ">
-                                <div style="text-align: center;">
-                                    <div style="font-size: 2rem; margin-bottom: 16px;">⏳</div>
-                                    <div>Loading AR Preview...</div>
-                                    <div style="font-size: 0.8rem; color: #7d8590; margin-top: 8px;" id="loadingStatus">Connecting to live viewer</div>
-                                </div>
-                            </div>
-                            <iframe id="previewFrame" 
-                                    src="/view?id=Ct81wo8G" 
-                                    width="100%" 
-                                    height="100%" 
-                                    frameborder="0"
-                                    style="border-radius: 8px; position: relative; z-index: 1;">
-                            </iframe>
                         </div>
                     </div>
                 </div>
@@ -2449,7 +2420,14 @@
             let html = '<div class="models-grid" id="modelsGrid">';
             
             models.forEach(model => {
-                const viewUrl = `https://newfurniture.live/view?id=${model.id}`;
+                // Create view URL with background color if set
+                let viewUrl = `https://newfurniture.live/view?id=${model.id}`;
+                let localViewUrl = `/view?id=${model.id}`;
+                const savedColor = localStorage.getItem('furniture_background_color');
+                if (savedColor && savedColor !== '#ffffff') {
+                    viewUrl += `&bg=${encodeURIComponent(savedColor)}`;
+                    localViewUrl += `&bg=${encodeURIComponent(savedColor)}`;
+                }
                 const modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
                 
                 html += `
@@ -2505,7 +2483,7 @@
                             ` : ''}
                             
                             <div class="model-actions">
-                                <a href="/view?id=${model.id}" target="_blank" class="action-button view-ar-link" data-model-id="${model.id}">
+                                <a href="${localViewUrl}" target="_blank" class="action-button view-ar-link" data-model-id="${model.id}">
                                     👁️ View in AR
                                 </a>
                                 <button class="action-button copy-link-btn" onclick="copyToClipboard('${viewUrl}', this)">
@@ -2607,6 +2585,13 @@
                 } else {
                     // Specific variant - include variant parameter
                     newUrl = `/view?id=${modelId}&variant=${variantId}`;
+                }
+                
+                // Add background color parameter if set
+                const savedColor = localStorage.getItem('furniture_background_color');
+                if (savedColor && savedColor !== '#ffffff') {
+                    const separator = newUrl.includes('?') ? '&' : '?';
+                    newUrl += `${separator}bg=${encodeURIComponent(savedColor)}`;
                 }
                 
                 // Update the href attribute with the new URL
@@ -2865,8 +2850,34 @@
             // Store color preference in localStorage
             localStorage.setItem('furniture_background_color', color);
             
+            // Update all View AR links with new background color
+            updateAllViewARLinks();
+            
             // Mark color guide button as active
             document.querySelector('.color-guide-btn').classList.add('active');
+        }
+        
+        function updateAllViewARLinks() {
+            // Update all existing View AR links with current background color
+            const viewARLinks = document.querySelectorAll('a.view-ar-link');
+            viewARLinks.forEach(link => {
+                const modelId = link.getAttribute('data-model-id');
+                const modelCard = link.closest('.model-card');
+                if (modelId && modelCard) {
+                    // Get current variant if any
+                    const activeVariant = modelCard.querySelector('.variant-circle.active');
+                    let variantId = 'original';
+                    if (activeVariant && !activeVariant.getAttribute('onclick').includes('original')) {
+                        // Extract variant ID from onclick attribute
+                        const onclickAttr = activeVariant.getAttribute('onclick');
+                        const variantMatch = onclickAttr.match(/'([^']+)',\s*'([^']+)'/);
+                        if (variantMatch && variantMatch[2] !== 'original') {
+                            variantId = variantMatch[2];
+                        }
+                    }
+                    updateViewARUrl(modelCard, modelId, variantId);
+                }
+            });
         }
         
         function applyFurnitureBackgroundColor(color) {
