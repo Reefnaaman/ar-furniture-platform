@@ -1319,11 +1319,157 @@
             margin-top: 8px;
         }
         
-        .settings-grid {
+        .brand-settings-container {
             display: grid;
-            grid-template-columns: 1fr;
-            gap: 20px;
+            grid-template-columns: 400px 1fr;
+            gap: 30px;
+            height: 70vh;
             margin-top: 25px;
+        }
+        
+        .settings-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+        
+        .preview-panel {
+            background: rgba(13, 17, 23, 0.4);
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .preview-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
+        }
+        
+        .preview-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #e6edf3;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .preview-status {
+            font-size: 0.75rem;
+            color: #7d8590;
+        }
+        
+        .ar-preview {
+            width: 100%;
+            height: calc(100% - 60px);
+            border-radius: 8px;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        /* Logo Upload Styles */
+        .logo-upload-area {
+            border: 2px dashed rgba(240, 246, 252, 0.2);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(240, 246, 252, 0.02);
+        }
+        
+        .logo-upload-area:hover {
+            border-color: rgba(88, 166, 255, 0.4);
+            background: rgba(88, 166, 255, 0.05);
+        }
+        
+        .upload-placeholder {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .upload-icon {
+            font-size: 2rem;
+            opacity: 0.6;
+        }
+        
+        .upload-text {
+            font-weight: 500;
+            color: #e6edf3;
+        }
+        
+        .upload-hint {
+            font-size: 0.8rem;
+            color: #7d8590;
+        }
+        
+        .logo-preview {
+            max-width: 100%;
+            max-height: 80px;
+            border-radius: 4px;
+        }
+        
+        /* Color Controls */
+        .color-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .color-control {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .color-label {
+            flex: 1;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #e6edf3;
+        }
+        
+        .color-control input[type="color"] {
+            width: 40px;
+            height: 40px;
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 6px;
+            cursor: pointer;
+            background: none;
+        }
+        
+        .color-value {
+            font-family: 'Monaco', monospace;
+            font-size: 0.8rem;
+            color: #7d8590;
+            min-width: 70px;
+        }
+        
+        /* Typography Select */
+        #fontFamily {
+            width: 100%;
+            padding: 10px 12px;
+            background: rgba(240, 246, 252, 0.05);
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 6px;
+            color: #e6edf3;
+            font-size: 0.9rem;
+        }
+        
+        #fontFamily:focus {
+            outline: none;
+            border-color: rgba(88, 166, 255, 0.5);
         }
         
         .settings-card {
@@ -1788,39 +1934,123 @@
                     <div class="section-subtitle">Customize how your furniture appears to your customers</div>
                 </div>
                 
-                <div class="settings-grid">
-                    <!-- Language Setting -->
-                    <div class="settings-card">
-                        <div class="settings-card-header">
-                            <h3>🌍 Language & Layout</h3>
-                            <p>Choose your language for the AR viewing experience</p>
-                        </div>
-                        <div class="settings-card-content">
-                            <div class="language-toggle">
-                                <label class="language-option">
-                                    <input type="radio" name="textDirection" value="ltr" id="dirLtr" checked>
-                                    <span class="language-button">
-                                        <span class="language-flag">🇺🇸</span>
-                                        <span class="language-name">English</span>
-                                    </span>
-                                </label>
-                                <label class="language-option">
-                                    <input type="radio" name="textDirection" value="rtl" id="dirRtl">
-                                    <span class="language-button">
-                                        <span class="language-flag">🇮🇱</span>
-                                        <span class="language-name">Hebrew</span>
-                                    </span>
-                                </label>
+                <div class="brand-settings-container">
+                    <!-- Settings Panel -->
+                    <div class="settings-panel">
+                        <!-- Logo Upload -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>🏢 Company Logo</h3>
+                                <p>Upload your logo to appear in the AR viewer</p>
+                            </div>
+                            <div class="settings-card-content">
+                                <div class="logo-upload-area" onclick="document.getElementById('logoInput').click()">
+                                    <div class="upload-placeholder" id="logoPlaceholder">
+                                        <div class="upload-icon">📎</div>
+                                        <div class="upload-text">Click to upload logo</div>
+                                        <div class="upload-hint">PNG, JPG up to 2MB</div>
+                                    </div>
+                                    <img id="logoPreview" class="logo-preview" style="display: none;" />
+                                </div>
+                                <input type="file" id="logoInput" accept=".png,.jpg,.jpeg" style="display: none;" onchange="handleLogoUpload(event)">
                             </div>
                         </div>
+                        
+                        <!-- Brand Colors -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>🎨 Brand Colors</h3>
+                                <p>Set colors to match your website theme</p>
+                            </div>
+                            <div class="settings-card-content">
+                                <div class="color-controls">
+                                    <div class="color-control">
+                                        <label class="color-label">Primary Color</label>
+                                        <input type="color" id="primaryColor" value="#58a6ff" onchange="updatePreviewColors()">
+                                        <span class="color-value" id="primaryColorValue">#58a6ff</span>
+                                    </div>
+                                    <div class="color-control">
+                                        <label class="color-label">Secondary Color</label>
+                                        <input type="color" id="secondaryColor" value="#79c0ff" onchange="updatePreviewColors()">
+                                        <span class="color-value" id="secondaryColorValue">#79c0ff</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Typography -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>📝 Typography</h3>
+                                <p>Choose font to match your brand</p>
+                            </div>
+                            <div class="settings-card-content">
+                                <select id="fontFamily" onchange="updatePreviewFont()">
+                                    <option value="Inter">Inter (Default)</option>
+                                    <option value="Arial">Arial</option>
+                                    <option value="Helvetica">Helvetica</option>
+                                    <option value="Georgia">Georgia</option>
+                                    <option value="Times New Roman">Times New Roman</option>
+                                    <option value="Poppins">Poppins</option>
+                                    <option value="Roboto">Roboto</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <!-- Language Setting -->
+                        <div class="settings-card">
+                            <div class="settings-card-header">
+                                <h3>🌍 Language & Layout</h3>
+                                <p>Choose your language for the AR viewing experience</p>
+                            </div>
+                            <div class="settings-card-content">
+                                <div class="language-toggle">
+                                    <label class="language-option">
+                                        <input type="radio" name="textDirection" value="ltr" id="dirLtr" checked onchange="updatePreviewDirection()">
+                                        <span class="language-button">
+                                            <span class="language-flag">🇺🇸</span>
+                                            <span class="language-name">English</span>
+                                        </span>
+                                    </label>
+                                    <label class="language-option">
+                                        <input type="radio" name="textDirection" value="rtl" id="dirRtl" onchange="updatePreviewDirection()">
+                                        <span class="language-button">
+                                            <span class="language-flag">🇮🇱</span>
+                                            <span class="language-name">Hebrew</span>
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Save Button -->
+                        <div class="settings-actions">
+                            <button class="save-settings-btn" onclick="saveBrandSettings()">
+                                💾 Save Settings
+                            </button>
+                        </div>
                     </div>
-
-                </div>
-
-                <div class="settings-actions">
-                    <button class="save-settings-btn" onclick="saveBrandSettings()">
-                        💾 Save Settings
-                    </button>
+                    
+                    <!-- Preview Panel -->
+                    <div class="preview-panel">
+                        <div class="preview-header">
+                            <div class="preview-title">
+                                👁️ Live Preview
+                            </div>
+                            <div class="preview-status">
+                                Updates in real-time
+                            </div>
+                        </div>
+                        <div class="ar-preview" id="brandPreview">
+                            <iframe id="previewFrame" 
+                                    src="/view.html?preview=true&id=demo" 
+                                    width="100%" 
+                                    height="100%" 
+                                    frameborder="0"
+                                    style="border-radius: 8px;">
+                            </iframe>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -3146,6 +3376,9 @@
             } catch (error) {
                 console.error('Error loading brand settings:', error);
             }
+            
+            // Initialize the live preview
+            setTimeout(initializeBrandPreview, 500);
         }
 
         async function saveBrandSettings() {
@@ -3196,6 +3429,107 @@
                 saveBtn.disabled = false;
                 saveBtn.textContent = originalText;
             }
+        }
+
+        // ===== BRAND SETTINGS LIVE PREVIEW FUNCTIONS =====
+        function handleLogoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            // Validate file type and size
+            if (!file.type.match(/^image\/(png|jpe?g)$/)) {
+                alert('Please upload a PNG or JPG image.');
+                return;
+            }
+            
+            if (file.size > 2 * 1024 * 1024) { // 2MB
+                alert('Image size must be less than 2MB.');
+                return;
+            }
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const logoPreview = document.getElementById('logoPreview');
+                const logoPlaceholder = document.getElementById('logoPlaceholder');
+                
+                logoPreview.src = e.target.result;
+                logoPreview.style.display = 'block';
+                logoPlaceholder.style.display = 'none';
+                
+                // Update preview iframe
+                updatePreviewLogo(e.target.result);
+            };
+            
+            reader.readAsDataURL(file);
+        }
+
+        function updatePreviewColors() {
+            const primaryColor = document.getElementById('primaryColor').value;
+            const secondaryColor = document.getElementById('secondaryColor').value;
+            
+            // Update color value displays
+            document.getElementById('primaryColorValue').textContent = primaryColor;
+            document.getElementById('secondaryColorValue').textContent = secondaryColor;
+            
+            // Update preview iframe
+            const previewFrame = document.getElementById('previewFrame');
+            if (previewFrame && previewFrame.contentWindow) {
+                previewFrame.contentWindow.postMessage({
+                    type: 'updateColors',
+                    primaryColor: primaryColor,
+                    secondaryColor: secondaryColor
+                }, '*');
+            }
+        }
+
+        function updatePreviewFont() {
+            const fontFamily = document.getElementById('fontFamily').value;
+            
+            const previewFrame = document.getElementById('previewFrame');
+            if (previewFrame && previewFrame.contentWindow) {
+                previewFrame.contentWindow.postMessage({
+                    type: 'updateFont',
+                    fontFamily: fontFamily
+                }, '*');
+            }
+        }
+
+        function updatePreviewDirection() {
+            const direction = document.querySelector('input[name="textDirection"]:checked')?.value || 'ltr';
+            
+            const previewFrame = document.getElementById('previewFrame');
+            if (previewFrame && previewFrame.contentWindow) {
+                previewFrame.contentWindow.postMessage({
+                    type: 'updateDirection',
+                    direction: direction
+                }, '*');
+            }
+        }
+
+        function updatePreviewLogo(logoDataURL) {
+            const previewFrame = document.getElementById('previewFrame');
+            if (previewFrame && previewFrame.contentWindow) {
+                previewFrame.contentWindow.postMessage({
+                    type: 'updateLogo',
+                    logoData: logoDataURL
+                }, '*');
+            }
+        }
+
+        // Initialize preview when Brand Settings loads
+        function initializeBrandPreview() {
+            // Set initial color values
+            updatePreviewColors();
+            
+            // Wait for iframe to load, then send initial settings
+            const previewFrame = document.getElementById('previewFrame');
+            previewFrame.addEventListener('load', function() {
+                setTimeout(() => {
+                    updatePreviewColors();
+                    updatePreviewFont();
+                    updatePreviewDirection();
+                }, 1000);
+            });
         }
 
         // Load brand settings when brand settings section is shown
