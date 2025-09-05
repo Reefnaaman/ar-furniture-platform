@@ -290,7 +290,9 @@ async function handleUpload(req, res) {
     
     // Debug log the form fields to see what we're receiving
     console.log('📋 Form fields received:', Object.keys(fields).map(key => `${key}: ${fields[key]?.[0] || 'undefined'}`));
+    console.log('📋 All form fields structure:', JSON.stringify(fields, null, 2));
     console.log('📋 Variant upload detection:', { parentModelId, variantName, isVariantUpload });
+    console.log('📋 Upload path decision:', isVariantUpload ? '🎨 VARIANT UPLOAD PATH' : '📦 REGULAR MODEL UPLOAD PATH');
 
     // Get file
     const uploadedFile = files.file?.[0];
@@ -389,7 +391,12 @@ async function handleUpload(req, res) {
         hexColor: fields.hexColor?.[0] || '#000000',
         cloudinaryUrl: cloudinaryResult.url,
         viewUrl: `https://${domain}/view?id=${parentModelId}&variant=${dbResult.id}`,
-        message: 'Variant uploaded successfully!'
+        message: 'Variant uploaded successfully!',
+        debugInfo: {
+          uploadType: 'variant',
+          formFields: Object.keys(fields).map(key => `${key}: ${fields[key]?.[0] || 'undefined'}`),
+          detectedAs: 'variant'
+        }
       });
     } else {
       // Model upload response
@@ -402,7 +409,13 @@ async function handleUpload(req, res) {
         shareUrl: `https://${domain}/view?id=${modelId}`,
         title: fields.title?.[0] || uploadedFile.originalFilename,
         fileSize: cloudinaryResult.size,
-        message: 'Model uploaded successfully!'
+        message: 'Model uploaded successfully!',
+        debugInfo: {
+          uploadType: 'model',
+          formFields: Object.keys(fields).map(key => `${key}: ${fields[key]?.[0] || 'undefined'}`),
+          detectedAs: 'regular model',
+          variantDetectionResult: { parentModelId, variantName, isVariantUpload }
+        }
       });
     }
 
