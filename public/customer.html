@@ -1638,6 +1638,9 @@
                     <button class="nav-item" onclick="showSection('requests')" id="nav-requests">
                         📝 My Requests
                     </button>
+                    <button class="nav-item" onclick="showSection('brand-settings')" id="nav-brand-settings">
+                        🎨 Brand Settings
+                    </button>
                 </div>
             </div>
             
@@ -3187,7 +3190,7 @@
         // Load brand settings when brand settings section is shown
         function showSection(sectionName) {
             // Hide all sections
-            const sections = ['furniture-section', 'requests-section'];
+            const sections = ['furniture-section', 'requests-section', 'brand-settings-section'];
             sections.forEach(id => {
                 const element = document.getElementById(id);
                 if (element) {
@@ -3219,6 +3222,8 @@
             // Load data for the section
             if (sectionName === 'requests') {
                 loadRequests();
+            } else if (sectionName === 'brand-settings') {
+                loadBrandSettings();
             } else if (sectionName === 'furniture') {
                 // Furniture is already loaded on page load
             }
