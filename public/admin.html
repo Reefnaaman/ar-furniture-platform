@@ -4649,6 +4649,13 @@
                 
                 console.log('✅ Variant uploaded successfully:', result);
                 
+                // Debug: Log what the server detected
+                if (result.debugInfo) {
+                    console.log('🐛 Server debug info:', result.debugInfo);
+                    console.log('🐛 Server detected upload as:', result.debugInfo.detectedAs);
+                    console.log('🐛 Form fields sent:', result.debugInfo.formFields);
+                }
+                
                 // No popup alert - just close modal and reload
                 closeVariantModal();
                 
