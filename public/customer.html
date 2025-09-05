@@ -1331,17 +1331,40 @@
         }
         
         .brand-settings-container {
-            display: block;
-            max-width: 600px;
-            margin: 20px auto 0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            max-width: 900px;
+            margin: 30px auto 0;
         }
         
         .settings-panel {
-            display: grid;
-            grid-template-columns: 0.6fr 0.6fr;
-            gap: 16px;
-            height: fit-content;
+            display: contents;
+        }
+        
+        .save-button-container {
+            grid-column: 1 / -1;
+            margin-top: 30px;
+            display: flex;
             justify-content: center;
+        }
+        
+        .save-settings-btn-main {
+            background: linear-gradient(135deg, #58a6ff 0%, #79c0ff 100%);
+            color: white;
+            border: none;
+            padding: 16px 48px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.3);
+        }
+        
+        .save-settings-btn-main:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(88, 166, 255, 0.4);
         }
         
         .preview-panel {
@@ -2023,25 +2046,15 @@
                             </div>
                         </div>
                         
-                        <!-- Save Button -->
-                        <div class="settings-actions">
-                            <button class="save-settings-btn" onclick="saveBrandSettings()">
-                                💾 Save Settings
-                            </button>
-                        </div>
                     </div>
                     
-                    
-                    <!-- Settings Note -->
-                    <div class="settings-note">
-                        <div style="background: rgba(88, 166, 255, 0.1); border: 1px solid rgba(88, 166, 255, 0.2); border-radius: 12px; padding: 20px; text-align: center; margin-top: 20px;">
-                            <div style="color: #58a6ff; font-size: 1.1rem; margin-bottom: 8px;">💡 Brand Settings Applied</div>
-                            <div style="color: #7d8590; font-size: 0.9rem;">
-                                Your brand customizations will be applied to all customer-facing AR view pages.<br>
-                                Changes take effect immediately after saving.
-                            </div>
-                        </div>
+                    <!-- Save Button (Full Width) -->
+                    <div class="save-button-container">
+                        <button class="save-settings-btn-main" onclick="saveBrandSettings()">
+                            💾 Save Brand Settings
+                        </button>
                     </div>
+                    
                 </div>
             </div>
         </div>
