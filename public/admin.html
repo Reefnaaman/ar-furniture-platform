@@ -4670,8 +4670,11 @@
                     }));
                 }
                 
-                // Reload immediately to show the new variant
-                location.reload();
+                // Reload after a delay to allow debug info to be seen
+                console.log('⏰ Reloading in 5 seconds to show debug info...');
+                setTimeout(() => {
+                    location.reload();
+                }, 5000);
                 
             } catch (error) {
                 console.error('❌ Error creating variant:', error);
