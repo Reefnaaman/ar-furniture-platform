@@ -3584,17 +3584,24 @@
             
             // Listen for iframe ready signal
             window.addEventListener('message', function(event) {
-                if (event.data.type === 'iframeReady') {
+                console.log('📨 Message received from iframe:', event.data, 'Origin:', event.origin);
+                
+                if (event.data && event.data.type === 'iframeReady') {
                     console.log('🎯 Iframe is ready, sending initial brand settings');
+                    console.log('📊 Iframe details:', event.data);
                     
                     // Hide loading overlay
                     const loadingOverlay = document.getElementById('iframeLoading');
                     if (loadingOverlay) {
                         loadingOverlay.style.display = 'none';
+                        console.log('✅ Loading overlay hidden');
+                    } else {
+                        console.warn('⚠️ Loading overlay not found');
                     }
                     
                     // Send initial settings after iframe confirms it's ready
                     setTimeout(() => {
+                        console.log('🎨 Sending initial brand settings to iframe');
                         updatePreviewColors();
                         updatePreviewFont();
                         updatePreviewDirection();
@@ -3605,6 +3612,8 @@
                             updatePreviewLogo(logoPreview.src);
                         }
                     }, 500);
+                } else {
+                    console.log('📝 Non-iframe-ready message:', event.data);
                 }
             });
             
