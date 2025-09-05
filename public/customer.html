@@ -280,6 +280,7 @@
         .container {
             width: 100%;
             padding: 0 40px;
+            margin-top: 40px;
         }
         
         .stats-grid {
@@ -721,6 +722,7 @@
             }
             .container {
                 padding: 0 20px;
+                margin-top: 30px;
             }
             
             /* Responsive Typography */
@@ -739,6 +741,9 @@
         }
         
         @media (max-width: 480px) {
+            .container {
+                margin-top: 20px;
+            }
             .header h1 {
                 font-size: 24px;
             }
@@ -1819,7 +1824,7 @@
     <div class="main-content">
         <div class="header">
             <div class="header-content">
-                <h1 id="customerName">🪑 Collection</h1>
+                <h1 id="customerName">My Collection</h1>
             </div>
             <div class="header-stats">
                 <div class="header-stat-item">
@@ -3557,7 +3562,7 @@
             
             if (sectionName === 'furniture') {
                 // Collection section
-                headerTitle.textContent = '🪑 My Collection';
+                headerTitle.textContent = 'My Collection';
                 if (statIcons[0]) statIcons[0].textContent = '🪑';
                 if (statIcons[1]) statIcons[1].textContent = '👁️';
                 if (statLabels[0]) statLabels[0].textContent = 'Pieces';
@@ -3566,7 +3571,7 @@
                 
             } else if (sectionName === 'requests') {
                 // Requests section
-                headerTitle.textContent = '📝 My Requests';
+                headerTitle.textContent = 'My Requests';
                 if (statIcons[0]) statIcons[0].textContent = '📝';
                 if (statIcons[1]) statIcons[1].textContent = '⏳';
                 if (statLabels[0]) statLabels[0].textContent = 'Total Requests';
@@ -3576,7 +3581,7 @@
                 
             } else if (sectionName === 'brand-settings') {
                 // Brand Settings section
-                headerTitle.textContent = '🎨 Brand Settings';
+                headerTitle.textContent = 'Brand Settings';
                 if (statIcons[0]) statIcons[0].textContent = '🎨';
                 if (statIcons[1]) statIcons[1].textContent = '⚙️';
                 if (statLabels[0]) statLabels[0].textContent = 'Customizations';
