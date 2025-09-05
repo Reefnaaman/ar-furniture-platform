@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Header Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #1a1a1a; color: white; padding: 20px; }
+        .header { background: #333; padding: 15px; margin: 10px 0; border-radius: 5px; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #2d5a2d; }
+        .error { background: #5a2d2d; }
+        .info { background: #2d4a5a; }
+    </style>
+</head>
+<body>
+    <h1>🔍 HTTP Headers Test</h1>
+    <div id="results"></div>
+    
+    <h2>🧪 Iframe Test</h2>
+    <iframe src="/simple_test.html" width="400" height="200" style="border: 2px solid #ff6b6b;"></iframe>
+
+    <script>
+        const results = document.getElementById('results');
+        
+        function addResult(message, type = 'info') {
+            const div = document.createElement('div');
+            div.className = `status ${type}`;
+            div.innerHTML = message;
+            results.appendChild(div);
+        }
+
+        // Test current page headers by making a fetch request
+        fetch(window.location.href, { method: 'HEAD' })
+        .then(response => {
+            addResult('<h3>📋 Current Page Headers:</h3>', 'info');
+            
+            // Check specific headers
+            const xFrameOptions = response.headers.get('x-frame-options');
+            const csp = response.headers.get('content-security-policy');
+            
+            addResult(`X-Frame-Options: ${xFrameOptions || 'Not set'}`, xFrameOptions ? 'success' : 'error');
+            addResult(`Content-Security-Policy: ${csp || 'Not set'}`, csp ? 'success' : 'error');
+            
+            // Show all headers
+            addResult('<h4>All Headers:</h4>', 'info');
+            for (const [key, value] of response.headers) {
+                addResult(`${key}: ${value}`, 'info');
+            }
+        })
+        .catch(error => {
+            addResult(`❌ Error fetching headers: ${error.message}`, 'error');
+        });
+
+        // Test iframe detection
+        const isInIframe = window.parent !== window.self;
+        addResult(`<h3>🖼️ Iframe Status:</h3>`, 'info');
+        addResult(`Running in iframe: ${isInIframe ? 'YES' : 'NO'}`, isInIframe ? 'success' : 'info');
+        
+        if (isInIframe) {
+            try {
+                window.parent.postMessage({ type: 'headerTestReady' }, '*');
+                addResult('✅ Successfully sent message to parent', 'success');
+            } catch (error) {
+                addResult(`❌ Failed to send message to parent: ${error.message}`, 'error');
+            }
+        }
+
+        console.log('📊 Header test page loaded');
+    </script>
+</body>
+</html>
