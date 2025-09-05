@@ -1658,7 +1658,7 @@
         <div class="content-section" id="furniture-section">
             <div class="furniture-section">
                 <div class="section-header">
-                    <h2 class="section-title" id="sectionTitle">Furniture Collection</h2>
+                    <h2 class="section-title" id="sectionTitle">Collection</h2>
                     <div class="section-controls">
                         <div class="grid-controls">
                             <button class="grid-btn" onclick="setGridColumns(2)" title="2 per row">
@@ -2128,13 +2128,13 @@
         
         function updateCustomerBranding(customerId, models) {
             const customerName = customerId.toUpperCase();
-            const brandedName = `🪑 ${customerName} Furniture Collection`;
+            const brandedName = `🪑 Collection`;
             
             // Update page elements
             document.getElementById('customerName').textContent = brandedName;
-            document.getElementById('sectionTitle').textContent = `${customerName} Collection`;
-            document.getElementById('pageTitle').textContent = `${customerName} - AR Furniture Experience`;
-            document.title = `${customerName} - AR Furniture Experience`;
+            document.getElementById('sectionTitle').textContent = `Collection`;
+            document.getElementById('pageTitle').textContent = `Collection - AR Experience`;
+            document.title = `Collection - AR Experience`;
         }
         
         function displayFurniture(models) {
