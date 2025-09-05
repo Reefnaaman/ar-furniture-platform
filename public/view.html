@@ -567,8 +567,10 @@
                     }
                 }
                 
-                // Hide the old container and create new layout
-                document.querySelector('.container').style.display = 'none';
+                // Hide the old container and create new layout (but NOT in iframe mode)
+                if (!isInIframe) {
+                    document.querySelector('.container').style.display = 'none';
+                }
                 
                 // Create new desktop layout with luxury dark theme
                 // First, reset the body to remove any existing styles
