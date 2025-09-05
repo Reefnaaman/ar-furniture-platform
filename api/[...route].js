@@ -123,6 +123,11 @@ export default async function handler(req, res) {
       return await handleCreateBrandSettingsTable(req, res);
     }
     
+    // Route: /api/create-variants-table
+    if (routePath === 'create-variants-table') {
+      return await handleCreateVariantsTable(req, res);
+    }
+    
     // Route: /api/requests - Customer furniture requests
     if (routePath === 'requests') {
       return await handleRequests(req, res);
@@ -286,12 +291,23 @@ async function handleUpload(req, res) {
     // Check if this is a variant upload (has parentModelId field)
     const parentModelId = fields.parentModelId?.[0];
     const variantName = fields.variantName?.[0];
-    const isVariantUpload = parentModelId && variantName;
+    
+    // More robust variant detection - check for non-empty strings
+    const isVariantUpload = parentModelId && variantName && 
+                           parentModelId.trim() !== '' && variantName.trim() !== '';
     
     // Debug log the form fields to see what we're receiving
     console.log('📋 Form fields received:', Object.keys(fields).map(key => `${key}: ${fields[key]?.[0] || 'undefined'}`));
     console.log('📋 All form fields structure:', JSON.stringify(fields, null, 2));
-    console.log('📋 Variant upload detection:', { parentModelId, variantName, isVariantUpload });
+    console.log('📋 Variant upload detection:', { 
+      parentModelId, 
+      variantName, 
+      parentModelIdTrimmed: parentModelId?.trim(), 
+      variantNameTrimmed: variantName?.trim(),
+      parentModelIdEmpty: !parentModelId || parentModelId.trim() === '',
+      variantNameEmpty: !variantName || variantName.trim() === '',
+      isVariantUpload 
+    });
     console.log('📋 Upload path decision:', isVariantUpload ? '🎨 VARIANT UPLOAD PATH' : '📦 REGULAR MODEL UPLOAD PATH');
 
     // Get file
@@ -1713,6 +1729,55 @@ async function handleCustomerBrandSettings(req, res, customerId) {
   else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+}
+
+/**
+ * Handle model_variants table creation instructions
+ */
+async function handleCreateVariantsTable(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  return res.status(200).json({
+    message: 'Please run the following SQL in your Supabase SQL editor to create the model_variants table',
+    sql: `
+-- Create model_variants table for furniture color/material variants
+CREATE TABLE IF NOT EXISTS model_variants (
+  id TEXT PRIMARY KEY,
+  parent_model_id TEXT NOT NULL,
+  variant_name VARCHAR(255) NOT NULL,
+  hex_color VARCHAR(7) DEFAULT '#000000',
+  cloudinary_url TEXT NOT NULL,
+  cloudinary_public_id VARCHAR(255) NOT NULL,
+  file_size BIGINT DEFAULT 0,
+  is_primary BOOLEAN DEFAULT false,
+  variant_type VARCHAR(50) DEFAULT 'upload', -- 'upload' or 'color'
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW(),
+  
+  -- Foreign key constraint
+  CONSTRAINT fk_parent_model FOREIGN KEY (parent_model_id) REFERENCES models(id) ON DELETE CASCADE
+);
+
+-- Add indexes for faster queries
+CREATE INDEX IF NOT EXISTS idx_variants_parent ON model_variants(parent_model_id);
+CREATE INDEX IF NOT EXISTS idx_variants_type ON model_variants(variant_type);
+CREATE INDEX IF NOT EXISTS idx_variants_primary ON model_variants(is_primary);
+
+-- Grant permissions
+GRANT ALL ON model_variants TO authenticated;
+GRANT ALL ON model_variants TO service_role;
+    `,
+    instructions: [
+      '1. Go to your Supabase dashboard',
+      '2. Navigate to SQL Editor',
+      '3. Copy and paste the SQL above',
+      '4. Click "Run" to create the model_variants table',
+      '5. Test by trying a variant upload again'
+    ]
+  });
 }
 
 /**
