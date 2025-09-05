@@ -28,6 +28,26 @@
     {
       "source": "/view",
       "destination": "/view.html"
+    },
+    {
+      "source": "/iframe-debug",
+      "destination": "/iframe_debug.html"
+    },
+    {
+      "source": "/iframe-diagnostic",
+      "destination": "/iframe_diagnostic.html"
+    },
+    {
+      "source": "/simple-test",
+      "destination": "/simple_test.html"
+    },
+    {
+      "source": "/view-minimal",
+      "destination": "/view_minimal.html"
+    },
+    {
+      "source": "/header-test",
+      "destination": "/header_test.html"
     }
   ],
   "headers": [
