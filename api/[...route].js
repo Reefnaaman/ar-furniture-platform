@@ -17,7 +17,7 @@ export const config = {
  * Handles: upload, models, model/[id], model/[id]/info, model/[id]/view, upload-variant
  */
 export default async function handler(req, res) {
-  console.log('=== FUNCTION ENTRY ===', new Date().toISOString());
+  console.log('=== FUNCTION ENTRY v2.0 ===', new Date().toISOString());
   console.log('Request method:', req.method);
   console.log('Request URL:', req.url);
   console.log('User-Agent:', req.headers['user-agent']);
