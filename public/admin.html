@@ -5577,6 +5577,11 @@
                     loadFeedbackFilters();
                     loadFeedback();
                     break;
+                case 'requests':
+                    console.log(`📝 Loading requests page...`);
+                    loadRequests();
+                    loadRequestsFilters();
+                    break;
                 case 'dashboard':
                     console.log(`🏠 Dashboard page (no initialization needed)`);
                     break;
@@ -6045,6 +6050,269 @@
                 window.currentCustomerForLogo = null;
             }
         };
+        
+        // ===== REQUESTS MANAGEMENT =====
+        async function loadRequests() {
+            try {
+                const statusFilter = document.getElementById('statusFilterAdmin')?.value || '';
+                const customerFilter = document.getElementById('customerFilterAdmin')?.value || '';
+                
+                // Get all requests first
+                const response = await fetch('/api/requests');
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                let requests = data.requests || [];
+                
+                // Apply client-side filtering
+                if (statusFilter) {
+                    requests = requests.filter(r => r.status === statusFilter);
+                }
+                if (customerFilter) {
+                    requests = requests.filter(r => r.customer_id === customerFilter);
+                }
+                
+                displayRequests(requests);
+                updateRequestsStats(requests);
+                
+            } catch (error) {
+                console.error('Error loading requests:', error);
+                document.getElementById('requestsContainer').innerHTML = 
+                    '<div class="error">Error loading requests: ' + error.message + '</div>';
+            }
+        }
+        
+        function displayRequests(requests) {
+            const container = document.getElementById('requestsContainer');
+            
+            if (!requests || requests.length === 0) {
+                container.innerHTML = '<div class="empty-state">No requests found</div>';
+                return;
+            }
+            
+            const requestsHTML = requests.map(request => {
+                const statusColor = getRequestStatusColor(request.status);
+                const statusIcon = getRequestStatusIcon(request.status);
+                const createdDate = new Date(request.created_at).toLocaleDateString();
+                
+                return `
+                    <div class="request-admin-card" style="background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%); border: 1px solid rgba(240, 246, 252, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 16px;">
+                        <div class="request-admin-header" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                            <div class="request-admin-title" style="font-size: 1.1rem; font-weight: 600; color: #e6edf3;">${request.title || 'Custom Furniture Request'}</div>
+                            <div class="request-admin-status ${request.status}" style="color: ${statusColor}; padding: 4px 12px; border-radius: 20px; font-size: 0.8rem; font-weight: 500; background: rgba(240, 246, 252, 0.1); border: 1px solid rgba(240, 246, 252, 0.2);">
+                                ${statusIcon} ${request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                            </div>
+                        </div>
+                        
+                        <div class="request-admin-content" style="margin-bottom: 20px; color: #7d8590; line-height: 1.5;">
+                            <div style="margin-bottom: 8px;"><strong style="color: #e6edf3;">Customer:</strong> ${request.customer_id}</div>
+                            <div style="margin-bottom: 8px;"><strong style="color: #e6edf3;">Product URL:</strong> 
+                                <a href="${request.product_url}" target="_blank" rel="noopener" style="color: #58a6ff; text-decoration: none;">
+                                    ${request.product_url.length > 60 ? request.product_url.substring(0, 60) + '...' : request.product_url}
+                                </a>
+                            </div>
+                            ${request.notes ? `<div style="margin-bottom: 8px;"><strong style="color: #e6edf3;">Notes:</strong> ${request.notes}</div>` : ''}
+                            ${request.admin_notes ? `<div style="margin-bottom: 8px; background: rgba(88, 166, 255, 0.1); border: 1px solid rgba(88, 166, 255, 0.2); border-radius: 8px; padding: 10px;"><strong style="color: #79c0ff;">Admin Notes:</strong> ${request.admin_notes}</div>` : ''}
+                            <div><strong style="color: #e6edf3;">Submitted:</strong> ${createdDate}</div>
+                        </div>
+                        
+                        <div class="request-admin-actions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
+                            <select class="futuristic-input" id="status-${request.id}" style="width: auto; min-width: 140px;">
+                                <option value="pending" ${request.status === 'pending' ? 'selected' : ''}>Pending</option>
+                                <option value="in_progress" ${request.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
+                                <option value="completed" ${request.status === 'completed' ? 'selected' : ''}>Completed</option>
+                                <option value="cancelled" ${request.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
+                            </select>
+                            <button class="action-button primary" onclick="updateRequestStatus('${request.id}')" style="margin-left: 0;">
+                                Update Status
+                            </button>
+                            <button class="action-button secondary" onclick="openRequestNotesModal('${request.id}', '${(request.admin_notes || '').replace(/'/g, "\\'")}')">
+                                Add Notes
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = requestsHTML;
+        }
+        
+        function updateRequestsStats(requests) {
+            const total = requests.length;
+            const pending = requests.filter(r => r.status === 'pending').length;
+            const inProgress = requests.filter(r => r.status === 'in_progress').length;
+            const completed = requests.filter(r => r.status === 'completed').length;
+            
+            document.getElementById('totalRequestsAdmin').textContent = total;
+            document.getElementById('pendingRequestsAdmin').textContent = pending;
+            document.getElementById('inProgressRequestsAdmin').textContent = inProgress;
+            document.getElementById('completedRequestsAdmin').textContent = completed;
+        }
+        
+        async function updateRequestStatus(requestId) {
+            try {
+                const statusSelect = document.getElementById(`status-${requestId}`);
+                const newStatus = statusSelect.value;
+                
+                const response = await fetch('/api/requests', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: requestId,
+                        status: newStatus
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Request status updated successfully', 'success');
+                    loadRequests(); // Reload to reflect changes
+                } else {
+                    throw new Error(result.error || 'Update failed');
+                }
+                
+            } catch (error) {
+                console.error('Error updating request status:', error);
+                showNotification('Error updating request status: ' + error.message, 'error');
+            }
+        }
+        
+        function openRequestNotesModal(requestId, currentNotes) {
+            const modal = document.createElement('div');
+            modal.className = 'modal-overlay';
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+            `;
+            modal.innerHTML = `
+                <div class="modal-content" style="background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%); border: 1px solid rgba(240, 246, 252, 0.2); border-radius: 16px; padding: 30px; max-width: 500px; width: 90%; max-height: 80vh; overflow-y: auto;">
+                    <div class="modal-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+                        <h3 style="color: #e6edf3; margin: 0;">Admin Notes</h3>
+                        <button class="modal-close" onclick="this.closest('.modal-overlay').remove()" style="background: none; border: none; color: #7d8590; font-size: 1.5rem; cursor: pointer; padding: 0; width: 30px; height: 30px; display: flex; align-items: center; justify-content: center;">×</button>
+                    </div>
+                    <div class="modal-body" style="margin-bottom: 20px;">
+                        <textarea id="adminNotesInput" placeholder="Enter admin notes that will be visible to the customer..." 
+                                  style="width: 100%; min-height: 120px; padding: 12px; border: 1px solid rgba(240, 246, 252, 0.2); border-radius: 8px; background: rgba(22, 27, 34, 0.8); color: #e6edf3; resize: vertical; font-family: inherit;">${currentNotes}</textarea>
+                    </div>
+                    <div class="modal-actions" style="display: flex; gap: 12px; justify-content: flex-end;">
+                        <button class="action-button secondary" onclick="this.closest('.modal-overlay').remove()">Cancel</button>
+                        <button class="action-button primary" onclick="saveAdminNotes('${requestId}')">Save Notes</button>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+        }
+        
+        async function saveAdminNotes(requestId) {
+            try {
+                const notes = document.getElementById('adminNotesInput').value.trim();
+                
+                const response = await fetch('/api/requests', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: requestId,
+                        adminNotes: notes
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const result = await response.json();
+                if (result.success) {
+                    showNotification('Admin notes saved successfully', 'success');
+                    document.querySelector('.modal-overlay').remove();
+                    loadRequests(); // Reload to reflect changes
+                } else {
+                    throw new Error(result.error || 'Save failed');
+                }
+                
+            } catch (error) {
+                console.error('Error saving admin notes:', error);
+                showNotification('Error saving notes: ' + error.message, 'error');
+            }
+        }
+        
+        function getRequestStatusColor(status) {
+            switch (status) {
+                case 'pending': return '#f1c40f';
+                case 'in_progress': return '#3498db';
+                case 'completed': return '#2ecc71';
+                case 'cancelled': return '#e74c3c';
+                default: return '#95a5a6';
+            }
+        }
+        
+        function getRequestStatusIcon(status) {
+            switch (status) {
+                case 'pending': return '⏳';
+                case 'in_progress': return '🔄';
+                case 'completed': return '✅';
+                case 'cancelled': return '❌';
+                default: return '📝';
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                padding: 12px 20px;
+                border-radius: 8px;
+                color: white;
+                font-weight: 500;
+                z-index: 10001;
+                opacity: 0;
+                transition: opacity 0.3s ease;
+                max-width: 400px;
+            `;
+            
+            switch (type) {
+                case 'success':
+                    notification.style.background = 'linear-gradient(45deg, #2ecc71, #27ae60)';
+                    break;
+                case 'error':
+                    notification.style.background = 'linear-gradient(45deg, #e74c3c, #c0392b)';
+                    break;
+                default:
+                    notification.style.background = 'linear-gradient(45deg, #3498db, #2980b9)';
+            }
+            
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            
+            // Animate in
+            setTimeout(() => notification.style.opacity = '1', 10);
+            
+            // Auto remove
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
     </script>
         </div>
     </div>
