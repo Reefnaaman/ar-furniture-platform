@@ -634,8 +634,10 @@
                 // Load customer logo for desktop
                 loadDesktopCustomerLogo(modelInfo);
                 
-                // Load customer brand settings and apply RTL if needed
-                await loadCustomerBrandSettings(modelInfo.customer_id);
+                // Load customer brand settings and apply RTL if needed (non-blocking)
+                loadCustomerBrandSettings(modelInfo.customer_id).catch(err => {
+                    console.warn('⚠️ Could not load brand settings (non-critical):', err.message);
+                });
                 
             } catch (error) {
                 showError(error.message);
@@ -686,7 +688,11 @@
                 const response = await fetch(`/api/customers/${customerId}/brand-settings`);
                 
                 if (!response.ok) {
-                    console.log('📝 No brand settings found, using defaults');
+                    if (response.status === 404) {
+                        console.log('📝 No brand settings found for customer, using defaults');
+                    } else {
+                        console.log('⚠️ Brand settings API returned:', response.status, response.statusText);
+                    }
                     return;
                 }
                 
@@ -697,7 +703,7 @@
                 applyDirectionToQRScreen(settings.textDirection || 'ltr');
                 
             } catch (error) {
-                console.error('Error loading brand settings:', error);
+                console.warn('⚠️ Error loading brand settings (non-critical):', error);
                 console.log('📝 Using default LTR direction due to error');
             }
         }
@@ -1162,6 +1168,14 @@
             if (container) {
                 container.style.display = 'flex';
                 container.style.minHeight = '100vh';
+                container.style.visibility = 'visible';
+            }
+            
+            // Force desktop container to show
+            const desktopContainer = document.querySelector('.desktop-container');
+            if (desktopContainer) {
+                desktopContainer.style.display = 'flex';
+                desktopContainer.style.visibility = 'visible';
             }
         }
         

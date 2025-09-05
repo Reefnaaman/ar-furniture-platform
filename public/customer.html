@@ -2047,13 +2047,33 @@
                                 Updates in real-time
                             </div>
                         </div>
-                        <div class="ar-preview" id="brandPreview">
+                        <div class="ar-preview" id="brandPreview" style="position: relative;">
+                            <div class="iframe-loading" id="iframeLoading" style="
+                                position: absolute;
+                                top: 0;
+                                left: 0;
+                                right: 0;
+                                bottom: 0;
+                                display: flex;
+                                align-items: center;
+                                justify-content: center;
+                                background: rgba(22, 27, 34, 0.9);
+                                color: #e6edf3;
+                                z-index: 10;
+                                border-radius: 8px;
+                            ">
+                                <div style="text-align: center;">
+                                    <div style="font-size: 2rem; margin-bottom: 16px;">⏳</div>
+                                    <div>Loading AR Preview...</div>
+                                    <div style="font-size: 0.8rem; color: #7d8590; margin-top: 8px;" id="loadingStatus">Connecting to live viewer</div>
+                                </div>
+                            </div>
                             <iframe id="previewFrame" 
                                     src="/view?id=Ct81wo8G" 
                                     width="100%" 
                                     height="100%" 
                                     frameborder="0"
-                                    style="border-radius: 8px;">
+                                    style="border-radius: 8px; position: relative; z-index: 1;">
                             </iframe>
                         </div>
                     </div>
@@ -3547,6 +3567,13 @@
             window.addEventListener('message', function(event) {
                 if (event.data.type === 'iframeReady') {
                     console.log('🎯 Iframe is ready, sending initial brand settings');
+                    
+                    // Hide loading overlay
+                    const loadingOverlay = document.getElementById('iframeLoading');
+                    if (loadingOverlay) {
+                        loadingOverlay.style.display = 'none';
+                    }
+                    
                     // Send initial settings after iframe confirms it's ready
                     setTimeout(() => {
                         updatePreviewColors();
@@ -3566,12 +3593,26 @@
             const previewFrame = document.getElementById('previewFrame');
             previewFrame.addEventListener('load', function() {
                 console.log('📡 Iframe loaded, waiting for ready signal...');
-                // Give iframe time to initialize before sending settings
+                
+                // Update loading status
+                const loadingStatus = document.getElementById('loadingStatus');
+                if (loadingStatus) {
+                    loadingStatus.textContent = 'Waiting for AR viewer to initialize...';
+                }
+                
+                // Fallback: If no ready signal in 5 seconds, hide loading anyway
                 setTimeout(() => {
-                    updatePreviewColors();
-                    updatePreviewFont();
-                    updatePreviewDirection();
-                }, 2000);
+                    const loadingOverlay = document.getElementById('iframeLoading');
+                    if (loadingOverlay && loadingOverlay.style.display !== 'none') {
+                        console.log('⏰ Timeout reached, hiding loading overlay');
+                        loadingOverlay.style.display = 'none';
+                        
+                        // Send settings as fallback
+                        updatePreviewColors();
+                        updatePreviewFont();
+                        updatePreviewDirection();
+                    }
+                }, 5000);
             });
             
             // Add error handling for failed iframe loads
