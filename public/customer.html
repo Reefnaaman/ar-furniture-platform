@@ -231,7 +231,7 @@
             background: rgba(13, 17, 23, 0.6);
             border-radius: 10px;
             border: 1px solid rgba(240, 246, 252, 0.1);
-            min-width: 120px;
+            min-width: 180px;
         }
         
         .header-stat-item .stat-icon {
@@ -262,10 +262,7 @@
         }
         
         .header-content {
-            max-width: 1200px;
-            margin: 0 auto;
             display: flex;
-            justify-content: space-between;
             align-items: center;
         }
         
@@ -414,19 +411,24 @@
         }
         
         .refresh-button {
-            background: linear-gradient(135deg, #58a6ff, #79c0ff);
-            color: white;
-            border: none;
-            padding: 12px 24px;
-            border-radius: 12px;
+            padding: 10px 16px;
+            background: rgba(240, 246, 252, 0.05);
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 8px;
+            color: #e6edf3;
             cursor: pointer;
+            font-size: 0.9rem;
             font-weight: 500;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .refresh-button:hover {
+            background: rgba(88, 166, 255, 0.1);
+            border-color: rgba(88, 166, 255, 0.3);
             transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
         }
         
         .section-controls {
@@ -1667,7 +1669,7 @@
                     <div class="stat-icon">👁️</div>
                     <div class="stat-info">
                         <div class="stat-value" id="totalViews">-</div>
-                        <div class="stat-label">Views</div>
+                        <div class="stat-label">Total Views</div>
                     </div>
                 </div>
             </div>
