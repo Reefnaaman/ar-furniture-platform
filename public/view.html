@@ -774,6 +774,17 @@
                     clickedElement.classList.add('active');
                 }
             }
+            
+            // 🔗 UPDATE BROWSER URL for variant selection
+            const newUrl = variantUrl;
+            if (window.location.href !== newUrl) {
+                window.history.pushState(
+                    { modelId, variantId, variantName }, 
+                    `${variantName} - AR Furniture`, 
+                    newUrl
+                );
+                console.log(`🔗 Updated browser URL to: ${newUrl}`);
+            }
         }
 
 
@@ -1059,6 +1070,35 @@
                 </div>
             `;
         }
+        
+        // 🔗 Handle browser back/forward navigation for variants
+        window.addEventListener('popstate', function(event) {
+            console.log('🔙 Browser navigation detected:', event.state);
+            
+            if (event.state && event.state.modelId) {
+                // Extract current URL parameters
+                const urlParams = new URLSearchParams(window.location.search);
+                const variantId = urlParams.get('variant');
+                const modelId = urlParams.get('id');
+                
+                if (variantId) {
+                    // Find the variant circle and trigger its click
+                    const variantCircles = document.querySelectorAll('.variant-circle');
+                    for (let circle of variantCircles) {
+                        if (circle.onclick.toString().includes(variantId)) {
+                            circle.click();
+                            break;
+                        }
+                    }
+                } else {
+                    // Switch to original variant
+                    const originalCircle = document.querySelector('.variant-circle[title*="Original"]');
+                    if (originalCircle) {
+                        originalCircle.click();
+                    }
+                }
+            }
+        });
         
     </script>
 </body>

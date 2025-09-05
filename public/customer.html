@@ -226,8 +226,8 @@
         .header-stat-item {
             display: flex;
             align-items: center;
-            gap: 12px;
-            padding: 12px 18px;
+            justify-content: space-between;
+            padding: 16px 20px;
             background: rgba(13, 17, 23, 0.6);
             border-radius: 10px;
             border: 1px solid rgba(240, 246, 252, 0.1);
@@ -235,30 +235,33 @@
         }
         
         .header-stat-item .stat-icon {
-            font-size: 1.1rem;
-            opacity: 0.7;
+            font-size: 1.3rem;
+            opacity: 0.6;
         }
         
         .header-stat-item .stat-info {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            gap: 1px;
+            align-items: flex-start;
+            gap: 2px;
+            flex: 1;
+            margin-left: 12px;
         }
         
         .header-stat-item .stat-value {
-            font-size: 1.2rem;
+            font-size: 1.4rem;
             font-weight: 600;
             color: #58a6ff;
             line-height: 1;
         }
         
         .header-stat-item .stat-label {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #7d8590;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             line-height: 1;
+            font-weight: 500;
         }
         
         .header-content {
