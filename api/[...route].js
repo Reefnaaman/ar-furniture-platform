@@ -472,26 +472,40 @@ async function handleModels(req, res) {
   
   // Update a model
   else if (req.method === 'PUT') {
-    const { id, title } = req.body;
+    const { modelId, id, title, description } = req.body;
+    const actualModelId = modelId || id; // Accept both formats
     
-    if (!id) {
-      return res.status(400).json({ error: 'Model ID required' });
+    if (!actualModelId) {
+      return res.status(400).json({ error: 'Model ID is required' });
     }
     
     try {
-      // Update model title in database
-      const { error } = await supabase
-        .from('models')
-        .update({ title })
-        .eq('id', id);
-
-      if (error) throw error;
+      // Build update object
+      const updateData = { updated_at: new Date().toISOString() };
+      if (title !== undefined) updateData.title = title;
+      if (description !== undefined) updateData.description = description;
       
-      res.status(200).json({ success: true, message: 'Model updated successfully' });
+      const { data, error } = await supabase
+        .from('models')
+        .update(updateData)
+        .eq('id', actualModelId)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error updating model:', error);
+        return res.status(500).json({ error: 'Failed to update model' });
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Model updated successfully',
+        model: data
+      });
       
     } catch (error) {
-      console.error('Error updating model:', error);
-      res.status(500).json({ error: 'Failed to update model' });
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
     }
   }
   
