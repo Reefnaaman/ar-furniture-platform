@@ -123,7 +123,7 @@ export default async function handler(req, res) {
       return await handleCreateBrandSettingsTable(req, res);
     }
     
-    // Route: /api/requests
+    // Route: /api/requests - Customer furniture requests
     if (routePath === 'requests') {
       return await handleRequests(req, res);
     }
