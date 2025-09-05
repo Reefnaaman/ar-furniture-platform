@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' *.newfurniture.live localhost:*;">
+    <title>Minimal View Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            text-align: center;
+        }
+        .container {
+            background: rgba(255,255,255,0.1);
+            padding: 40px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+        .status {
+            font-size: 1.2rem;
+            margin: 10px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Minimal View Test</h1>
+        <div class="status" id="status">Loading...</div>
+        <div class="status" id="iframeStatus"></div>
+        <div class="status">Model ID: <span id="modelId"></span></div>
+        <div style="margin-top: 20px; font-size: 0.9rem; color: rgba(255,255,255,0.7);">
+            This is a stripped-down version of view.html to test iframe loading
+        </div>
+    </div>
+
+    <script>
+        console.log('🚀 Minimal view test starting...');
+        
+        // Get URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const modelId = urlParams.get('id');
+        
+        console.log('📋 URL params:', { modelId, href: window.location.href });
+        document.getElementById('modelId').textContent = modelId || 'None';
+        
+        // Iframe detection
+        const isInIframe = window.parent !== window.self;
+        
+        console.log('🔍 Iframe detection:', {
+            isInIframe,
+            windowParent: window.parent,
+            windowSelf: window.self,
+            parentExists: window.parent !== undefined,
+            href: window.location.href
+        });
+        
+        // Update status
+        document.getElementById('status').textContent = '✅ Page loaded successfully';
+        document.getElementById('iframeStatus').textContent = isInIframe ? '🖼️ Running in iframe' : '🌐 Running standalone';
+        
+        if (isInIframe) {
+            console.log('📡 Sending minimal ready signal to parent');
+            try {
+                window.parent.postMessage({
+                    type: 'minimalViewReady',
+                    timestamp: Date.now(),
+                    url: window.location.href,
+                    modelId: modelId,
+                    message: 'Minimal view loaded successfully in iframe'
+                }, '*');
+                console.log('✅ Ready signal sent successfully');
+            } catch (error) {
+                console.error('❌ Failed to send ready signal:', error);
+            }
+        }
+        
+        // Update page every second to show it's alive
+        setInterval(() => {
+            const time = new Date().toLocaleTimeString();
+            document.title = `Minimal View Test - ${time}`;
+        }, 1000);
+        
+        console.log('🎯 Minimal view test completed successfully');
+    </script>
+</body>
+</html>

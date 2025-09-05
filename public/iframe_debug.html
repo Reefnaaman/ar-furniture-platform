@@ -53,7 +53,9 @@
     <div class="test-links">
         <a href="/view?id=Ct81wo8G" target="_blank">Test Direct URL</a>
         <a href="#" onclick="loadBasicPage()">Load Basic Page</a>
-        <a href="#" onclick="loadViewPage()">Load View Page</a>
+        <a href="#" onclick="loadSimpleTest()">Load Simple Test</a>
+        <a href="#" onclick="loadMinimalView()">Load Minimal View</a>
+        <a href="#" onclick="loadViewPage()">Load Full View</a>
         <a href="#" onclick="reloadIframe()">Reload Iframe</a>
     </div>
 
@@ -90,6 +92,17 @@
         window.addEventListener('message', function(event) {
             addLog(`📨 Message from iframe: ${JSON.stringify(event.data)}`, 'success');
             addLog(`📍 Message origin: ${event.origin}`, 'info');
+            
+            // Handle specific message types
+            if (event.data.type === 'test') {
+                addLog('✅ Basic page communication working!', 'success');
+            } else if (event.data.type === 'simpleTestReady') {
+                addLog('✅ Simple test page loaded in iframe!', 'success');
+            } else if (event.data.type === 'minimalViewReady') {
+                addLog('✅ Minimal view loaded in iframe!', 'success');
+            } else if (event.data.type === 'iframeReady') {
+                addLog('✅ Full view loaded in iframe!', 'success');
+            }
         });
 
         // Listen for iframe load events
@@ -116,8 +129,18 @@
             iframe.src = 'data:text/html,<html><body><h1>Test Page</h1><script>window.parent.postMessage({type:"test", message:"Basic page loaded"}, "*");</script></body></html>';
         }
 
+        function loadSimpleTest() {
+            addLog('🔄 Loading simple test page in iframe...', 'info');
+            iframe.src = '/simple_test.html';
+        }
+
+        function loadMinimalView() {
+            addLog('🔄 Loading minimal view page in iframe...', 'info');
+            iframe.src = '/view_minimal.html?id=Ct81wo8G';
+        }
+
         function loadViewPage() {
-            addLog('🔄 Loading view page in iframe...', 'info');
+            addLog('🔄 Loading FULL view page in iframe...', 'info');
             iframe.src = '/view?id=Ct81wo8G';
         }
 
