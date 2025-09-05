@@ -1905,11 +1905,16 @@
                                 </svg>
                             </button>
                         </div>
-                        <button class="color-guide-btn" onclick="openColorGuide()" title="Change furniture preview background color">
-                            <div class="color-preview" id="colorPreview"></div>
-                            <span>Furniture Background</span>
-                            <input type="color" class="color-picker-input" id="backgroundColorPicker" oninput="updateFurnitureBackground(this.value)" onchange="updateFurnitureBackground(this.value)">
-                        </button>
+                        <div style="display: flex; gap: 8px; align-items: center;">
+                            <button class="color-guide-btn" onclick="openColorGuide()" title="Change furniture preview background color">
+                                <div class="color-preview" id="colorPreview"></div>
+                                <span>Furniture Background</span>
+                                <input type="color" class="color-picker-input" id="backgroundColorPicker" oninput="updateFurnitureBackground(this.value)" onchange="updateFurnitureBackground(this.value)">
+                            </button>
+                            <button class="action-button secondary" onclick="setDefaultBackground()" title="Reset to default transparent background" style="padding: 8px 12px; font-size: 0.8rem;">
+                                Default
+                            </button>
+                        </div>
                     </div>
                 </div>
                 
@@ -2434,7 +2439,7 @@
                 let viewUrl = `https://newfurniture.live/view?id=${model.id}`;
                 let localViewUrl = `/view?id=${model.id}`;
                 const savedColor = localStorage.getItem('furniture_background_color');
-                if (savedColor && savedColor !== '#ffffff') {
+                if (savedColor && savedColor !== '#ffffff' && savedColor !== 'default') {
                     viewUrl += `&bg=${encodeURIComponent(savedColor)}`;
                     localViewUrl += `&bg=${encodeURIComponent(savedColor)}`;
                 }
@@ -2597,9 +2602,9 @@
                     newUrl = `/view?id=${modelId}&variant=${variantId}`;
                 }
                 
-                // Add background color parameter if set
+                // Add background color parameter if set (but not for default)
                 const savedColor = localStorage.getItem('furniture_background_color');
-                if (savedColor && savedColor !== '#ffffff') {
+                if (savedColor && savedColor !== '#ffffff' && savedColor !== 'default') {
                     const separator = newUrl.includes('?') ? '&' : '?';
                     newUrl += `${separator}bg=${encodeURIComponent(savedColor)}`;
                 }
@@ -2904,32 +2909,43 @@
             });
         }
         
-        function resetFurnitureBackground() {
-            currentBackgroundColor = '#0d1117';
+        function setDefaultBackground() {
+            currentBackgroundColor = 'default';
             
-            // Reset model previews to default
+            // Reset model previews to original default gradient
             const modelPreviews = document.querySelectorAll('.model-preview');
             modelPreviews.forEach(preview => {
                 preview.style.background = 'linear-gradient(135deg, #0d1117 0%, #21262d 100%)';
             });
             
-            // Update color preview and picker
-            document.getElementById('colorPreview').style.backgroundColor = '#ffffff';
+            // Update color preview to show it's default (gray indicator)
+            document.getElementById('colorPreview').style.backgroundColor = '#21262d';
             document.getElementById('backgroundColorPicker').value = '#ffffff';
             
             // Remove active state
             document.querySelector('.color-guide-btn').classList.remove('active');
             
-            // Remove from localStorage
-            localStorage.removeItem('furniture_background_color');
+            // Store 'default' preference in localStorage
+            localStorage.setItem('furniture_background_color', 'default');
+            
+            // Update all View AR links to remove background parameter
+            updateAllViewARLinks();
+        }
+        
+        function resetFurnitureBackground() {
+            setDefaultBackground(); // Use the new default function
         }
         
         // Load saved furniture background color on page load
         function loadSavedFurnitureBackground() {
             const savedColor = localStorage.getItem('furniture_background_color');
             if (savedColor) {
-                document.getElementById('backgroundColorPicker').value = savedColor;
-                updateFurnitureBackground(savedColor);
+                if (savedColor === 'default') {
+                    setDefaultBackground();
+                } else {
+                    document.getElementById('backgroundColorPicker').value = savedColor;
+                    updateFurnitureBackground(savedColor);
+                }
             }
         }
         
