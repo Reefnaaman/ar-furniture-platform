@@ -2266,11 +2266,24 @@
         
         let customerId;
         
+        // Restore section from URL hash on page load
+        function restoreSectionFromURL() {
+            const hash = window.location.hash.substring(1); // Remove # from hash
+            const validSections = ['furniture', 'requests', 'brand-settings'];
+            
+            if (hash && validSections.includes(hash)) {
+                showSection(hash, false); // Don't update URL since we're reading from it
+            } else {
+                showSection('furniture', false); // Default to furniture section
+            }
+        }
+        
         // Initialize customer ID and load furniture
         getCurrentCustomerId().then(id => {
             customerId = id;
             loadFurniture();
             updateUserInfo();
+            restoreSectionFromURL();
         });
         
         function updateUserInfo() {
@@ -3530,15 +3543,69 @@
             // Set initial color values
             updatePreviewColors();
             
-            // Wait for iframe to load, then send initial settings
+            // Listen for iframe ready signal
+            window.addEventListener('message', function(event) {
+                if (event.data.type === 'iframeReady') {
+                    console.log('🎯 Iframe is ready, sending initial brand settings');
+                    // Send initial settings after iframe confirms it's ready
+                    setTimeout(() => {
+                        updatePreviewColors();
+                        updatePreviewFont();
+                        updatePreviewDirection();
+                        
+                        // Send existing logo if available
+                        const logoPreview = document.getElementById('logoPreview');
+                        if (logoPreview.src && !logoPreview.src.includes('placeholder')) {
+                            updatePreviewLogo(logoPreview.src);
+                        }
+                    }, 500);
+                }
+            });
+            
+            // Also setup traditional load listener as backup
             const previewFrame = document.getElementById('previewFrame');
             previewFrame.addEventListener('load', function() {
+                console.log('📡 Iframe loaded, waiting for ready signal...');
+                // Give iframe time to initialize before sending settings
                 setTimeout(() => {
                     updatePreviewColors();
                     updatePreviewFont();
                     updatePreviewDirection();
-                }, 1000);
+                }, 2000);
             });
+            
+            // Add error handling for failed iframe loads
+            previewFrame.addEventListener('error', function() {
+                console.error('❌ Iframe failed to load');
+                showPreviewError();
+            });
+        }
+        
+        function showPreviewError() {
+            const previewPanel = document.querySelector('.ar-preview');
+            if (previewPanel) {
+                previewPanel.innerHTML = `
+                    <div style="
+                        display: flex; 
+                        align-items: center; 
+                        justify-content: center; 
+                        height: 100%; 
+                        background: rgba(22, 27, 34, 0.5); 
+                        border-radius: 8px; 
+                        color: #e6edf3;
+                        text-align: center;
+                        padding: 20px;
+                    ">
+                        <div>
+                            <div style="font-size: 2rem; margin-bottom: 16px;">⚠️</div>
+                            <div style="font-size: 1.1rem; margin-bottom: 8px;">Preview Unavailable</div>
+                            <div style="font-size: 0.9rem; color: #7d8590;">
+                                Unable to load AR preview. Changes will be saved and applied to your live site.
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
         }
 
         async function setPreviewModel() {
@@ -3598,7 +3665,7 @@
             document.getElementById('totalViews').textContent = '-';
         }
 
-        function showSection(sectionName) {
+        function showSection(sectionName, updateURL = true) {
             // Hide all sections
             const sections = ['furniture-section', 'requests-section', 'brand-settings-section'];
             sections.forEach(id => {
@@ -3607,6 +3674,11 @@
                     element.style.display = 'none';
                 }
             });
+            
+            // Update URL hash to preserve state on refresh
+            if (updateURL) {
+                window.location.hash = sectionName;
+            }
             
             // Show requested section
             const targetSection = document.getElementById(sectionName + '-section');

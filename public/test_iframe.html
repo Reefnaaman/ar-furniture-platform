@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Live Preview Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background: #1a1a1a;
+            color: white;
+        }
+        
+        .test-container {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 20px;
+            height: 80vh;
+        }
+        
+        .controls {
+            background: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        
+        .control-group {
+            margin-bottom: 15px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        
+        input[type="color"], select {
+            width: 100%;
+            padding: 8px;
+            border: none;
+            border-radius: 4px;
+        }
+        
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        
+        button:hover {
+            background: #45a049;
+        }
+        
+        .preview-container {
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .status {
+            background: #444;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Live Preview Test - Brand Settings</h1>
+    
+    <div class="status" id="status">
+        Status: Loading...
+    </div>
+    
+    <div class="test-container">
+        <div class="controls">
+            <h3>Brand Settings</h3>
+            
+            <div class="control-group">
+                <label for="primaryColor">Primary Color:</label>
+                <input type="color" id="primaryColor" value="#4CAF50" onchange="updateColors()">
+            </div>
+            
+            <div class="control-group">
+                <label for="secondaryColor">Secondary Color:</label>
+                <input type="color" id="secondaryColor" value="#45a049" onchange="updateColors()">
+            </div>
+            
+            <div class="control-group">
+                <label for="fontFamily">Font Family:</label>
+                <select id="fontFamily" onchange="updateFont()">
+                    <option value="Inter">Inter</option>
+                    <option value="Arial">Arial</option>
+                    <option value="Georgia">Georgia</option>
+                    <option value="Verdana">Verdana</option>
+                </select>
+            </div>
+            
+            <div class="control-group">
+                <button onclick="reloadIframe()">🔄 Reload</button>
+                <button onclick="testLogo()">🖼️ Test Logo</button>
+            </div>
+            
+            <div class="control-group">
+                <label>Communication Log:</label>
+                <div id="log" style="background: #000; padding: 10px; border-radius: 4px; height: 200px; overflow-y: auto; font-size: 11px;">
+                </div>
+            </div>
+        </div>
+        
+        <div class="preview-container">
+            <iframe id="previewFrame" src="/view?id=Ct81wo8G"></iframe>
+        </div>
+    </div>
+
+    <script>
+        let log = document.getElementById('log');
+        let status = document.getElementById('status');
+        
+        function addLog(message) {
+            const timestamp = new Date().toLocaleTimeString();
+            log.innerHTML += `<div>[${timestamp}] ${message}</div>`;
+            log.scrollTop = log.scrollHeight;
+        }
+        
+        // Listen for messages from iframe
+        window.addEventListener('message', function(event) {
+            addLog(`📨 Received: ${JSON.stringify(event.data)}`);
+            
+            if (event.data.type === 'iframeReady') {
+                status.textContent = 'Status: ✅ Iframe Ready - Communication Established';
+                status.style.background = '#2d5a2d';
+                
+                // Send initial settings
+                setTimeout(() => {
+                    updateColors();
+                    updateFont();
+                }, 500);
+            }
+        });
+        
+        function updateColors() {
+            const primaryColor = document.getElementById('primaryColor').value;
+            const secondaryColor = document.getElementById('secondaryColor').value;
+            
+            const message = {
+                type: 'updateColors',
+                primaryColor: primaryColor,
+                secondaryColor: secondaryColor
+            };
+            
+            document.getElementById('previewFrame').contentWindow.postMessage(message, '*');
+            addLog(`📤 Sent colors: ${primaryColor}, ${secondaryColor}`);
+        }
+        
+        function updateFont() {
+            const fontFamily = document.getElementById('fontFamily').value;
+            
+            const message = {
+                type: 'updateFont',
+                fontFamily: fontFamily
+            };
+            
+            document.getElementById('previewFrame').contentWindow.postMessage(message, '*');
+            addLog(`📤 Sent font: ${fontFamily}`);
+        }
+        
+        function testLogo() {
+            // Send a test logo (base64 encoded small image)
+            const testLogoData = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTAwIiBoZWlnaHQ9IjUwIiB2aWV3Qm94PSIwIDAgMTAwIDUwIiBmaWxsPSJub25lIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPgo8cmVjdCB3aWR0aD0iMTAwIiBoZWlnaHQ9IjUwIiBmaWxsPSIjNENBRjUwIi8+Cjx0ZXh0IHg9IjUwIiB5PSIzMCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZmlsbD0id2hpdGUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxNCIgZm9udC13ZWlnaHQ9ImJvbGQiPkxPR088L3RleHQ+Cjwvc3ZnPgo=';
+            
+            const message = {
+                type: 'updateLogo',
+                logoData: testLogoData
+            };
+            
+            document.getElementById('previewFrame').contentWindow.postMessage(message, '*');
+            addLog(`📤 Sent test logo`);
+        }
+        
+        function reloadIframe() {
+            document.getElementById('previewFrame').src = `/view?id=Ct81wo8G`;
+            status.textContent = 'Status: 🔄 Reloading...';
+            status.style.background = '#444';
+            addLog(`🔄 Iframe reloaded`);
+        }
+        
+        // Initial setup
+        addLog('🚀 Test page loaded, waiting for iframe...');
+        status.textContent = 'Status: ⏳ Waiting for iframe to load...';
+    </script>
+</body>
+</html>

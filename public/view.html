@@ -3,6 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-Frame-Options" content="SAMEORIGIN">
+    <meta http-equiv="Content-Security-Policy" content="frame-ancestors 'self' *.newfurniture.live localhost:*;">
     <title>AR Furniture Viewer - newfurniture.live</title>
     <!-- Inter Font -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,6 +22,42 @@
         /* Hide container by default to prevent flash */
         .container {
             display: none;
+        }
+        
+        /* Iframe-specific styling */
+        .iframe-mode .container {
+            display: flex !important;
+            min-height: 100vh;
+            background: transparent;
+        }
+        
+        .iframe-mode body {
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+        }
+        
+        /* Ensure AR viewer is visible in iframe */
+        .iframe-mode .desktop-container {
+            display: flex !important;
+        }
+        
+        /* Brand logo styling for iframe */
+        .brand-logo-container {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            max-width: 120px;
+            max-height: 60px;
+        }
+        
+        .brand-logo {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
         }
         
         /* RTL Support using CSS logical properties */
@@ -1099,6 +1137,143 @@
                 }
             }
         });
+
+        // ==============================================
+        // IFRAME & LIVE PREVIEW SUPPORT
+        // ==============================================
+        
+        // Detect if running in iframe for live preview
+        const isInIframe = window.parent !== window.self;
+        
+        if (isInIframe) {
+            console.log('🖼️ AR View loaded in iframe - Live Preview Mode activated');
+            
+            // Signal to parent that iframe is ready
+            window.parent.postMessage({
+                type: 'iframeReady',
+                timestamp: Date.now()
+            }, '*');
+            
+            // Add iframe-specific styling
+            document.body.classList.add('iframe-mode');
+            
+            // Ensure container is visible in iframe
+            const container = document.querySelector('.container');
+            if (container) {
+                container.style.display = 'flex';
+                container.style.minHeight = '100vh';
+            }
+        }
+        
+        // Listen for brand setting updates from parent
+        window.addEventListener('message', function(event) {
+            // Validate message origin for security
+            if (event.origin !== window.location.origin && 
+                !event.origin.includes('newfurniture.live') && 
+                !event.origin.includes('localhost')) {
+                return;
+            }
+            
+            const message = event.data;
+            console.log('📨 Received message:', message);
+            
+            switch (message.type) {
+                case 'updateColors':
+                    updateViewColors(message.primaryColor, message.secondaryColor);
+                    break;
+                case 'updateLogo':
+                    updateViewLogo(message.logoData);
+                    break;
+                case 'updateFont':
+                    updateViewFont(message.fontFamily);
+                    break;
+                case 'updateDirection':
+                    updateViewDirection(message.direction);
+                    break;
+            }
+        });
+        
+        // Brand setting update functions
+        function updateViewColors(primaryColor, secondaryColor) {
+            // Apply colors to CSS custom properties
+            document.documentElement.style.setProperty('--primary-color', primaryColor);
+            document.documentElement.style.setProperty('--secondary-color', secondaryColor);
+            
+            // Update specific elements
+            const buttons = document.querySelectorAll('.ar-button, .variant-circle, .mobile-ar-button');
+            buttons.forEach(btn => {
+                btn.style.background = primaryColor;
+                btn.style.borderColor = primaryColor;
+            });
+            
+            const actionButtons = document.querySelectorAll('.action-button');
+            actionButtons.forEach(btn => {
+                btn.style.background = `linear-gradient(135deg, ${primaryColor}, ${secondaryColor})`;
+            });
+            
+            console.log('🎨 Colors updated:', { primaryColor, secondaryColor });
+        }
+        
+        function updateViewLogo(logoData) {
+            let logoContainer = document.querySelector('.brand-logo-container');
+            
+            // Create logo container if it doesn't exist
+            if (!logoContainer) {
+                logoContainer = document.createElement('div');
+                logoContainer.className = 'brand-logo-container';
+                logoContainer.style.cssText = `
+                    position: fixed;
+                    top: 20px;
+                    left: 20px;
+                    z-index: 1000;
+                    max-width: 120px;
+                    max-height: 60px;
+                `;
+                document.body.appendChild(logoContainer);
+            }
+            
+            // Update or create logo image
+            let logoImg = logoContainer.querySelector('.brand-logo');
+            if (!logoImg) {
+                logoImg = document.createElement('img');
+                logoImg.className = 'brand-logo';
+                logoImg.style.cssText = `
+                    max-width: 100%;
+                    max-height: 100%;
+                    object-fit: contain;
+                    border-radius: 4px;
+                `;
+                logoContainer.appendChild(logoImg);
+            }
+            
+            logoImg.src = logoData;
+            console.log('🖼️ Logo updated');
+        }
+        
+        function updateViewFont(fontFamily) {
+            // Update font for all text elements
+            const textElements = document.querySelectorAll('h1, h2, h3, p, span, .furniture-title, .ar-instructions');
+            textElements.forEach(el => {
+                el.style.fontFamily = `${fontFamily}, 'Inter', sans-serif`;
+            });
+            
+            console.log('🔤 Font updated to:', fontFamily);
+        }
+        
+        function updateViewDirection(direction) {
+            const container = document.querySelector('.container');
+            if (container) {
+                if (direction === 'rtl') {
+                    container.classList.add('rtl-container');
+                    container.dir = 'rtl';
+                } else {
+                    container.classList.remove('rtl-container');
+                    container.dir = 'ltr';
+                }
+            }
+            
+            console.log('🔄 Direction updated to:', direction);
+        }
         
     </script>
 </body>
