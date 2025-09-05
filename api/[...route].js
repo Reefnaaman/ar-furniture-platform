@@ -77,15 +77,6 @@ export default async function handler(req, res) {
       return await handleUpload(req, res);
     }
     
-    // Route: /api/test-variant
-    if (routePath === 'test-variant') {
-      return res.status(200).json({ message: 'Test variant route working!' });
-    }
-    
-    // Route: /api/upload-variant
-    if (routePath === 'upload-variant') {
-      return await handleVariantUpload(req, res);
-    }
     
     // Route: /api/models
     if (routePath === 'models') {
@@ -365,13 +356,15 @@ async function handleUpload(req, res) {
         uploadedAt: new Date().toISOString()
       }
     });
+    }
 
     console.log('Database save result:', dbResult);
 
     if (!dbResult.success) {
       console.error('Database save failed:', dbResult.error);
+      const errorType = isVariantUpload ? 'variant' : 'model';
       return res.status(500).json({ 
-        error: 'Failed to save model to database',
+        error: `Failed to save ${errorType} to database`,
         details: dbResult.error || 'Unknown database error'
       });
     }
@@ -379,20 +372,35 @@ async function handleUpload(req, res) {
     // Clean up temp file
     fs.unlinkSync(uploadedFile.path);
 
-    // Return success
-    const modelId = dbResult.id;
+    // Return success - different response based on upload type
     const domain = process.env.DOMAIN || 'newfurniture.live';
     
-    res.status(200).json({
-      success: true,
-      id: modelId,
-      viewUrl: `https://${domain}/view?id=${modelId}`,
-      directUrl: cloudinaryResult.url,
-      shareUrl: `https://${domain}/view?id=${modelId}`,
-      title: fields.title?.[0] || uploadedFile.originalFilename,
-      fileSize: cloudinaryResult.size,
-      message: 'Model uploaded successfully!'
-    });
+    if (isVariantUpload) {
+      // Variant upload response
+      res.status(200).json({
+        success: true,
+        id: dbResult.id,
+        parentModelId: parentModelId,
+        variantName: variantName,
+        hexColor: fields.hexColor?.[0] || '#000000',
+        cloudinaryUrl: cloudinaryResult.url,
+        viewUrl: `https://${domain}/view?id=${parentModelId}&variant=${dbResult.id}`,
+        message: 'Variant uploaded successfully!'
+      });
+    } else {
+      // Model upload response
+      const modelId = dbResult.id;
+      res.status(200).json({
+        success: true,
+        id: modelId,
+        viewUrl: `https://${domain}/view?id=${modelId}`,
+        directUrl: cloudinaryResult.url,
+        shareUrl: `https://${domain}/view?id=${modelId}`,
+        title: fields.title?.[0] || uploadedFile.originalFilename,
+        fileSize: cloudinaryResult.size,
+        message: 'Model uploaded successfully!'
+      });
+    }
 
   } catch (error) {
     console.error('Upload error:', error);
@@ -403,104 +411,6 @@ async function handleUpload(req, res) {
   }
 }
 
-/**
- * Handle variant upload
- */
-async function handleVariantUpload(req, res) {
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-  
-  try {
-    // Parse multipart form data
-    const form = new multiparty.Form();
-    
-    const { fields, files } = await new Promise((resolve, reject) => {
-      form.parse(req, (err, fields, files) => {
-        if (err) reject(err);
-        else resolve({ fields, files });
-      });
-    });
-
-    // Get required fields
-    const parentModelId = fields.parentModelId?.[0];
-    const variantName = fields.variantName?.[0];
-    const hexColor = fields.hexColor?.[0] || '#000000';
-
-    if (!parentModelId || !variantName) {
-      return res.status(400).json({ error: 'Missing required fields: parentModelId, variantName' });
-    }
-
-    // Get file
-    const uploadedFile = files.file?.[0];
-    if (!uploadedFile) {
-      return res.status(400).json({ error: 'No file provided' });
-    }
-
-    // Validate file type
-    if (!uploadedFile.originalFilename?.match(/\.(glb|gltf)$/i)) {
-      return res.status(400).json({ error: 'Only GLB and GLTF files are allowed' });
-    }
-
-    // Check file size (100MB)
-    if (uploadedFile.size > 100 * 1024 * 1024) {
-      return res.status(400).json({ error: 'File too large. Maximum size is 100MB' });
-    }
-
-    // Read file
-    const fs = await import('fs');
-    const fileBuffer = fs.readFileSync(uploadedFile.path);
-
-    // Upload to Cloudinary
-    console.log('Uploading variant to Cloudinary...');
-    const cloudinaryResult = await uploadModel(fileBuffer, uploadedFile.originalFilename);
-
-    // Save variant to database
-    console.log('Saving variant to database...');
-    const variantResult = await saveModelVariant({
-      parentModelId: parentModelId,
-      variantName: variantName,
-      hexColor: hexColor,
-      cloudinaryUrl: cloudinaryResult.url,
-      cloudinaryPublicId: cloudinaryResult.publicId,
-      fileSize: cloudinaryResult.size,
-      isPrimary: false,
-      variantType: 'upload'
-    });
-
-    if (!variantResult.success) {
-      console.error('Variant save failed:', variantResult.error);
-      return res.status(500).json({ 
-        error: 'Failed to save variant to database',
-        details: variantResult.error || 'Unknown database error'
-      });
-    }
-
-    // Clean up temp file
-    fs.unlinkSync(uploadedFile.path);
-
-    // Return success
-    const domain = process.env.DOMAIN || 'newfurniture.live';
-    
-    res.status(200).json({
-      success: true,
-      id: variantResult.id,
-      parentModelId: parentModelId,
-      variantName: variantName,
-      hexColor: hexColor,
-      cloudinaryUrl: cloudinaryResult.url,
-      viewUrl: `https://${domain}/view?id=${parentModelId}&variant=${variantResult.id}`,
-      message: 'Variant uploaded successfully!'
-    });
-
-  } catch (error) {
-    console.error('Variant upload error:', error);
-    return res.status(500).json({ 
-      error: 'Variant upload failed', 
-      details: error.message
-    });
-  }
-}
 
 /**
  * Handle models listing and deletion

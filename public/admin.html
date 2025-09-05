@@ -4636,7 +4636,7 @@
                 fileName.textContent = 'Uploading variant...';
                 fileName.style.color = '#58a6ff';
                 
-                const response = await fetch('/api/upload-variant', {
+                const response = await fetch('/api/upload-simple', {
                     method: 'POST',
                     body: formData
                 });
