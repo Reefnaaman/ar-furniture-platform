@@ -219,18 +219,19 @@
         
         .header-stats {
             display: flex;
-            gap: 25px;
+            gap: 30px;
             align-items: center;
         }
         
         .header-stat-item {
             display: flex;
             align-items: center;
-            gap: 10px;
-            padding: 10px 14px;
+            gap: 12px;
+            padding: 12px 18px;
             background: rgba(13, 17, 23, 0.6);
             border-radius: 10px;
             border: 1px solid rgba(240, 246, 252, 0.1);
+            min-width: 120px;
         }
         
         .header-stat-item .stat-icon {
@@ -1143,23 +1144,36 @@
         }
         
         .action-button {
-            padding: 8px 16px;
-            border: 1px solid rgba(240, 246, 252, 0.2);
+            padding: 10px 16px;
             background: rgba(240, 246, 252, 0.05);
+            border: 1px solid rgba(240, 246, 252, 0.1);
             border-radius: 8px;
+            color: #e6edf3;
             cursor: pointer;
-            font-size: 0.85rem;
+            font-size: 0.9rem;
             font-weight: 500;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
             text-decoration: none;
-            color: #e6edf3;
-            display: inline-block;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
         }
         
         .action-button:hover {
-            border-color: rgba(88, 166, 255, 0.5);
             background: rgba(88, 166, 255, 0.1);
+            border-color: rgba(88, 166, 255, 0.3);
             transform: translateY(-1px);
+        }
+        
+        .action-button.delete-btn {
+            background: rgba(248, 81, 73, 0.1);
+            border-color: rgba(248, 81, 73, 0.2);
+            color: #f85149;
+        }
+        
+        .action-button.delete-btn:hover {
+            background: rgba(248, 81, 73, 0.2);
+            border-color: rgba(248, 81, 73, 0.4);
         }
         
         .loading {
@@ -1574,7 +1588,19 @@
             font-size: 0.8rem;
             color: #7d8590;
             border-top: 1px solid rgba(240, 246, 252, 0.1);
-            padding-top: 10px;
+            padding-top: 15px;
+        }
+        
+        .request-info {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+        
+        .request-actions {
+            display: flex;
+            gap: 10px;
+            align-items: center;
         }
         
         .request-date,
@@ -1644,11 +1670,6 @@
                         <div class="stat-label">Views</div>
                     </div>
                 </div>
-            </div>
-            <div class="header-actions">
-                <button class="settings-btn" onclick="openCustomerSettings()" title="Customer Settings">
-                    ⚙️ Settings
-                </button>
             </div>
         </div>
         
@@ -2914,15 +2935,22 @@
                         </div>
                         
                         <div class="request-footer">
-                            <span class="request-date">Submitted: ${createdDate}</span>
-                            ${request.estimated_completion ? `
-                                <span class="request-eta">ETA: ${new Date(request.estimated_completion).toLocaleDateString()}</span>
-                            ` : ''}
-                            ${request.models && request.models.title ? `
-                                <a href="/view?id=${request.model_id}" target="_blank" class="action-button" style="margin-left: auto;">
-                                    👁️ View Result
-                                </a>
-                            ` : ''}
+                            <div class="request-info">
+                                <span class="request-date">Submitted: ${createdDate}</span>
+                                ${request.estimated_completion ? `
+                                    <span class="request-eta">ETA: ${new Date(request.estimated_completion).toLocaleDateString()}</span>
+                                ` : ''}
+                            </div>
+                            <div class="request-actions">
+                                ${request.models && request.models.title ? `
+                                    <a href="/view?id=${request.model_id}" target="_blank" class="action-button">
+                                        👁️ View Result
+                                    </a>
+                                ` : ''}
+                                <button class="action-button delete-btn" onclick="deleteRequest('${request.id}', '${request.title || 'Custom Furniture Request'}')">
+                                    🗑️ Delete
+                                </button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -3025,6 +3053,45 @@
             } finally {
                 submitBtn.disabled = false;
                 submitBtn.textContent = originalText;
+            }
+        }
+
+        async function deleteRequest(requestId, requestTitle) {
+            if (!confirm(`Are you sure you want to delete the request "${requestTitle}"?\n\nThis action cannot be undone.`)) {
+                return;
+            }
+
+            try {
+                console.log('Deleting request:', requestId);
+                
+                const response = await fetch(`/api/requests`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        id: requestId,
+                        customerId: customerId
+                    })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to delete request');
+                }
+
+                const result = await response.json();
+                console.log('✅ Request deleted successfully:', result);
+                
+                // Show success message
+                alert('🗑️ Request deleted successfully!');
+                
+                // Reload requests to update the list
+                loadRequests();
+                
+            } catch (error) {
+                console.error('Error deleting request:', error);
+                alert('❌ Failed to delete request: ' + error.message);
             }
         }
 

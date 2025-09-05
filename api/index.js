@@ -97,6 +97,11 @@ export default async function handler(req, res) {
       return await handleUpdateColor(req, res);
     }
     
+    // Route: /api/update-variant-color
+    if (routePath === 'update-variant-color') {
+      return await handleUpdateVariantColor(req, res);
+    }
+    
     // Route: /api/upload-image
     if (routePath === 'upload-image') {
       return await handleImageUpload(req, res);
@@ -899,6 +904,59 @@ async function handleUpdateColor(req, res) {
 
   } catch (error) {
     console.error('💥 Update color error:', error);
+    return res.status(500).json({ 
+      success: false, 
+      error: error.message
+    });
+  }
+}
+
+/**
+ * Handle updating variant color
+ */
+async function handleUpdateVariantColor(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { variantId, dominantColor } = req.body;
+    
+    if (!variantId || !dominantColor) {
+      return res.status(400).json({ error: 'Variant ID and dominant color required' });
+    }
+    
+    // Validate hex color format
+    if (!/^#[0-9A-Fa-f]{6}$/.test(dominantColor)) {
+      return res.status(400).json({ error: 'Invalid hex color format' });
+    }
+
+    // Update variant hex color in database
+    const { error } = await supabase
+      .from('model_variants')
+      .update({ hex_color: dominantColor })
+      .eq('id', variantId);
+
+    if (error) {
+      console.error('Error updating variant color:', error);
+      return res.status(500).json({
+        success: false,
+        error: 'Failed to update variant color',
+        details: error.message
+      });
+    }
+    
+    console.log(`✅ Updated variant color for ${variantId}: ${dominantColor}`);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Variant color updated successfully',
+      variantId,
+      dominantColor
+    });
+
+  } catch (error) {
+    console.error('💥 Update variant color error:', error);
     return res.status(500).json({ 
       success: false, 
       error: error.message
