@@ -100,9 +100,21 @@
         
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-            gap: 20px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 15px;
             margin-bottom: 40px;
+        }
+        
+        @media (max-width: 768px) {
+            .stats-grid {
+                gap: 10px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stats-grid {
+                gap: 8px;
+            }
         }
         
         .stat-card {
@@ -160,6 +172,31 @@
             float: right;
             font-size: 2rem;
             opacity: 0.4;
+        }
+        
+        @media (max-width: 768px) {
+            .stat-icon {
+                font-size: 1.5rem;
+            }
+            .stat-value {
+                font-size: 1.8rem !important;
+            }
+            .stat-label {
+                font-size: 0.8rem !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .stat-icon {
+                font-size: 1.2rem;
+            }
+            .stat-value {
+                font-size: 1.5rem !important;
+            }
+            .stat-label {
+                font-size: 0.7rem !important;
+                line-height: 1.2;
+            }
         }
         
         .models-section {
@@ -6047,15 +6084,12 @@
                         </div>
                         
                         <div class="request-admin-actions" style="display: flex; gap: 12px; align-items: center; flex-wrap: wrap;">
-                            <select class="futuristic-input" id="status-${request.id}" style="width: auto; min-width: 140px;">
+                            <select class="futuristic-input" id="status-${request.id}" onchange="updateRequestStatus('${request.id}')" style="width: auto; min-width: 140px;">
                                 <option value="pending" ${request.status === 'pending' ? 'selected' : ''}>Pending</option>
                                 <option value="in_progress" ${request.status === 'in_progress' ? 'selected' : ''}>In Progress</option>
                                 <option value="completed" ${request.status === 'completed' ? 'selected' : ''}>Completed</option>
                                 <option value="cancelled" ${request.status === 'cancelled' ? 'selected' : ''}>Cancelled</option>
                             </select>
-                            <button class="action-button primary" onclick="updateRequestStatus('${request.id}')" style="margin-left: 0;">
-                                Update Status
-                            </button>
                             <button class="action-button secondary" onclick="openRequestNotesModal('${request.id}', '${(request.admin_notes || '').replace(/'/g, "\\'")}')">
                                 Add Notes
                             </button>
