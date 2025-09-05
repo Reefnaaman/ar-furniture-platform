@@ -1,5 +1,5 @@
 import { uploadModel } from '../lib/cloudinary.js';
-import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase, query } from '../lib/supabase.js';
+import { saveModel, saveModelVariant, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase, query } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
@@ -350,6 +350,20 @@ async function handleUpload(req, res) {
       });
     });
 
+    // 🚨 VARIANT DETECTION LOGIC
+    const parentModelId = fields.parentModelId?.[0];
+    const variantName = fields.variantName?.[0];
+    const isVariantUpload = parentModelId && variantName && 
+                           parentModelId.trim() !== '' && variantName.trim() !== '';
+    
+    // Debug logging
+    console.log('🚨 UPLOAD DEBUG:', {
+      parentModelId,
+      variantName, 
+      isVariantUpload,
+      uploadType: isVariantUpload ? '🎨 VARIANT UPLOAD' : '📦 REGULAR MODEL UPLOAD'
+    });
+
     // Get file
     const uploadedFile = files.file?.[0];
     if (!uploadedFile) {
@@ -374,32 +388,50 @@ async function handleUpload(req, res) {
     console.log('Uploading to Cloudinary...');
     const cloudinaryResult = await uploadModel(fileBuffer, uploadedFile.originalFilename);
 
-    // Save to database
-    console.log('Saving to database...');
-    console.log('Data to save:', {
-      title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
-      description: fields.description?.[0] || '',
-      filename: uploadedFile.originalFilename,
-      cloudinaryUrl: cloudinaryResult.url,
-      cloudinaryPublicId: cloudinaryResult.publicId,
-      fileSize: cloudinaryResult.size
-    });
+    // Save to database - VARIANT OR MODEL
+    let dbResult;
     
-    const dbResult = await saveModel({
-      title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
-      description: fields.description?.[0] || '',
-      filename: uploadedFile.originalFilename,
-      cloudinaryUrl: cloudinaryResult.url,
-      cloudinaryPublicId: cloudinaryResult.publicId,
-      fileSize: cloudinaryResult.size,
-      customerId: fields.customerId?.[0] || 'unassigned',
-      customerName: fields.customerName?.[0] || 'Unassigned',
-      dominantColor: '#6b7280', // Will be updated by frontend after color extraction
-      metadata: {
-        mimetype: uploadedFile.headers['content-type'],
-        uploadedAt: new Date().toISOString()
-      }
-    });
+    if (isVariantUpload) {
+      console.log('🎨 Saving VARIANT to database...');
+      const hexColor = fields.hexColor?.[0] || '#000000';
+      
+      dbResult = await saveModelVariant({
+        parentModelId: parentModelId,
+        variantName: variantName,
+        hexColor: hexColor,
+        cloudinaryUrl: cloudinaryResult.url,
+        cloudinaryPublicId: cloudinaryResult.publicId,
+        fileSize: cloudinaryResult.size,
+        isPrimary: false,
+        variantType: 'upload'
+      });
+    } else {
+      console.log('📦 Saving MODEL to database...');
+      console.log('Data to save:', {
+        title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
+        description: fields.description?.[0] || '',
+        filename: uploadedFile.originalFilename,
+        cloudinaryUrl: cloudinaryResult.url,
+        cloudinaryPublicId: cloudinaryResult.publicId,
+        fileSize: cloudinaryResult.size
+      });
+      
+      dbResult = await saveModel({
+        title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
+        description: fields.description?.[0] || '',
+        filename: uploadedFile.originalFilename,
+        cloudinaryUrl: cloudinaryResult.url,
+        cloudinaryPublicId: cloudinaryResult.publicId,
+        fileSize: cloudinaryResult.size,
+        customerId: fields.customerId?.[0] || 'unassigned',
+        customerName: fields.customerName?.[0] || 'Unassigned',
+        dominantColor: '#6b7280', // Will be updated by frontend after color extraction
+        metadata: {
+          mimetype: uploadedFile.headers['content-type'],
+          uploadedAt: new Date().toISOString()
+        }
+      });
+    }
 
     console.log('Database save result:', dbResult);
 
@@ -414,20 +446,43 @@ async function handleUpload(req, res) {
     // Clean up temp file
     fs.unlinkSync(uploadedFile.path);
 
-    // Return success
-    const modelId = dbResult.id;
+    // Return success - different response based on upload type
     const domain = process.env.DOMAIN || 'newfurniture.live';
     
-    res.status(200).json({
-      success: true,
-      id: modelId,
-      viewUrl: `https://${domain}/view?id=${modelId}`,
-      directUrl: cloudinaryResult.url,
-      shareUrl: `https://${domain}/view?id=${modelId}`,
-      title: fields.title?.[0] || uploadedFile.originalFilename,
-      fileSize: cloudinaryResult.size,
-      message: 'Model uploaded successfully!'
-    });
+    if (isVariantUpload) {
+      // Variant upload response
+      res.status(200).json({
+        success: true,
+        id: dbResult.id,
+        parentModelId: parentModelId,
+        variantName: variantName,
+        hexColor: fields.hexColor?.[0] || '#000000',
+        cloudinaryUrl: cloudinaryResult.url,
+        viewUrl: `https://${domain}/view?id=${parentModelId}&variant=${dbResult.id}`,
+        message: '🎨 Variant uploaded successfully!',
+        debugInfo: {
+          uploadType: 'variant',
+          detectedAs: 'variant'
+        }
+      });
+    } else {
+      // Model upload response  
+      const modelId = dbResult.id;
+      res.status(200).json({
+        success: true,
+        id: modelId,
+        viewUrl: `https://${domain}/view?id=${modelId}`,
+        directUrl: cloudinaryResult.url,
+        shareUrl: `https://${domain}/view?id=${modelId}`,
+        title: fields.title?.[0] || uploadedFile.originalFilename,
+        fileSize: cloudinaryResult.size,
+        message: '📦 Model uploaded successfully!',
+        debugInfo: {
+          uploadType: 'model',
+          detectedAs: 'regular model'
+        }
+      });
+    }
 
   } catch (error) {
     console.error('Upload error:', error);
