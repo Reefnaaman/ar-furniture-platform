@@ -2005,7 +2005,7 @@
                         </div>
                         <div class="ar-preview" id="brandPreview">
                             <iframe id="previewFrame" 
-                                    src="/view.html?preview=true&id=demo" 
+                                    src="/view.html?preview=true&id=Ct81wo8G" 
                                     width="100%" 
                                     height="100%" 
                                     frameborder="0"
@@ -3490,39 +3490,14 @@
         }
 
         async function setPreviewModel() {
-            try {
-                // Get customer's models
-                const response = await fetch(`/api/models?customer=${customerId}`);
-                if (!response.ok) {
-                    console.warn('Could not load customer models for preview');
-                    return;
-                }
-                
-                const data = await response.json();
-                const models = data.models || [];
-                
-                let previewModelId = 'demo'; // fallback
-                
-                if (models.length > 0) {
-                    // Use first available model
-                    previewModelId = models[0].id;
-                    console.log('Using customer model for preview:', previewModelId);
-                } else {
-                    // Use a hardcoded working model ID as fallback
-                    previewModelId = 'model-1725286932901-h2x8ye'; // Replace with actual working model
-                    console.log('Using fallback model for preview');
-                }
-                
-                // Update iframe src
-                const previewFrame = document.getElementById('previewFrame');
-                previewFrame.src = `/view.html?preview=true&id=${previewModelId}`;
-                
-            } catch (error) {
-                console.error('Error setting preview model:', error);
-                // Use hardcoded fallback
-                const previewFrame = document.getElementById('previewFrame');
-                previewFrame.src = `/view.html?preview=true&id=model-1725286932901-h2x8ye`;
-            }
+            // Use the popular couch model as a reliable demo for all customers
+            const previewModelId = 'Ct81wo8G'; // Couch model with 219 views - proven to work
+            
+            console.log('Setting Brand Settings preview to demo model:', previewModelId);
+            
+            // Update iframe src
+            const previewFrame = document.getElementById('previewFrame');
+            previewFrame.src = `/view.html?preview=true&id=${previewModelId}`;
         }
 
         // Load brand settings when brand settings section is shown
