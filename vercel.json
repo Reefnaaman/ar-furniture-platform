@@ -52,6 +52,10 @@
     {
       "source": "/iframe-simple-test",
       "destination": "/iframe_simple_test.html"
+    },
+    {
+      "source": "/iframe-view",
+      "destination": "/iframe_view.html"
     }
   ],
   "headers": [
