@@ -1790,13 +1790,13 @@
             <div class="sidebar-section">
                 <h4>Navigate</h4>
                 <div class="nav-items">
-                    <button class="nav-item active" onclick="showSection('furniture')" id="nav-furniture">
+                    <button class="nav-item active" onclick="showSection('furniture')" id="nav-furniture" data-page="furniture">
                         🪑 My Collection
                     </button>
-                    <button class="nav-item" onclick="showSection('requests')" id="nav-requests">
+                    <button class="nav-item" onclick="showSection('requests')" id="nav-requests" data-page="requests">
                         📝 Requests
                     </button>
-                    <button class="nav-item" onclick="showSection('brand-settings')" id="nav-brand-settings">
+                    <button class="nav-item" onclick="showSection('brand-settings')" id="nav-brand-settings" data-page="brand-settings">
                         🎨 Brand Settings
                     </button>
                 </div>
@@ -3101,9 +3101,17 @@
                 const pendingCount = requests.filter(r => r.status === 'pending').length;
                 const completedCount = requests.filter(r => r.status === 'completed').length;
                 
+                // Update sidebar stats
                 document.getElementById('totalRequests').textContent = requests.length;
                 document.getElementById('pendingRequests').textContent = pendingCount;
                 document.getElementById('completedRequests').textContent = completedCount;
+                
+                // Update header stats if we're on requests section
+                const currentSection = document.querySelector('.nav-item.active')?.dataset.page;
+                if (currentSection === 'requests') {
+                    document.getElementById('totalFurniture').textContent = requests.length;
+                    document.getElementById('totalViews').textContent = pendingCount;
+                }
                 
                 // Display requests
                 displayRequests(requests);
@@ -3540,6 +3548,51 @@
         }
 
         // Load brand settings when brand settings section is shown
+        function updateHeaderForSection(sectionName) {
+            const headerTitle = document.getElementById('customerName');
+            const totalFurnitureElement = document.getElementById('totalFurniture');
+            const totalViewsElement = document.getElementById('totalViews');
+            const statLabels = document.querySelectorAll('.stat-label');
+            const statIcons = document.querySelectorAll('.stat-icon');
+            
+            if (sectionName === 'furniture') {
+                // Collection section
+                headerTitle.textContent = '🪑 My Collection';
+                if (statIcons[0]) statIcons[0].textContent = '🪑';
+                if (statIcons[1]) statIcons[1].textContent = '👁️';
+                if (statLabels[0]) statLabels[0].textContent = 'Pieces';
+                if (statLabels[1]) statLabels[1].textContent = 'Total Views';
+                // Values will be updated by existing loadFurniture function
+                
+            } else if (sectionName === 'requests') {
+                // Requests section
+                headerTitle.textContent = '📝 My Requests';
+                if (statIcons[0]) statIcons[0].textContent = '📝';
+                if (statIcons[1]) statIcons[1].textContent = '⏳';
+                if (statLabels[0]) statLabels[0].textContent = 'Total Requests';
+                if (statLabels[1]) statLabels[1].textContent = 'Pending';
+                // Update request stats
+                updateRequestStats();
+                
+            } else if (sectionName === 'brand-settings') {
+                // Brand Settings section
+                headerTitle.textContent = '🎨 Brand Settings';
+                if (statIcons[0]) statIcons[0].textContent = '🎨';
+                if (statIcons[1]) statIcons[1].textContent = '⚙️';
+                if (statLabels[0]) statLabels[0].textContent = 'Customizations';
+                if (statLabels[1]) statLabels[1].textContent = 'Active';
+                totalFurnitureElement.textContent = '3';
+                totalViewsElement.textContent = 'Yes';
+            }
+        }
+
+        function updateRequestStats() {
+            // This will be called after loadRequests() completes
+            // For now, set placeholder values that will be updated by loadRequests
+            document.getElementById('totalFurniture').textContent = '-';
+            document.getElementById('totalViews').textContent = '-';
+        }
+
         function showSection(sectionName) {
             // Hide all sections
             const sections = ['furniture-section', 'requests-section', 'brand-settings-section'];
@@ -3570,6 +3623,9 @@
             if (searchSection) {
                 searchSection.style.display = sectionName === 'furniture' ? 'block' : 'none';
             }
+            
+            // Update header content based on section
+            updateHeaderForSection(sectionName);
             
             // Load data for the section
             if (sectionName === 'requests') {
