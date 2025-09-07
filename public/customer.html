@@ -1833,7 +1833,7 @@
                         📝 Requests
                     </button>
                     <button class="nav-item" onclick="showSection('brand-settings')" id="nav-brand-settings" data-page="brand-settings">
-                        🎨 הגדרות מותג
+                        🎨 Brand Settings
                     </button>
                 </div>
             </div>
@@ -1972,8 +1972,8 @@
         <div class="content-section" id="brand-settings-section" style="display: none;">
             <div class="brand-settings-section">
                 <div class="section-header">
-                    <h2 class="section-title">🎨 הגדרות מותג</h2>
-                    <div class="section-subtitle">התאם כיצד מציג ה-AR שלך נראה כאשר לקוחות צופים ברהיטים ממכשיריהם</div>
+                    <h2 class="section-title">🎨 Brand Settings</h2>
+                    <div class="section-subtitle">Customize how your AR viewer appears when customers view furniture from their devices</div>
                 </div>
                 
                 <div class="brand-settings-container">
@@ -1982,13 +1982,13 @@
                         <!-- Logo Upload -->
                         <div class="settings-card">
                             <div class="settings-card-header">
-                                <h3>🏢 לוגו החברה</h3>
+                                <h3>🏢 Company Logo</h3>
                             </div>
                             <div class="settings-card-content">
                                 <div class="logo-upload-area" onclick="document.getElementById('logoInput').click()">
                                     <div class="upload-placeholder" id="logoPlaceholder">
                                         <div class="upload-icon">📎</div>
-                                        <div class="upload-text">לחץ להעלות את הלוגו שלך</div>
+                                        <div class="upload-text">Click to upload logo</div>
                                     </div>
                                     <img id="logoPreview" class="logo-preview" style="display: none;" />
                                 </div>
@@ -1999,17 +1999,17 @@
                         <!-- Brand Colors -->
                         <div class="settings-card">
                             <div class="settings-card-header">
-                                <h3>🎨 צבעי המותג</h3>
+                                <h3>🎨 Brand Colors</h3>
                             </div>
                             <div class="settings-card-content">
                                 <div class="color-controls">
                                     <div class="color-control">
-                                        <label class="color-label">צבע עיקרי</label>
+                                        <label class="color-label">Primary Color</label>
                                         <input type="color" id="primaryColor" value="#58a6ff" onchange="updatePreviewColors()">
                                         <span class="color-value" id="primaryColorValue">#58a6ff</span>
                                     </div>
                                     <div class="color-control">
-                                        <label class="color-label">צבע משני</label>
+                                        <label class="color-label">Secondary Color</label>
                                         <input type="color" id="secondaryColor" value="#79c0ff" onchange="updatePreviewColors()">
                                         <span class="color-value" id="secondaryColorValue">#79c0ff</span>
                                     </div>
@@ -2020,11 +2020,11 @@
                         <!-- Typography -->
                         <div class="settings-card">
                             <div class="settings-card-header">
-                                <h3>📝 טיפוגרפיה</h3>
+                                <h3>📝 Typography</h3>
                             </div>
                             <div class="settings-card-content">
                                 <select id="fontFamily" onchange="updatePreviewFont()">
-                                    <option value="Inter">Inter (ברירת מחדל)</option>
+                                    <option value="Inter">Inter (Default)</option>
                                     <option value="Arial">Arial</option>
                                     <option value="Helvetica">Helvetica</option>
                                     <option value="Georgia">Georgia</option>
@@ -2038,7 +2038,7 @@
                         <!-- Language Setting -->
                         <div class="settings-card">
                             <div class="settings-card-header">
-                                <h3>🌍 שפה ופיסוק</h3>
+                                <h3>🌍 Language & Layout</h3>
                             </div>
                             <div class="settings-card-content">
                                 <div class="language-toggle">
@@ -2046,14 +2046,14 @@
                                         <input type="radio" name="textDirection" value="ltr" id="dirLtr" checked onchange="updatePreviewDirection()">
                                         <span class="language-button">
                                             <span class="language-flag">🇺🇸</span>
-                                            <span class="language-name">אנגלית</span>
+                                            <span class="language-name">English</span>
                                         </span>
                                     </label>
                                     <label class="language-option">
                                         <input type="radio" name="textDirection" value="rtl" id="dirRtl" onchange="updatePreviewDirection()">
                                         <span class="language-button">
                                             <span class="language-flag">🇮🇱</span>
-                                            <span class="language-name">עברית</span>
+                                            <span class="language-name">Hebrew</span>
                                         </span>
                                     </label>
                                 </div>
@@ -2065,7 +2065,7 @@
                     <!-- Save Button (Full Width) -->
                     <div class="save-button-container">
                         <button class="save-settings-btn-main" onclick="saveBrandSettings()">
-                            💾 שמור הגדרות מותג
+                            💾 Save Brand Settings
                         </button>
                     </div>
                     
@@ -3532,7 +3532,7 @@
                 console.log('✅ Brand settings saved:', result);
                 
                 alert('🎉 Brand settings saved successfully!\\n\\nYour customers will now see your furniture in ' + 
-                      (textDirection === 'rtl' ? 'עברית (מימין לשמאל)' : 'אנגלית (משמאל לימין)') + '.';
+                      (textDirection === 'rtl' ? 'Right-to-Left (RTL)' : 'Left-to-Right (LTR)') + ' format.');
                       
             } catch (error) {
                 console.error('Error saving brand settings:', error);

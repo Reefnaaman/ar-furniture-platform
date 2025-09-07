@@ -4,7 +4,6 @@ import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import { validateFileContent, sanitizeFilename, checkRateLimit, getRateLimitHeaders, hashIP } from '../lib/security.js';
 import { logger } from '../lib/logger.js';
 import { getInternalEndpoint } from '../lib/endpoints.js';
-import { filterModelWithVariants, filterModelsWithVariants } from '../lib/dataFilter.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
 
@@ -706,23 +705,35 @@ async function handleModelInfo(req, res, modelId) {
       .order('is_primary', { ascending: false });
 
     if (variantsError) {
-      logger.warn('Error fetching variants for model info', variantsError);
+      console.warn('Error fetching variants for model info:', variantsError);
     }
     
-    // Apply data filtering to hide internal fields
-    const modelWithVariants = {
-      ...model,
-      variants: variants || []
-    };
-    
-    const filteredModel = filterModelWithVariants(modelWithVariants, true);
-    
-    res.status(200).json(filteredModel);
+    // Return model info with variants (without Cloudinary URLs for security)
+    res.status(200).json({
+      id: model.id,
+      title: model.title,
+      description: model.description,
+      filename: model.filename,
+      file_size: model.file_size,
+      upload_date: model.upload_date,
+      view_count: model.view_count,
+      dominant_color: model.dominant_color,
+      customer_id: model.customer_id, // Include for logo loading
+      customer_name: model.customer_name, // Include for logo loading
+      metadata: model.metadata,
+      variants: (variants || []).map(variant => ({
+        id: variant.id,
+        variant_name: variant.variant_name,
+        hex_color: variant.hex_color,
+        is_primary: variant.is_primary,
+        variant_type: variant.variant_type || 'upload',
+        cloudinary_url: variant.cloudinary_url // Include for variant switching
+      }))
+    });
     
   } catch (error) {
-    logger.error('Error fetching model info', error);
-    const { statusCode, response } = createErrorResponse(500, 'Failed to fetch model info', error);
-    return res.status(statusCode).json(response);
+    console.error('Error fetching model info:', error);
+    res.status(500).json({ error: 'Failed to fetch model info' });
   }
 }
 
