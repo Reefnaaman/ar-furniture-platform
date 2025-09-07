@@ -2,6 +2,8 @@ import { uploadModel } from '../lib/cloudinary.js';
 import { saveModel, saveModelVariant, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase, query } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import { validateFileContent, sanitizeFilename, checkRateLimit, getRateLimitHeaders, hashIP } from '../lib/security.js';
+import { logger } from '../lib/logger.js';
+import { getInternalEndpoint } from '../lib/endpoints.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
 
@@ -36,10 +38,10 @@ function createErrorResponse(statusCode, message, error = null) {
  * Handles: upload, models, model/[id], model/[id]/info, model/[id]/view
  */
 export default async function handler(req, res) {
-  console.log('=== FUNCTION ENTRY ===', new Date().toISOString());
-  console.log('Request method:', req.method);
-  console.log('Request URL:', req.url);
-  console.log('User-Agent:', req.headers['user-agent']);
+  logger.debug('Function entry', { 
+    method: req.method, 
+    timestamp: new Date().toISOString() 
+  });
   
   // Rate limiting for sensitive endpoints
   const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
@@ -68,14 +70,7 @@ export default async function handler(req, res) {
     }
   }
   
-  // Log all requests that include 'users' for debugging
-  if (req.url?.includes('users')) {
-    console.log('🔍 USERS REQUEST DETECTED:', {
-      url: req.url,
-      method: req.method,
-      timestamp: new Date().toISOString()
-    });
-  }
+  logger.debug('Route processing', { routePath });
   
   // Security headers
   res.setHeader('X-Content-Type-Options', 'nosniff');
@@ -107,31 +102,11 @@ export default async function handler(req, res) {
     const pathParts = url.pathname.split('/').filter(Boolean); // ['api', 'upload-simple'] or ['api', 'models']
     const routePath = pathParts.slice(1).join('/'); // Remove 'api' prefix: 'upload-simple' or 'models'
     
-    // Debug logging
-    console.log('Route debug:', { 
-      url: req.url, 
-      pathname: url.pathname, 
-      pathParts, 
-      routePath, 
-      method: req.method 
-    });
+    logger.debug('Route debug', { routePath, method: req.method });
     
-    // Additional debug for users routes specifically
-    if (routePath?.includes('users')) {
-      console.log('USERS ROUTE DEBUG:', { routePath, startsWithUsers: routePath?.startsWith('users/'), equalsUsers: routePath === 'users' });
-    }
+    logger.debug('Users route detected', { routePath });
     
-    // Additional debug for model routes
-    if (routePath?.startsWith('model/')) {
-      const routeParts = routePath.split('/');
-      console.log('Model route debug:', {
-        routePath,
-        routeParts,
-        modelId: routeParts[1],
-        action: routeParts[2],
-        partsLength: routeParts.length
-      });
-    }
+    logger.debug('Model route detected', { routePath });
     
     // Route: /api/upload-simple
     if (routePath === 'upload-simple') {
@@ -347,7 +322,7 @@ export default async function handler(req, res) {
           });
           
         } catch (error) {
-          console.error('Login error:', error);
+          logger.error('Login error', error);
           const { statusCode, response } = createErrorResponse(500, 'Login failed', error);
           return res.status(statusCode).json(response);
         }
@@ -432,18 +407,14 @@ async function handleUpload(req, res) {
       });
     });
 
-    // 🚨 VARIANT DETECTION LOGIC
+    // Variant detection logic
     const parentModelId = fields.parentModelId?.[0];
     const variantName = fields.variantName?.[0];
     const isVariantUpload = parentModelId && variantName && 
                            parentModelId.trim() !== '' && variantName.trim() !== '';
     
-    // Debug logging
-    console.log('🚨 UPLOAD DEBUG:', {
-      parentModelId,
-      variantName, 
-      isVariantUpload,
-      uploadType: isVariantUpload ? '🎨 VARIANT UPLOAD' : '📦 REGULAR MODEL UPLOAD'
+    logger.debug('Upload type detected', { 
+      isVariant: isVariantUpload 
     });
 
     // Get file
@@ -477,14 +448,14 @@ async function handleUpload(req, res) {
     }
 
     // Upload to Cloudinary
-    console.log('Uploading to Cloudinary...');
+    logger.debug('Starting file upload');
     const cloudinaryResult = await uploadModel(fileBuffer, uploadedFile.originalFilename);
 
     // Save to database - VARIANT OR MODEL
     let dbResult;
     
     if (isVariantUpload) {
-      console.log('🎨 Saving VARIANT to database...');
+      logger.debug('Saving variant to database');
       const hexColor = fields.hexColor?.[0] || '#000000';
       
       dbResult = await saveModelVariant({
@@ -498,15 +469,7 @@ async function handleUpload(req, res) {
         variantType: 'upload'
       });
     } else {
-      console.log('📦 Saving MODEL to database...');
-      console.log('Data to save:', {
-        title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
-        description: fields.description?.[0] || '',
-        filename: uploadedFile.originalFilename,
-        cloudinaryUrl: cloudinaryResult.url,
-        cloudinaryPublicId: cloudinaryResult.publicId,
-        fileSize: cloudinaryResult.size
-      });
+      logger.debug('Saving model to database');
       
       dbResult = await saveModel({
         title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
@@ -525,10 +488,10 @@ async function handleUpload(req, res) {
       });
     }
 
-    console.log('Database save result:', dbResult);
+    logger.debug('Database save completed');
 
     if (!dbResult.success) {
-      console.error('Database save failed:', dbResult.error);
+      logger.error('Database save failed', dbResult.error);
       return res.status(500).json({ 
         error: 'Failed to save model to database',
         details: dbResult.error || 'Unknown database error'
@@ -577,7 +540,7 @@ async function handleUpload(req, res) {
     }
 
   } catch (error) {
-    console.error('Upload error:', error);
+    logger.error('Upload error', error);
     const { statusCode, response } = createErrorResponse(500, 'Upload failed', error);
     return res.status(statusCode).json(response);
   }
