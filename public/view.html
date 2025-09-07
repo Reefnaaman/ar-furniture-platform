@@ -849,10 +849,11 @@
             // Add logo to mobile view (as a watermark in corner)
             if (window.innerWidth <= 768) {
                 const mobileLogo = document.createElement('div');
+                const isRTL = document.body.dir === 'rtl' || document.documentElement.dir === 'rtl';
                 mobileLogo.style.cssText = `
                     position: fixed;
                     top: 20px;
-                    left: 20px;
+                    ${isRTL ? 'right: 20px;' : 'left: 20px;'}
                     z-index: 1000;
                     max-width: 100px;
                     max-height: 40px;
@@ -890,13 +891,20 @@
                     if (logoContainer) {
                         // In RTL, logo should be on the right side of text
                         logoContainer.style.order = '1'; // Move after text in flex layout
+                        logoContainer.parentElement.style.flexDirection = 'row-reverse'; // Reverse the flex direction
                     }
                     
-                    // Adjust text alignment
+                    // Adjust text alignment for RTL
                     const titleContainer = logoContainer ? logoContainer.nextElementSibling : null;
                     if (titleContainer) {
                         titleContainer.style.textAlign = 'right';
-                        titleContainer.style.order = '0'; // Ensure text comes first visually (right side in RTL)
+                        titleContainer.style.order = '0'; // Ensure text comes first visually
+                    }
+                    
+                    // Also target the title directly
+                    const titleElement = document.querySelector('.gradient-text');
+                    if (titleElement) {
+                        titleElement.style.textAlign = 'right';
                     }
                     
                     // Apply RTL to QR instructions
@@ -912,12 +920,19 @@
                     const logoContainer = document.getElementById('desktopCustomerLogoContainer');
                     if (logoContainer) {
                         logoContainer.style.order = '0';
+                        logoContainer.parentElement.style.flexDirection = 'row'; // Reset to normal flex direction
                     }
                     
                     const titleContainer = logoContainer ? logoContainer.nextElementSibling : null;
                     if (titleContainer) {
                         titleContainer.style.textAlign = 'left';
                         titleContainer.style.order = '1';
+                    }
+                    
+                    // Reset title alignment
+                    const titleElement = document.querySelector('.gradient-text');
+                    if (titleElement) {
+                        titleElement.style.textAlign = 'left';
                     }
                     
                     console.log('✅ LTR styling applied to QR screen');
