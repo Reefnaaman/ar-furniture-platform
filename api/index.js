@@ -1,6 +1,7 @@
 import { uploadModel } from '../lib/cloudinary.js';
 import { saveModel, saveModelVariant, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase, query } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
+import { validateFileContent, sanitizeFilename, checkRateLimit, getRateLimitHeaders, hashIP } from '../lib/security.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
 
@@ -13,6 +14,24 @@ export const config = {
 };
 
 /**
+ * Create secure error response that doesn't leak internal details in production
+ */
+function createErrorResponse(statusCode, message, error = null) {
+  const isDevelopment = process.env.NODE_ENV !== 'production';
+  
+  const response = { error: message };
+  
+  if (isDevelopment && error) {
+    response.details = error.message;
+    if (error.stack) {
+      response.stack = error.stack;
+    }
+  }
+  
+  return { statusCode, response };
+}
+
+/**
  * Single catch-all API handler for all routes
  * Handles: upload, models, model/[id], model/[id]/info, model/[id]/view
  */
@@ -21,6 +40,33 @@ export default async function handler(req, res) {
   console.log('Request method:', req.method);
   console.log('Request URL:', req.url);
   console.log('User-Agent:', req.headers['user-agent']);
+  
+  // Rate limiting for sensitive endpoints
+  const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+  const ipHash = hashIP(clientIP);
+  
+  // Apply rate limiting to upload and authentication endpoints
+  const url = new URL(req.url, `https://${req.headers.host}`);
+  const pathParts = url.pathname.split('/').filter(Boolean);
+  const routePath = pathParts.slice(1).join('/');
+  
+  if (['upload-simple', 'upload-image', 'login', 'create-user'].includes(routePath)) {
+    const rateLimit = checkRateLimit(ipHash, 60000, 10); // 10 requests per minute
+    
+    // Set rate limit headers
+    const headers = getRateLimitHeaders(rateLimit);
+    Object.entries(headers).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+    
+    if (!rateLimit.allowed) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded',
+        message: 'Too many requests. Please try again later.',
+        retryAfter: rateLimit.resetTime - Math.floor(Date.now() / 1000)
+      });
+    }
+  }
   
   // Log all requests that include 'users' for debugging
   if (req.url?.includes('users')) {
@@ -31,10 +77,25 @@ export default async function handler(req, res) {
     });
   }
   
-  // Enable CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // Security headers
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  
+  // CORS headers (restrict in production)
+  const allowedOrigins = process.env.NODE_ENV === 'production' 
+    ? ['https://newfurniture.live', 'https://www.newfurniture.live']
+    : ['*'];
+  
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin || '*');
+  }
+  
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Admin-Password');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -265,10 +326,11 @@ export default async function handler(req, res) {
             return res.status(401).json({ error: 'Invalid credentials' });
           }
           
-          // Set basic session cookie (simplified)
+          // Set secure session cookies
+          const isProduction = process.env.NODE_ENV === 'production';
           res.setHeader('Set-Cookie', [
-            `user_role=${user.role}; Path=/; Max-Age=86400; SameSite=Strict`,
-            `user_id=${user.id}; Path=/; Max-Age=86400; SameSite=Strict`
+            `user_role=${user.role}; Path=/; Max-Age=86400; HttpOnly; SameSite=Strict${isProduction ? '; Secure' : ''}`,
+            `user_id=${user.id}; Path=/; Max-Age=86400; HttpOnly; SameSite=Strict${isProduction ? '; Secure' : ''}`
           ]);
           
           return res.status(200).json({
@@ -286,10 +348,8 @@ export default async function handler(req, res) {
           
         } catch (error) {
           console.error('Login error:', error);
-          return res.status(500).json({ 
-            error: 'Login failed', 
-            details: error.message 
-          });
+          const { statusCode, response } = createErrorResponse(500, 'Login failed', error);
+          return res.status(statusCode).json(response);
         }
       }
       
@@ -342,9 +402,13 @@ export default async function handler(req, res) {
     
   } catch (error) {
     console.error('API Error:', error);
+    
+    // Don't expose internal error details in production
+    const isDevelopment = process.env.NODE_ENV !== 'production';
+    
     return res.status(500).json({ 
       error: 'Internal server error',
-      details: error.message 
+      ...(isDevelopment && { details: error.message, stack: error.stack })
     });
   }
 }
@@ -388,7 +452,10 @@ async function handleUpload(req, res) {
       return res.status(400).json({ error: 'No file provided' });
     }
 
-    // Validate file type
+    // Sanitize filename
+    const sanitizedFilename = sanitizeFilename(uploadedFile.originalFilename);
+    
+    // Validate file type and extension
     if (!uploadedFile.originalFilename?.match(/\.(glb|gltf)$/i)) {
       return res.status(400).json({ error: 'Only GLB and GLTF files are allowed' });
     }
@@ -401,6 +468,13 @@ async function handleUpload(req, res) {
     // Read file
     const fs = await import('fs');
     const fileBuffer = fs.readFileSync(uploadedFile.path);
+    
+    // Validate file content using magic numbers
+    const contentValidation = validateFileContent(fileBuffer, uploadedFile.originalFilename, ['glb', 'gltf']);
+    if (!contentValidation.valid) {
+      fs.unlinkSync(uploadedFile.path); // Clean up temp file
+      return res.status(400).json({ error: `Security validation failed: ${contentValidation.error}` });
+    }
 
     // Upload to Cloudinary
     console.log('Uploading to Cloudinary...');
@@ -504,10 +578,8 @@ async function handleUpload(req, res) {
 
   } catch (error) {
     console.error('Upload error:', error);
-    return res.status(500).json({ 
-      error: 'Upload failed', 
-      details: error.message
-    });
+    const { statusCode, response } = createErrorResponse(500, 'Upload failed', error);
+    return res.status(statusCode).json(response);
   }
 }
 
@@ -1002,7 +1074,10 @@ async function handleImageUpload(req, res) {
       return res.status(400).json({ error: 'No file provided' });
     }
 
-    // Validate file type
+    // Sanitize filename
+    const sanitizedFilename = sanitizeFilename(uploadedFile.originalFilename);
+    
+    // Validate file type and extension
     if (!uploadedFile.originalFilename?.match(/\.(jpg|jpeg|png|webp|svg)$/i)) {
       return res.status(400).json({ error: 'Only image files (JPG, PNG, WebP, SVG) are allowed' });
     }
@@ -1015,6 +1090,14 @@ async function handleImageUpload(req, res) {
     // Read file
     const fs = await import('fs');
     const fileBuffer = fs.readFileSync(uploadedFile.path);
+    
+    // Validate file content using magic numbers
+    const allowedImageTypes = ['jpg', 'jpeg', 'png', 'webp', 'svg'];
+    const contentValidation = validateFileContent(fileBuffer, uploadedFile.originalFilename, allowedImageTypes);
+    if (!contentValidation.valid) {
+      fs.unlinkSync(uploadedFile.path); // Clean up temp file
+      return res.status(400).json({ error: `Security validation failed: ${contentValidation.error}` });
+    }
 
     // Upload to Cloudinary
     console.log('Uploading image to Cloudinary...');
