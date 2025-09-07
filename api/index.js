@@ -1516,9 +1516,11 @@ async function handleResetViewCounts(req, res) {
   try {
     console.log('🔄 Resetting all view counts to 0...');
     
-    // Reset view_count in models table using raw SQL to avoid Supabase WHERE clause requirement
-    const resetResult = await query('UPDATE models SET view_count = 0 WHERE view_count >= 0');
-    const modelsError = resetResult.error;
+    // Reset view_count in models table - use not equal to impossible value to match all rows
+    const { error: modelsError } = await supabase
+      .from('models')
+      .update({ view_count: 0 })
+      .not('id', 'eq', 'impossible_id_that_never_exists');
 
     if (modelsError) {
       console.error('Error resetting models view counts:', modelsError);

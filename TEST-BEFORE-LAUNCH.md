@@ -5,6 +5,8 @@
 - [ ] **Upload Flow**: Test GLB upload → verify shareable link generation
 - [ ] **AR View**: Test generated links on real iPhone/Android devices (not browser simulation)
 - [ ] **Error Handling**: Test invalid files, oversized files, network failures
+- [ ] **Test Error Reporting**: Trigger errors and verify "Report Issue" button works
+- [ ] **Verify Error Reports**: Check feedback table contains error reports with type='error'
 
 ## Infrastructure Verification
 - [ ] **Vercel Environment Variables**: Confirm all secrets are properly set
@@ -49,12 +51,22 @@ All error messages must be clear, friendly, and actionable for end users.
 - [ ] Stack traces appear in development mode
 - [ ] No loading states for error scenarios
 
-### ✅ Error Messages Improved:
-**Key improvements made:**
+### ✅ Error Messages & Support System Completed:
+
+**1. User-Friendly Error Messages:**
 - Technical database errors → "Unable to complete upload at this time. Please try again in a few moments."
-- Generic "Failed to fetch" → "Unable to load your furniture models. Please refresh the page and try again."
+- "Models" terminology → "Furniture" throughout the system
+- Generic "Failed to fetch" → "Unable to load your furniture collection. Please refresh the page and try again."
 - "Internal server error" → "Something went wrong on our end. Please try again in a few moments."
 - Upload errors → "Upload couldn't complete. Please check your file and try again."
+
+**2. Error Reporting System:**
+- ✅ Added "error" as feedback type in database schema
+- ✅ "📧 Report this issue to support" buttons on critical errors
+- ✅ Automatic error context collection (timestamps, user agent, error details)
+- ✅ Customer error reporting in furniture loading failures
+- ✅ Admin error reporting for upload and system failures
+- ✅ All error reports stored in feedback table for team review
 
 ### 🔧 Remaining Improvements for Future:
 1. **Add loading states** during operations

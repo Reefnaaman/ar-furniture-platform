@@ -2214,6 +2214,51 @@
     </div> <!-- End main-content -->
     
     <script>
+        // Error reporting utility for customers
+        async function reportCustomerIssue(errorMessage, context = {}) {
+            const userDescription = prompt('Please describe what you were doing when this error occurred (optional):');
+            
+            try {
+                const customerId = await getCurrentCustomerId();
+                await fetch('/api/feedback', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        type: 'error',
+                        comment: `Customer Error: ${errorMessage}\n\nUser description: ${userDescription || 'None provided'}\n\nContext: ${JSON.stringify(context, null, 2)}`,
+                        customerId: customerId || 'unknown',
+                        itemId: context.itemId || 'system',
+                        itemName: context.itemName || 'Customer System',
+                        userAgent: navigator.userAgent
+                    })
+                });
+                
+                alert('✅ Issue reported successfully! Our team will investigate.');
+            } catch (error) {
+                console.error('Failed to report issue:', error);
+                alert('❌ Unable to submit report. Please contact support directly.');
+            }
+        }
+
+        // Show error with report button
+        function showErrorWithReportButton(containerSelector, errorMessage, context = {}) {
+            const container = document.querySelector(containerSelector);
+            if (!container) return;
+            
+            const errorDiv = document.createElement('div');
+            errorDiv.style.cssText = 'margin: 20px; padding: 20px; background: #ffeaea; border: 1px solid #f85149; border-radius: 8px; text-align: center;';
+            errorDiv.innerHTML = `
+                <p style="color: #d1242f; margin: 0 0 15px 0; font-size: 16px;">${errorMessage}</p>
+                <button onclick="reportCustomerIssue('${errorMessage}', ${JSON.stringify(context).replace(/"/g, '&quot;')})" 
+                        style="padding: 10px 20px; background: #f85149; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                    📧 Report this issue to support
+                </button>
+            `;
+            
+            container.innerHTML = '';
+            container.appendChild(errorDiv);
+        }
+
         // Get customer ID from URL parameters or session/auth
         async function getCurrentCustomerId() {
             try {
@@ -2408,14 +2453,14 @@
                 
             } catch (error) {
                 console.error('Error loading furniture:', error);
-                document.getElementById('furnitureContainer').innerHTML = `
-                    <div class="empty-state">
-                        <h3>Error Loading Collection</h3>
-                        <p>Customer: ${customerId}</p>
-                        <p>Error: ${error.message}</p>
-                        <button class="refresh-button" onclick="loadFurniture()">Try Again</button>
-                    </div>
-                `;
+                showErrorWithReportButton('#furnitureContainer', 
+                    'Unable to load your furniture collection. Please try again or report this issue if it persists.', 
+                    { 
+                        customerId: customerId,
+                        errorType: 'furniture_loading_failed',
+                        originalError: error.message 
+                    }
+                );
             }
         }
         
