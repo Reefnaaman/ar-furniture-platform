@@ -1233,7 +1233,7 @@
                     z-index: 9999;
                     visibility: hidden;
                 `;
-                backButton.textContent = '← Back to Product';
+                backButton.textContent = `← Back to ${modelInfo.customer_name || 'Product'}`;
                 backButton.onclick = () => {
                     const returnUrl = getReturnUrl();
                     console.log('🔙 Going back to:', returnUrl);
@@ -1357,12 +1357,14 @@
                 return returnUrl;
             }
             
-            if (document.referrer && document.referrer !== window.location.href) {
+            if (document.referrer && document.referrer !== window.location.href && document.referrer !== '') {
                 console.log('🔗 Using document referrer:', document.referrer);
                 return document.referrer;
             }
             
-            console.log('🔗 Using browser back as fallback');
+            console.log('🔗 No referrer found, using browser back as fallback');
+            console.log('🔗 Current URL:', window.location.href);
+            console.log('🔗 Referrer:', document.referrer);
             return 'javascript:history.back()';
         }
         
@@ -1399,30 +1401,27 @@
                 transition: all 0.3s ease;
                 min-width: 200px;
             `;
-            backButton.textContent = '← Back to Product';
+            backButton.textContent = `← Back to ${modelInfo.customer_name || 'Product'}`;
             backButton.onclick = () => {
                 const returnUrl = getReturnUrl();
                 console.log('🏠 Going back to:', returnUrl);
-                if (returnUrl.startsWith('javascript:')) {
+                console.log('🏠 Button clicked, returnUrl:', returnUrl);
+                
+                // Better handling for testing scenarios
+                if (returnUrl === 'javascript:history.back()' || returnUrl.startsWith('javascript:')) {
+                    console.log('🏠 Using history.back()');
                     history.back();
-                } else {
+                } else if (returnUrl && returnUrl !== window.location.href) {
+                    console.log('🏠 Navigating to:', returnUrl);
                     window.location.href = returnUrl;
+                } else {
+                    // Fallback for testing - go to homepage
+                    console.log('🏠 Fallback: going to homepage');
+                    window.location.href = window.location.origin;
                 }
             };
             
-            // Create help text
-            const helpText = document.createElement('div');
-            helpText.style.cssText = `
-                color: #ffffff;
-                font-size: 14px;
-                margin-top: 10px;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
-                opacity: 0.8;
-            `;
-            helpText.textContent = 'Tap to return to website';
-            
             backButtonContainer.appendChild(backButton);
-            backButtonContainer.appendChild(helpText);
             document.body.appendChild(backButtonContainer);
             
             // Show back button after a delay (when user likely finished with AR)
