@@ -7,15 +7,14 @@ const STRINGS = {
         direction: 'ltr',
         
         // AR Viewer Page (view.html)
-        preview3D: 'Preview in 3D 👀',
-        scanWithPhone: 'סרוק אותי עם הטלפון שלך',
-        seeInSpace: 'כדי לראות את',
-        inYourSpace: 'בחלל שלך! 😊',
+        scanWithPhone: 'Scan me with your phone',
+        seeInSpace: 'to see',
+        inYourSpace: 'in your space! 😊',
         
         // Instructions
-        openCamera: 'פתח את אפליקציית המצלמה שלך',
-        pointAtQR: 'כוון לקוד ה-QR', 
-        seeMagic: 'תיהנה מהקסם!',
+        openCamera: 'Open your camera app',
+        pointAtQR: 'Point at the QR code', 
+        seeMagic: 'See the magic happen!',
         
         // Success messages
         uploadSuccess: 'Furniture uploaded successfully!',
@@ -27,7 +26,6 @@ const STRINGS = {
         direction: 'rtl',
         
         // AR Viewer Page (view.html)  
-        preview3D: 'צפיה תלת-מימדית 👀',
         scanWithPhone: 'סרוק אותי עם הטלפון שלך',
         seeInSpace: 'כדי לראות את',
         inYourSpace: 'בחלל שלך! 😊',
