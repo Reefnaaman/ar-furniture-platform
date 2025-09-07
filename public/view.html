@@ -86,6 +86,12 @@
             font-family: 'Noto Sans Hebrew', 'Noto Sans', 'Inter', sans-serif;
         }
         
+        /* Animation for AR back button */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateX(-50%) translateY(20px); }
+            to { opacity: 1; transform: translateX(-50%) translateY(0); }
+        }
+        
         /* Hide everything on mobile initially */
         @media (max-width: 768px) {
             body {
@@ -1085,9 +1091,12 @@
             modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
             document.body.appendChild(modelViewer);
 
-            // Create floating variant controls if variants exist
+            // Create floating controls (variants if they exist, or back button if no variants)
             if (modelInfo && modelInfo.variants && modelInfo.variants.length > 0) {
                 createARVariantControls(modelId, modelInfo, selectedVariant, modelViewer);
+            } else {
+                // No variants - create simple back button for when user exits AR
+                createARBackButton(modelInfo);
             }
 
             // Wait for model to load, then activate AR
@@ -1224,10 +1233,15 @@
                     z-index: 9999;
                     visibility: hidden;
                 `;
-                backButton.textContent = '← Back';
+                backButton.textContent = '← Back to Product';
                 backButton.onclick = () => {
-                    console.log('🔙 Going back to:', document.referrer);
-                    window.location.href = document.referrer;
+                    const returnUrl = getReturnUrl();
+                    console.log('🔙 Going back to:', returnUrl);
+                    if (returnUrl.startsWith('javascript:')) {
+                        history.back();
+                    } else {
+                        window.location.href = returnUrl;
+                    }
                 };
                 
                 // Add hover effect
@@ -1331,6 +1345,91 @@
                 clickedCircle.style.border = '4px solid #58a6ff';
                 clickedCircle.style.boxShadow = '0 0 20px rgba(88, 166, 255, 0.5)';
             }
+        }
+        
+        // Get return URL using hybrid approach: URL parameter > referrer > history back
+        function getReturnUrl() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const returnUrl = urlParams.get('returnUrl');
+            
+            if (returnUrl) {
+                console.log('🔗 Using returnUrl parameter:', returnUrl);
+                return returnUrl;
+            }
+            
+            if (document.referrer && document.referrer !== window.location.href) {
+                console.log('🔗 Using document referrer:', document.referrer);
+                return document.referrer;
+            }
+            
+            console.log('🔗 Using browser back as fallback');
+            return 'javascript:history.back()';
+        }
+        
+        // Create back button for when there are no variants
+        function createARBackButton(modelInfo) {
+            console.log('🏠 Creating back button for no-variants case');
+            
+            // Create back button container
+            const backButtonContainer = document.createElement('div');
+            backButtonContainer.id = 'arBackButton';
+            backButtonContainer.style.cssText = `
+                position: fixed;
+                bottom: 120px;
+                left: 50%;
+                transform: translateX(-50%);
+                z-index: 10000;
+                visibility: hidden;
+                text-align: center;
+            `;
+            
+            // Create the back button
+            const backButton = document.createElement('button');
+            backButton.style.cssText = `
+                background: linear-gradient(135deg, #58a6ff 0%, #4e9eff 100%);
+                color: white;
+                border: none;
+                padding: 15px 25px;
+                border-radius: 25px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 20px rgba(88, 166, 255, 0.3);
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+                transition: all 0.3s ease;
+                min-width: 200px;
+            `;
+            backButton.textContent = '← Back to Product';
+            backButton.onclick = () => {
+                const returnUrl = getReturnUrl();
+                console.log('🏠 Going back to:', returnUrl);
+                if (returnUrl.startsWith('javascript:')) {
+                    history.back();
+                } else {
+                    window.location.href = returnUrl;
+                }
+            };
+            
+            // Create help text
+            const helpText = document.createElement('div');
+            helpText.style.cssText = `
+                color: #ffffff;
+                font-size: 14px;
+                margin-top: 10px;
+                text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
+                opacity: 0.8;
+            `;
+            helpText.textContent = 'Tap to return to website';
+            
+            backButtonContainer.appendChild(backButton);
+            backButtonContainer.appendChild(helpText);
+            document.body.appendChild(backButtonContainer);
+            
+            // Show back button after a delay (when user likely finished with AR)
+            setTimeout(() => {
+                backButtonContainer.style.visibility = 'visible';
+                backButtonContainer.style.animation = 'fadeIn 0.5s ease-in-out';
+            }, 3000);
         }
         
         function showError(message) {
