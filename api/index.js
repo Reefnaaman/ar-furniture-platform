@@ -137,6 +137,11 @@ export default async function handler(req, res) {
       return await handleCreateFeedbackTable(req, res);
     }
     
+    // Route: /api/create-brand-settings-table
+    if (routePath === 'create-brand-settings-table') {
+      return await handleCreateBrandSettingsTable(req, res);
+    }
+    
     // Route: /api/init-models-db
     if (routePath === 'init-models-db') {
       return await handleInitModelsDB(req, res);
@@ -239,17 +244,19 @@ export default async function handler(req, res) {
             return res.status(400).json({ error: 'Username and password are required' });
           }
           
-          // Find user by username (using template literal like other queries)
-          const userResult = await query(`
-            SELECT * FROM users 
-            WHERE username = '${username}' AND is_active = true
-          `);
+          // Find user by username (using parameterized query to prevent SQL injection)
+          const { data: userData, error: userError } = await supabase
+            .from('users')
+            .select('*')
+            .eq('username', username)
+            .eq('is_active', true)
+            .single();
           
-          if (!userResult.success || !userResult.data || userResult.data.length === 0) {
+          if (userError || !userData) {
             return res.status(401).json({ error: 'Invalid credentials' });
           }
           
-          const user = userResult.data[0];
+          const user = userData;
           
           // Verify password
           const passwordMatch = await bcrypt.compare(password, user.password_hash);
@@ -296,6 +303,12 @@ export default async function handler(req, res) {
         return res.status(400).json({ error: 'Customer ID is required' });
       }
       return await handleCustomerModels(req, res, customerId);
+    }
+    
+    // Route: /api/customers/[id]/brand-settings
+    if (routePath?.match(/^customers\/[^\/]+\/brand-settings$/)) {
+      const customerId = routePath.split('/')[1];
+      return await handleBrandSettings(req, res, customerId);
     }
     
     // Route: /api/customer/[id]
@@ -1649,6 +1662,139 @@ GRANT ALL ON feedback TO service_role;
       '3. Copy and paste the SQL above',
       '4. Click "Run" to create the feedback table',
       '5. This enables customer feedback collection and admin viewing'
+    ]
+  });
+}
+
+/**
+ * Handle brand settings for customers
+ */
+async function handleBrandSettings(req, res, customerId) {
+  if (req.method === 'GET') {
+    // Get brand settings for customer
+    try {
+      const { data, error } = await supabase
+        .from('brand_settings')
+        .select('*')
+        .eq('customer_id', customerId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error fetching brand settings:', error);
+        return res.status(500).json({ error: 'Failed to fetch brand settings' });
+      }
+
+      // Return settings or defaults
+      const settings = data || {
+        customer_id: customerId,
+        text_direction: 'ltr',
+        primary_color: '#58a6ff',
+        secondary_color: '#4e9eff',
+        font_family: 'Inter',
+        logo_url: null,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      };
+
+      return res.status(200).json(settings);
+
+    } catch (error) {
+      console.error('Error handling brand settings GET:', error);
+      return res.status(500).json({ error: 'Failed to process request' });
+    }
+  }
+
+  if (req.method === 'PUT') {
+    // Update brand settings for customer
+    try {
+      const { textDirection, primaryColor, secondaryColor, fontFamily, logoUrl } = req.body;
+
+      const settingsData = {
+        customer_id: customerId,
+        text_direction: textDirection || 'ltr',
+        primary_color: primaryColor || '#58a6ff',
+        secondary_color: secondaryColor || '#4e9eff', 
+        font_family: fontFamily || 'Inter',
+        logo_url: logoUrl || null,
+        updated_at: new Date().toISOString()
+      };
+
+      // Upsert brand settings
+      const { data, error } = await supabase
+        .from('brand_settings')
+        .upsert(settingsData, {
+          onConflict: 'customer_id'
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error('Error saving brand settings:', error);
+        return res.status(500).json({ 
+          error: 'Failed to save brand settings',
+          details: error.message 
+        });
+      }
+
+      console.log(`✅ Brand settings saved for customer ${customerId}`);
+
+      return res.status(200).json({
+        success: true,
+        message: 'Brand settings saved successfully',
+        settings: data
+      });
+
+    } catch (error) {
+      console.error('Error handling brand settings PUT:', error);
+      return res.status(500).json({ 
+        error: 'Failed to process request',
+        details: error.message 
+      });
+    }
+  }
+
+  return res.status(405).json({ error: 'Method not allowed' });
+}
+
+/**
+ * Handle creating brand settings table
+ */
+async function handleCreateBrandSettingsTable(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  return res.status(200).json({
+    message: 'Please run the following SQL in your Supabase SQL editor to create the brand settings system',
+    sql: `
+-- Create brand_settings table
+CREATE TABLE IF NOT EXISTS brand_settings (
+  id BIGSERIAL PRIMARY KEY,
+  customer_id VARCHAR(100) NOT NULL UNIQUE,
+  text_direction VARCHAR(10) DEFAULT 'ltr' CHECK (text_direction IN ('ltr', 'rtl')),
+  primary_color VARCHAR(7) DEFAULT '#58a6ff',
+  secondary_color VARCHAR(7) DEFAULT '#4e9eff',
+  font_family VARCHAR(100) DEFAULT 'Inter',
+  logo_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add indexes for better performance
+CREATE INDEX IF NOT EXISTS idx_brand_settings_customer ON brand_settings(customer_id);
+
+-- Grant permissions
+GRANT ALL ON brand_settings TO authenticated;
+GRANT ALL ON brand_settings TO service_role;
+GRANT USAGE, SELECT ON SEQUENCE brand_settings_id_seq TO authenticated;
+GRANT USAGE, SELECT ON SEQUENCE brand_settings_id_seq TO service_role;
+    `,
+    instructions: [
+      '1. Go to your Supabase dashboard',
+      '2. Navigate to SQL Editor',
+      '3. Copy and paste the SQL above',
+      '4. Click "Run" to create the brand settings table',
+      '5. This enables customer brand customization settings'
     ]
   });
 }
