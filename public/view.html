@@ -784,6 +784,11 @@
                 applyBrandFont(settings.font_family);
                 applyBrandLogo(settings.logo_url);
                 
+                // Translate to Hebrew if RTL is selected
+                if (settings.text_direction === 'rtl') {
+                    translateToHebrew();
+                }
+                
             } catch (error) {
                 console.warn('⚠️ Error loading brand settings (non-critical):', error);
                 console.log('📝 Using default LTR direction due to error');
@@ -863,6 +868,55 @@
             }
         }
         
+        // Translate "Almost there" screen to Hebrew
+        function translateToHebrew() {
+            console.log('🌍 Translating "Almost there" screen to Hebrew');
+            
+            // Translate title
+            const titleElement = document.querySelector('h2.gradient-text');
+            if (titleElement) {
+                // Keep the original title but add Hebrew subtitle
+                titleElement.innerHTML = titleElement.innerHTML + '<br><span style="font-size: 0.7em; color: #7d8590;">רהיט במציאות רבודה</span>';
+            }
+            
+            // Translate "Preview in 3D"
+            const previewText = document.querySelector('p[style*="text-transform: uppercase"]');
+            if (previewText) {
+                previewText.textContent = 'צפיה תלת-מימדית 👀';
+            }
+            
+            // Translate "Almost there!"
+            const almostThereHeading = document.querySelector('h3[style*="background: linear-gradient"]');
+            if (almostThereHeading) {
+                almostThereHeading.textContent = 'כמעט סיימנו! 🎉';
+            }
+            
+            // Translate QR instructions
+            const qrInstructions = document.querySelector('.qr-instructions');
+            if (qrInstructions) {
+                const titleSpan = qrInstructions.querySelector('span[style*="font-weight: 600"]');
+                const modelTitle = titleSpan ? titleSpan.textContent.replace('to see ', '').replace(/^to see /, '') : 'הרהיט';
+                
+                qrInstructions.innerHTML = `
+                    <span style="color: #7d8590;">סרוק אותי עם הטלפון שלך</span><br>
+                    <span style="color: #58a6ff; font-weight: 600;">כדי לראות את ${modelTitle}</span><br>
+                    <span style="color: #7d8590;">בחלל שלך! 😊</span>
+                `;
+            }
+            
+            // Translate instruction steps
+            const instructionsParagraph = document.querySelector('div[style*="backdrop-filter: blur"] p');
+            if (instructionsParagraph) {
+                instructionsParagraph.innerHTML = `
+                    <span style="color: #58a6ff;">📱</span> פתח את אפליקציית המצלמה שלך<br>
+                    <span style="color: #79c0ff;">👆</span> כוון לקוד ה-QR<br>
+                    <span style="color: #a371f7;">✨</span> תיהנה מהקסם!
+                `;
+            }
+            
+            console.log('✅ Hebrew translation applied');
+        }
+        
         // Apply RTL/LTR direction to the QR screen
         function applyDirectionToQRScreen(direction) {
             console.log(`🔄 Applying ${direction.toUpperCase()} direction to QR screen`);
@@ -885,18 +939,23 @@
                 
                 // Apply RTL-specific styling
                 if (direction === 'rtl') {
-                    // Adjust logo positioning for RTL
+                    // Adjust logo positioning for RTL - logo should be to the RIGHT of text
                     const logoContainer = document.getElementById('desktopCustomerLogoContainer');
-                    if (logoContainer) {
-                        // In RTL, logo should be on the right side of text
-                        logoContainer.style.order = '1'; // Move after text in flex layout
+                    if (logoContainer && logoContainer.parentElement) {
+                        // Change the flex direction to row-reverse so logo appears on right side
+                        logoContainer.parentElement.style.flexDirection = 'row-reverse';
                     }
                     
-                    // Adjust text alignment
+                    // Adjust text alignment for RTL
+                    const titleElement = document.querySelector('.gradient-text');
+                    if (titleElement) {
+                        titleElement.style.textAlign = 'right';
+                    }
+                    
+                    // Also ensure the title container text aligns right
                     const titleContainer = logoContainer ? logoContainer.nextElementSibling : null;
                     if (titleContainer) {
                         titleContainer.style.textAlign = 'right';
-                        titleContainer.style.order = '0'; // Ensure text comes first visually (right side in RTL)
                     }
                     
                     // Apply RTL to QR instructions
@@ -910,14 +969,20 @@
                 } else {
                     // Reset to LTR defaults
                     const logoContainer = document.getElementById('desktopCustomerLogoContainer');
-                    if (logoContainer) {
-                        logoContainer.style.order = '0';
+                    if (logoContainer && logoContainer.parentElement) {
+                        // Reset flex direction to normal (logo on left, text on right)
+                        logoContainer.parentElement.style.flexDirection = 'row';
+                    }
+                    
+                    // Reset text alignment to left
+                    const titleElement = document.querySelector('.gradient-text');
+                    if (titleElement) {
+                        titleElement.style.textAlign = 'left';
                     }
                     
                     const titleContainer = logoContainer ? logoContainer.nextElementSibling : null;
                     if (titleContainer) {
                         titleContainer.style.textAlign = 'left';
-                        titleContainer.style.order = '1';
                     }
                     
                     console.log('✅ LTR styling applied to QR screen');
