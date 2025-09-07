@@ -3472,7 +3472,7 @@
                 }, 2000);
                 
             } catch (error) {
-                document.getElementById('uploadStatus').textContent = '❌ Upload failed: ' + error.message;
+                document.getElementById('uploadStatus').textContent = '❌ Upload couldn\'t complete. Please check your file and try again.';
                 document.getElementById('uploadButton').disabled = false;
                 document.getElementById('progressBar').style.width = '0%';
                 document.getElementById('progressPercentage').textContent = '0%';
@@ -4792,7 +4792,7 @@
                 console.error('❌ Error creating variant:', error);
                 
                 // Show error in filename area
-                fileName.textContent = `❌ Upload failed: ${error.message}`;
+                fileName.textContent = `❌ Upload couldn't complete. Please try again.`;
                 fileName.style.color = '#f85149';
             }
         }
@@ -5119,7 +5119,7 @@
                         loadImages();
                     }, 1500);
                 } else {
-                    fileName.textContent = `❌ Upload failed: ${result.error || 'Unknown error'}`;
+                    fileName.textContent = `❌ Upload couldn't complete. Please try again.`;
                     fileName.style.color = '#f85149';
                 }
             } catch (error) {
@@ -6022,7 +6022,7 @@
                         }
                     }, 1500);
                 } else {
-                    fileName.textContent = `❌ Upload failed: ${result.error || 'Unknown error'}`;
+                    fileName.textContent = `❌ Upload couldn't complete. Please try again.`;
                     fileName.style.color = '#f85149';
                 }
             } catch (error) {

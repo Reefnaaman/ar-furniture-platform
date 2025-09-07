@@ -842,11 +842,20 @@
             // Add logo to desktop view
             const desktopLogoContainer = document.getElementById('desktopCustomerLogoContainer');
             if (desktopLogoContainer) {
+                // Make sure container maintains its original styling
+                desktopLogoContainer.style.display = 'flex';
+                desktopLogoContainer.style.alignItems = 'center';
+                desktopLogoContainer.style.justifyContent = 'center';
+                desktopLogoContainer.style.alignSelf = 'stretch'; // Maintain original height
+                desktopLogoContainer.style.minWidth = '80px';
+                
                 const logoImg = document.createElement('img');
                 logoImg.src = logoUrl;
                 logoImg.style.maxHeight = '60px';
                 logoImg.style.maxWidth = '200px';
                 logoImg.style.objectFit = 'contain';
+                logoImg.alt = 'Customer Logo';
+                
                 desktopLogoContainer.innerHTML = '';
                 desktopLogoContainer.appendChild(logoImg);
             }
@@ -871,13 +880,6 @@
         // Translate "Almost there" screen to Hebrew
         function translateToHebrew() {
             console.log('🌍 Translating "Almost there" screen to Hebrew');
-            
-            // Translate title
-            const titleElement = document.querySelector('h2.gradient-text');
-            if (titleElement) {
-                // Keep the original title but add Hebrew subtitle
-                titleElement.innerHTML = titleElement.innerHTML + '<br><span style="font-size: 0.7em; color: #7d8590;">רהיט במציאות רבודה</span>';
-            }
             
             // Translate "Preview in 3D"
             const previewText = document.querySelector('p[style*="text-transform: uppercase"]');
@@ -904,15 +906,20 @@
                 `;
             }
             
-            // Translate instruction steps
-            const instructionsParagraph = document.querySelector('div[style*="backdrop-filter: blur"] p');
-            if (instructionsParagraph) {
-                instructionsParagraph.innerHTML = `
-                    <span style="color: #58a6ff;">📱</span> פתח את אפליקציית המצלמה שלך<br>
-                    <span style="color: #79c0ff;">👆</span> כוון לקוד ה-QR<br>
-                    <span style="color: #a371f7;">✨</span> תיהנה מהקסם!
-                `;
-            }
+            // Translate instruction steps - use more specific selector
+            setTimeout(() => {
+                const instructionsCard = document.querySelector('div[style*="margin-top: 25px"][style*="backdrop-filter: blur"] p');
+                if (instructionsCard) {
+                    instructionsCard.innerHTML = `
+                        <span style="color: #58a6ff;">📱</span> פתח את אפליקציית המצלמה שלך<br>
+                        <span style="color: #79c0ff;">👆</span> כוון לקוד ה-QR<br>
+                        <span style="color: #a371f7;">✨</span> תיהנה מהקסם!
+                    `;
+                    console.log('✅ Instruction steps translated');
+                } else {
+                    console.warn('⚠️ Could not find instruction steps to translate');
+                }
+            }, 100);
             
             console.log('✅ Hebrew translation applied');
         }
@@ -941,9 +948,17 @@
                 if (direction === 'rtl') {
                     // Adjust logo positioning for RTL - logo should be to the RIGHT of text
                     const logoContainer = document.getElementById('desktopCustomerLogoContainer');
-                    if (logoContainer && logoContainer.parentElement) {
-                        // Change the flex direction to row-reverse so logo appears on right side
+                    const titleContainer = logoContainer ? logoContainer.nextElementSibling : null;
+                    
+                    if (logoContainer && titleContainer) {
+                        // Use explicit ordering: logo should be visually after text (on the right)
+                        logoContainer.style.order = '2';     // Logo comes second (right side)
+                        titleContainer.style.order = '1';    // Text comes first (left side)
+                        
+                        // But since we want right-to-left layout, reverse the parent direction
                         logoContainer.parentElement.style.flexDirection = 'row-reverse';
+                        
+                        // This creates the layout: [TEXT] [LOGO] in RTL reading order
                     }
                     
                     // Adjust text alignment for RTL
@@ -953,7 +968,6 @@
                     }
                     
                     // Also ensure the title container text aligns right
-                    const titleContainer = logoContainer ? logoContainer.nextElementSibling : null;
                     if (titleContainer) {
                         titleContainer.style.textAlign = 'right';
                     }
@@ -969,8 +983,14 @@
                 } else {
                     // Reset to LTR defaults
                     const logoContainer = document.getElementById('desktopCustomerLogoContainer');
-                    if (logoContainer && logoContainer.parentElement) {
-                        // Reset flex direction to normal (logo on left, text on right)
+                    const titleContainer = logoContainer ? logoContainer.nextElementSibling : null;
+                    
+                    if (logoContainer && titleContainer) {
+                        // Reset to default order and direction
+                        logoContainer.style.order = '0';     // Logo first (left side)
+                        titleContainer.style.order = '1';    // Text second (right side) 
+                        
+                        // Reset flex direction to normal
                         logoContainer.parentElement.style.flexDirection = 'row';
                     }
                     
@@ -980,7 +1000,6 @@
                         titleElement.style.textAlign = 'left';
                     }
                     
-                    const titleContainer = logoContainer ? logoContainer.nextElementSibling : null;
                     if (titleContainer) {
                         titleContainer.style.textAlign = 'left';
                     }

@@ -382,8 +382,8 @@ export default async function handler(req, res) {
     const isDevelopment = process.env.NODE_ENV !== 'production';
     
     return res.status(500).json({ 
-      error: 'Internal server error',
-      ...(isDevelopment && { details: error.message, stack: error.stack })
+      error: 'Something went wrong on our end. Please try again in a few moments.',
+      message: 'Service temporarily unavailable'
     });
   }
 }
@@ -493,8 +493,8 @@ async function handleUpload(req, res) {
     if (!dbResult.success) {
       logger.error('Database save failed', dbResult.error);
       return res.status(500).json({ 
-        error: 'Failed to save model to database',
-        details: dbResult.error || 'Unknown database error'
+        error: 'Unable to complete upload at this time. Please try again in a few moments.',
+        message: 'Upload processing failed'
       });
     }
 
@@ -567,7 +567,7 @@ async function handleModels(req, res) {
       
     } catch (error) {
       console.error('Error fetching models:', error);
-      res.status(500).json({ error: 'Failed to fetch models' });
+      res.status(500).json({ error: 'Unable to load your furniture models. Please refresh the page and try again.' });
     }
   }
   
@@ -592,7 +592,7 @@ async function handleModels(req, res) {
       
     } catch (error) {
       console.error('Error updating model:', error);
-      res.status(500).json({ error: 'Failed to update model' });
+      res.status(500).json({ error: 'Unable to save changes. Please try again.' });
     }
   }
   
@@ -682,7 +682,7 @@ async function handleModelFile(req, res, modelId) {
     
   } catch (error) {
     console.error('Error fetching model:', error);
-    res.status(500).json({ error: 'Failed to fetch model' });
+    res.status(500).json({ error: 'Unable to load the requested furniture model. Please check the link and try again.' });
   }
 }
 
@@ -733,7 +733,7 @@ async function handleModelInfo(req, res, modelId) {
     
   } catch (error) {
     console.error('Error fetching model info:', error);
-    res.status(500).json({ error: 'Failed to fetch model info' });
+    res.status(500).json({ error: 'Unable to load furniture details. Please try again.' });
   }
 }
 
@@ -1504,10 +1504,9 @@ async function handleResetViewCounts(req, res) {
   try {
     console.log('🔄 Resetting all view counts to 0...');
     
-    // Reset view_count in models table
-    const { error: modelsError } = await supabase
-      .from('models')
-      .update({ view_count: 0 });
+    // Reset view_count in models table using raw SQL to avoid Supabase WHERE clause requirement
+    const resetResult = await query('UPDATE models SET view_count = 0 WHERE view_count >= 0');
+    const modelsError = resetResult.error;
 
     if (modelsError) {
       console.error('Error resetting models view counts:', modelsError);
