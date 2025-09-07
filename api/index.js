@@ -383,7 +383,13 @@ export default async function handler(req, res) {
     
     return res.status(500).json({ 
       error: 'Something went wrong on our end. Please try again in a few moments.',
-      message: 'Service temporarily unavailable'
+      message: 'Service temporarily unavailable',
+      showReportButton: true,
+      reportData: {
+        errorType: 'server_error',
+        timestamp: new Date().toISOString(),
+        userAgent: req.headers['user-agent'] || 'unknown'
+      }
     });
   }
 }
@@ -494,7 +500,13 @@ async function handleUpload(req, res) {
       logger.error('Database save failed', dbResult.error);
       return res.status(500).json({ 
         error: 'Unable to complete upload at this time. Please try again in a few moments.',
-        message: 'Upload processing failed'
+        message: 'Upload processing failed',
+        showReportButton: true,
+        reportData: {
+          errorType: 'upload_failed',
+          filename: uploadedFile?.originalFilename || 'unknown',
+          timestamp: new Date().toISOString()
+        }
       });
     }
 
@@ -531,7 +543,7 @@ async function handleUpload(req, res) {
         shareUrl: `https://${domain}/view?id=${modelId}`,
         title: fields.title?.[0] || uploadedFile.originalFilename,
         fileSize: cloudinaryResult.size,
-        message: '📦 Model uploaded successfully!',
+        message: '📦 Furniture uploaded successfully!',
         debugInfo: {
           uploadType: 'model',
           detectedAs: 'regular model'
@@ -567,7 +579,7 @@ async function handleModels(req, res) {
       
     } catch (error) {
       console.error('Error fetching models:', error);
-      res.status(500).json({ error: 'Unable to load your furniture models. Please refresh the page and try again.' });
+      res.status(500).json({ error: 'Unable to load your furniture collection. Please refresh the page and try again.' });
     }
   }
   
@@ -674,7 +686,7 @@ async function handleModelFile(req, res, modelId) {
     const model = await getModel(modelId);
     
     if (!model) {
-      return res.status(404).json({ error: 'Model not found' });
+      return res.status(404).json({ error: 'Furniture item not found' });
     }
     
     // Redirect to Cloudinary URL for the actual file
@@ -694,7 +706,7 @@ async function handleModelInfo(req, res, modelId) {
     const model = await getModel(modelId);
     
     if (!model) {
-      return res.status(404).json({ error: 'Model not found' });
+      return res.status(404).json({ error: 'Furniture item not found' });
     }
 
     // Get variants for this model
@@ -755,7 +767,7 @@ async function handleModelView(req, res, modelId) {
     const result = await incrementViewCount(modelId, variantId);
     
     if (!result.success) {
-      return res.status(404).json({ error: 'Model not found' });
+      return res.status(404).json({ error: 'Furniture item not found' });
     }
     
     res.status(200).json({ success: true });
@@ -1681,7 +1693,7 @@ async function handleCreateFeedbackTable(req, res) {
 -- Create feedback table
 CREATE TABLE IF NOT EXISTS feedback (
   id TEXT PRIMARY KEY,
-  feedback_type VARCHAR(20) NOT NULL CHECK (feedback_type IN ('positive', 'negative')),
+  feedback_type VARCHAR(20) NOT NULL CHECK (feedback_type IN ('positive', 'negative', 'error')),
   categories TEXT[] DEFAULT '{}',
   comment TEXT,
   customer_id VARCHAR(100) NOT NULL,

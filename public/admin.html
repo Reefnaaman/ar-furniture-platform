@@ -2966,6 +2966,58 @@
     <script>
         let deleteTarget = null;
         
+        // Error reporting utility
+        async function showErrorReporting(errorMessage, reportData) {
+            const reportButton = document.createElement('button');
+            reportButton.innerHTML = '📧 Report this issue to support';
+            reportButton.style.cssText = 'margin-top: 10px; padding: 8px 16px; background: #f85149; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;';
+            
+            reportButton.onclick = async () => {
+                const userDescription = prompt('Please describe what you were doing when this error occurred (optional):');
+                
+                try {
+                    await fetch('/api/feedback', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            type: 'error',
+                            comment: `Error: ${errorMessage}\n\nUser description: ${userDescription || 'None provided'}\n\nTechnical details: ${JSON.stringify(reportData, null, 2)}`,
+                            customerId: 'admin',
+                            itemId: 'system',
+                            itemName: 'Admin System',
+                            userAgent: navigator.userAgent
+                        })
+                    });
+                    
+                    alert('✅ Issue reported successfully! Our team will investigate.');
+                    reportButton.remove();
+                } catch (error) {
+                    alert('❌ Unable to submit report. Please contact support directly.');
+                }
+            };
+            
+            return reportButton;
+        }
+
+        // Enhanced error handling with report option
+        function handleAPIError(error, response) {
+            console.error('API Error:', error);
+            
+            if (response && response.showReportButton && response.reportData) {
+                const errorDiv = document.createElement('div');
+                errorDiv.style.cssText = 'margin: 10px; padding: 15px; background: #ffeaea; border: 1px solid #f85149; border-radius: 6px;';
+                errorDiv.innerHTML = `<p style="color: #d1242f; margin: 0 0 10px 0;">${response.error}</p>`;
+                
+                showErrorReporting(response.error, response.reportData).then(reportButton => {
+                    errorDiv.appendChild(reportButton);
+                });
+                
+                // Try to find a suitable container to show the error
+                const container = document.getElementById('modelsContainer') || document.body;
+                container.insertBefore(errorDiv, container.firstChild);
+            }
+        }
+        
         // Load models on page load
         loadModels();
         
