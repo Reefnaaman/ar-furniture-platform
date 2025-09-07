@@ -786,7 +786,7 @@
                 
                 // Translate to Hebrew if RTL is selected
                 if (settings.text_direction === 'rtl') {
-                    translateToHebrew();
+                    translateToLanguage('he');
                 }
                 
             } catch (error) {
@@ -877,20 +877,16 @@
             }
         }
         
-        // Translate "Almost there" screen to Hebrew
-        function translateToHebrew() {
-            console.log('🌍 Translating "Almost there" screen to Hebrew');
+        // Translate AR viewer screen using strings file
+        function translateToLanguage(language = 'he') {
+            console.log(`🌍 Translating AR viewer to ${language}`);
+            
+            const strings = getStrings(language);
             
             // Translate "Preview in 3D"
             const previewText = document.querySelector('p[style*="text-transform: uppercase"]');
             if (previewText) {
-                previewText.textContent = 'צפיה תלת-מימדית 👀';
-            }
-            
-            // Translate "Almost there!"
-            const almostThereHeading = document.querySelector('h3[style*="background: linear-gradient"]');
-            if (almostThereHeading) {
-                almostThereHeading.textContent = 'כמעט סיימנו! 🎉';
+                previewText.textContent = strings.preview3D;
             }
             
             // Translate QR instructions
@@ -900,9 +896,9 @@
                 const modelTitle = titleSpan ? titleSpan.textContent.replace('to see ', '').replace(/^to see /, '') : 'הרהיט';
                 
                 qrInstructions.innerHTML = `
-                    <span style="color: #7d8590;">סרוק אותי עם הטלפון שלך</span><br>
-                    <span style="color: #58a6ff; font-weight: 600;">כדי לראות את ${modelTitle}</span><br>
-                    <span style="color: #7d8590;">בחלל שלך! 😊</span>
+                    <span style="color: #7d8590;">${strings.scanWithPhone}</span><br>
+                    <span style="color: #58a6ff; font-weight: 600;">${strings.seeInSpace} ${modelTitle}</span><br>
+                    <span style="color: #7d8590;">${strings.inYourSpace}</span>
                 `;
             }
             
@@ -911,9 +907,9 @@
                 const instructionsCard = document.querySelector('div[style*="margin-top: 25px"][style*="backdrop-filter: blur"] p');
                 if (instructionsCard) {
                     instructionsCard.innerHTML = `
-                        <span style="color: #58a6ff;">📱</span> פתח את אפליקציית המצלמה שלך<br>
-                        <span style="color: #79c0ff;">👆</span> כוון לקוד ה-QR<br>
-                        <span style="color: #a371f7;">✨</span> תיהנה מהקסם!
+                        <span style="color: #58a6ff;">📱</span> ${strings.openCamera}<br>
+                        <span style="color: #79c0ff;">👆</span> ${strings.pointAtQR}<br>
+                        <span style="color: #a371f7;">✨</span> ${strings.seeMagic}
                     `;
                     console.log('✅ Instruction steps translated');
                 } else {
@@ -921,7 +917,7 @@
                 }
             }, 100);
             
-            console.log('✅ Hebrew translation applied');
+            console.log(`✅ ${language} translation applied`);
         }
         
         // Apply RTL/LTR direction to the QR screen
