@@ -3468,7 +3468,7 @@
                 console.error('Error loading brand settings:', error);
             }
             
-            // Initialize the live preview
+            // Initialize brand settings (simplified without preview)
             setTimeout(initializeBrandPreview, 500);
         }
 
@@ -3487,9 +3487,20 @@
 
                 // Get form data
                 const textDirection = document.querySelector('input[name="textDirection"]:checked')?.value || 'ltr';
+                const primaryColor = document.getElementById('primaryColor')?.value || '#58a6ff';
+                const secondaryColor = document.getElementById('secondaryColor')?.value || '#4e9eff';
+                const fontFamily = document.getElementById('fontFamily')?.value || 'Inter';
+                
+                // Get logo data if uploaded
+                const logoImg = document.getElementById('logoPreview');
+                const logoUrl = logoImg && logoImg.src && !logoImg.src.includes('placeholder') ? logoImg.src : null;
                 
                 const settingsData = {
-                    textDirection: textDirection
+                    textDirection: textDirection,
+                    primaryColor: primaryColor,
+                    secondaryColor: secondaryColor,
+                    fontFamily: fontFamily,
+                    logoUrl: logoUrl
                 };
 
                 console.log('Saving brand settings:', settingsData);
@@ -3607,8 +3618,60 @@
             }
         }
 
+        // Load existing brand settings
+        async function loadBrandSettings() {
+            if (!customerId) return;
+            
+            try {
+                const response = await fetch(`/api/customers/${customerId}/brand-settings`);
+                if (response.ok) {
+                    const settings = await response.json();
+                    console.log('Loaded brand settings:', settings);
+                    
+                    // Apply loaded settings to form
+                    if (settings.text_direction) {
+                        const dirRadio = document.querySelector(`input[name="textDirection"][value="${settings.text_direction}"]`);
+                        if (dirRadio) dirRadio.checked = true;
+                    }
+                    
+                    if (settings.primary_color) {
+                        document.getElementById('primaryColor').value = settings.primary_color;
+                    }
+                    
+                    if (settings.secondary_color) {
+                        document.getElementById('secondaryColor').value = settings.secondary_color;
+                    }
+                    
+                    if (settings.font_family) {
+                        document.getElementById('fontFamily').value = settings.font_family;
+                    }
+                    
+                    if (settings.logo_url) {
+                        const logoImg = document.getElementById('logoPreview');
+                        if (logoImg) {
+                            logoImg.src = settings.logo_url;
+                            logoImg.style.display = 'block';
+                        }
+                        const placeholder = document.getElementById('logoPlaceholder');
+                        if (placeholder) {
+                            placeholder.style.display = 'none';
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error loading brand settings:', error);
+            }
+        }
+        
         // Initialize preview when Brand Settings loads
         function initializeBrandPreview() {
+            // Preview functionality has been removed - no iframe preview
+            // Just load existing settings
+            loadBrandSettings();
+            return;
+            
+            // DEPRECATED CODE BELOW - keeping for reference
+            /*
             // Set preview model to customer's first available model
             setPreviewModel();
             
@@ -3616,7 +3679,7 @@
             updatePreviewColors();
             
             // Listen for iframe ready signal
-            window.addEventListener('message', function(event) {
+            window.addEventListener('message', function(event) {*/
                 console.log('📨 Message received from iframe:', event.data, 'Origin:', event.origin);
                 
                 if (event.data && event.data.type === 'iframeReady') {
@@ -3681,6 +3744,7 @@
                 console.error('❌ Iframe failed to load');
                 showPreviewError();
             });
+            */
         }
         
         function showPreviewError() {
