@@ -1169,7 +1169,7 @@
                 box-shadow: ${isOriginalActive ? '0 0 20px rgba(88, 166, 255, 0.5)' : 'none'};
             `;
             originalCircle.title = 'Original';
-            originalCircle.onclick = () => switchARVariant(modelViewer, `/api/model/${modelId}`, 'Original', originalCircle);
+            originalCircle.onclick = () => switchARVariant(modelViewer, modelInfo.cloudinary_url, 'Original', originalCircle);
             variantControls.appendChild(originalCircle);
             
             // Add variant color circles

@@ -720,7 +720,7 @@ async function handleModelInfo(req, res, modelId) {
       console.warn('Error fetching variants for model info:', variantsError);
     }
     
-    // Return model info with variants (without Cloudinary URLs for security)
+    // Return model info with variants (including Cloudinary URL for AR variant switching)
     res.status(200).json({
       id: model.id,
       title: model.title,
@@ -733,6 +733,7 @@ async function handleModelInfo(req, res, modelId) {
       customer_id: model.customer_id, // Include for logo loading
       customer_name: model.customer_name, // Include for logo loading
       metadata: model.metadata,
+      cloudinary_url: model.cloudinary_url, // Include for AR original variant switching
       variants: (variants || []).map(variant => ({
         id: variant.id,
         variant_name: variant.variant_name,
