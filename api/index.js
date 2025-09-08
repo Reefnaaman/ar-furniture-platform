@@ -188,6 +188,11 @@ export default async function handler(req, res) {
       return await handleTestSaveModel(req, res);
     }
     
+    // Route: /api/test-brand-settings-schema
+    if (routePath === 'test-brand-settings-schema') {
+      return await handleTestBrandSettingsSchema(req, res);
+    }
+    
     // Route: /api/test-columns (debug endpoint)
     if (routePath === 'test-columns') {
       try {
@@ -1476,10 +1481,50 @@ GRANT ALL ON model_variants TO service_role;
     }
 
     console.log('✅ Models table exists and is accessible!');
+    
+    // Now check if product_url column exists
+    console.log('🔧 Checking if product_url column exists...');
+    
+    try {
+      // Try to query the product_url column to see if it exists
+      const { error: columnCheckError } = await supabase
+        .from('models')
+        .select('product_url')
+        .limit(1);
+      
+      if (columnCheckError && columnCheckError.message.includes('product_url')) {
+        console.log('⚠️  product_url column is missing!');
+        
+        return res.status(200).json({
+          success: false,
+          message: 'Models table exists but product_url column is missing',
+          action_required: 'Please run this SQL in your Supabase SQL editor:',
+          sql: 'ALTER TABLE models ADD COLUMN product_url TEXT;',
+          instructions: [
+            '1. Go to your Supabase dashboard',
+            '2. Navigate to SQL Editor',
+            '3. Run the SQL command above',
+            '4. Then try saving product URLs again'
+          ]
+        });
+      } else {
+        console.log('✅ product_url column exists!');
+      }
+    } catch (columnError) {
+      console.error('⚠️  Error checking product_url column:', columnError);
+      
+      return res.status(200).json({
+        success: false,
+        message: 'Could not verify product_url column',
+        error: columnError.message,
+        action_required: 'Please run this SQL in your Supabase SQL editor to be safe:',
+        sql: 'ALTER TABLE models ADD COLUMN IF NOT EXISTS product_url TEXT;'
+      });
+    }
 
     return res.status(200).json({
       success: true,
-      message: 'Models table is ready!'
+      message: 'Models table is ready with product_url column!'
     });
 
   } catch (error) {
@@ -2005,4 +2050,95 @@ GRANT USAGE, SELECT ON SEQUENCE brand_settings_id_seq TO service_role;
       '5. This enables customer brand customization settings'
     ]
   });
+}
+
+/**
+ * Test brand settings schema with sample data
+ */
+async function handleTestBrandSettingsSchema(req, res) {
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const testCustomerId = 'TEST_CUSTOMER_001';
+    
+    if (req.method === 'POST') {
+      // Test inserting sample brand settings data
+      console.log('🧪 Testing brand settings schema with sample data...');
+      
+      const sampleData = {
+        customer_id: testCustomerId,
+        text_direction: 'rtl',
+        logo_url: 'https://res.cloudinary.com/example/image/upload/v1/brand-assets/test-logo.png',
+        primary_color: '#ff6b6b',
+        secondary_color: '#4ecdc4',
+        font_family: 'Roboto',
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('customer_brand_settings')
+        .upsert(sampleData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Schema test failed:', error);
+        return res.status(500).json({ 
+          error: 'Schema test failed', 
+          details: error.message,
+          hint: 'Make sure you ran the database migration first'
+        });
+      }
+
+      console.log('✅ Sample data inserted successfully');
+      return res.status(200).json({
+        success: true,
+        message: 'Brand settings schema test passed!',
+        testData: data,
+        schemaFields: ['id', 'customer_id', 'text_direction', 'logo_url', 'primary_color', 'secondary_color', 'font_family', 'created_at', 'updated_at']
+      });
+    }
+    
+    else if (req.method === 'GET') {
+      // Test retrieving the sample data
+      const { data, error } = await supabase
+        .from('customer_brand_settings')
+        .select('*')
+        .eq('customer_id', testCustomerId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        return res.status(500).json({ error: 'Failed to retrieve test data', details: error.message });
+      }
+
+      if (!data) {
+        return res.status(200).json({
+          message: 'No test data found. Use POST to create test data first.',
+          instructions: 'Send a POST request to this endpoint to create sample data'
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Schema validation successful!',
+        testData: data,
+        validation: {
+          hasAllFields: !!(data.customer_id && data.text_direction !== undefined && 
+                         data.logo_url !== undefined && data.primary_color && 
+                         data.secondary_color && data.font_family),
+          missingFields: []
+        }
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Schema test error:', error);
+    return res.status(500).json({ 
+      error: 'Schema test failed', 
+      details: error.message,
+      hint: 'Check if the customer_brand_settings table exists and has all required columns'
+    });
+  }
 }
