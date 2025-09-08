@@ -132,6 +132,56 @@ export default async function handler(req, res) {
     }
   }
   
+  // DELETE /api/requests - Delete request
+  else if (req.method === 'DELETE') {
+    try {
+      const { id, customerId } = req.body;
+      
+      if (!id) {
+        return res.status(400).json({ error: 'Request ID required' });
+      }
+      
+      // Verify the request belongs to this customer (security check)
+      if (customerId) {
+        const { data: existingRequest, error: fetchError } = await supabase
+          .from('customer_requests')
+          .select('customer_id')
+          .eq('id', id)
+          .single();
+          
+        if (fetchError || !existingRequest) {
+          return res.status(404).json({ error: 'Request not found' });
+        }
+        
+        if (existingRequest.customer_id !== customerId) {
+          return res.status(403).json({ error: 'Access denied' });
+        }
+      }
+      
+      const { data, error } = await supabase
+        .from('customer_requests')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error deleting request:', error);
+        return res.status(500).json({ error: 'Failed to delete request' });
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Request deleted successfully',
+        deletedRequest: data
+      });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
   else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
