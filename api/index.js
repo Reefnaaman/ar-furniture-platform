@@ -260,6 +260,11 @@ export default async function handler(req, res) {
       return await handleCreateUser(req, res);
     }
     
+    // Route: /api/requests - handle customer request operations
+    if (routePath === 'requests') {
+      return await handleRequests(req, res);
+    }
+    
     // Route: /api/variants - handle variant operations
     if (routePath === 'variants') {
       if (req.method === 'PUT') {
@@ -2221,6 +2226,191 @@ async function handleTestBrandSettingsSchema(req, res) {
   }
 }
 
+
+/**
+ * Handle customer requests operations
+ */
+async function handleRequests(req, res) {
+  // GET /api/requests or /api/requests?customer={id} - Get all requests or customer requests
+  if (req.method === 'GET') {
+    try {
+      const { customer } = req.query;
+      
+      let query = supabase
+        .from('customer_requests')
+        .select(`
+          *,
+          models!customer_requests_model_id_fkey(title, id)
+        `)
+        .order('created_at', { ascending: false });
+      
+      // If customer parameter is provided, filter by customer (for customer view)
+      // If no customer parameter, return all requests (for admin view)
+      if (customer) {
+        query = query.eq('customer_id', customer);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) {
+        console.error('Error fetching requests:', error);
+        return res.status(500).json({ error: 'Failed to fetch requests' });
+      }
+      
+      return res.status(200).json({
+        requests: data || [],
+        success: true
+      });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  // POST /api/requests - Submit new request
+  else if (req.method === 'POST') {
+    try {
+      const { customerId, productUrl, title, description, notes, referenceImages } = req.body;
+      
+      if (!customerId || !productUrl) {
+        return res.status(400).json({ error: 'Customer ID and product URL are required' });
+      }
+      
+      // Generate request ID
+      const requestId = `req-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+      
+      const { data, error } = await supabase
+        .from('customer_requests')
+        .insert({
+          id: requestId,
+          customer_id: customerId,
+          product_url: productUrl,
+          title: title || 'Custom Furniture Request',
+          description: description || '',
+          notes: notes || '',
+          reference_images: referenceImages || [],
+          status: 'pending',
+          priority: 'normal',
+          metadata: {
+            submitted_at: new Date().toISOString(),
+            user_agent: req.headers['user-agent']
+          }
+        })
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error creating request:', error);
+        return res.status(500).json({ error: 'Failed to create request' });
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Request submitted successfully!',
+        request: data
+      });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  // PUT /api/requests - Update request (admin only for now)  
+  else if (req.method === 'PUT') {
+    try {
+      const { id, status, adminNotes, estimatedCompletion, modelId } = req.body;
+      
+      if (!id) {
+        return res.status(400).json({ error: 'Request ID required' });
+      }
+      
+      const updateData = { updated_at: new Date().toISOString() };
+      
+      if (status) updateData.status = status;
+      if (adminNotes) updateData.admin_notes = adminNotes;
+      if (estimatedCompletion) updateData.estimated_completion = estimatedCompletion;
+      if (modelId) updateData.model_id = modelId;
+      
+      const { data, error } = await supabase
+        .from('customer_requests')
+        .update(updateData)
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error updating request:', error);
+        return res.status(500).json({ error: 'Failed to update request' });
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Request updated successfully',
+        request: data
+      });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  // DELETE /api/requests - Delete request
+  else if (req.method === 'DELETE') {
+    try {
+      const { id, customerId } = req.body;
+      
+      if (!id) {
+        return res.status(400).json({ error: 'Request ID required' });
+      }
+      
+      // Verify the request belongs to this customer (security check)
+      if (customerId) {
+        const { data: existingRequest, error: fetchError } = await supabase
+          .from('customer_requests')
+          .select('customer_id')
+          .eq('id', id)
+          .single();
+          
+        if (fetchError || !existingRequest) {
+          return res.status(404).json({ error: 'Request not found' });
+        }
+        
+        if (existingRequest.customer_id !== customerId) {
+          return res.status(403).json({ error: 'Access denied' });
+        }
+      }
+      
+      const { data, error } = await supabase
+        .from('customer_requests')
+        .delete()
+        .eq('id', id)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('Error deleting request:', error);
+        return res.status(500).json({ error: 'Failed to delete request' });
+      }
+      
+      return res.status(200).json({
+        success: true,
+        message: 'Request deleted successfully',
+        deletedRequest: data
+      });
+      
+    } catch (error) {
+      console.error('Error:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  else {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
 
 /**
  * Handle customer logo upload - integrates with admin Images system
