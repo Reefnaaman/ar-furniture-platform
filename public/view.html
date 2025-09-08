@@ -1293,69 +1293,56 @@
             
             document.body.appendChild(variantControls);
             
-            // 3. Create Back button or helpful message (more spacing, even higher)
-            if (document.referrer && document.referrer !== window.location.href && !document.referrer.includes(window.location.host)) {
-                // Show back button when there's an external referrer
-                const backButton = document.createElement('button');
-                backButton.id = 'arBackButton';
-                backButton.style.cssText = `
-                    position: fixed;
-                    bottom: 260px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    background: rgba(255, 255, 255, 0.2);
-                    border: 1px solid rgba(255, 255, 255, 0.3);
-                    color: #ffffff;
-                    padding: 10px 20px;
-                    border-radius: 25px;
-                    font-size: 14px;
-                    cursor: pointer;
-                    backdrop-filter: blur(10px);
-                    transition: all 0.2s ease;
-                    z-index: 9999;
-                    visibility: hidden;
-                `;
-                backButton.textContent = `← Back to ${modelInfo.customer_name || 'Product'}`;
-                backButton.onclick = () => {
-                    const returnUrl = getReturnUrl(modelInfo);
-                    console.log('🔙 Going back to:', returnUrl);
-                    if (returnUrl.startsWith('javascript:')) {
-                        history.back();
-                    } else {
-                        window.location.href = returnUrl;
-                    }
-                };
-                
-                // Add hover effect
-                backButton.onmouseenter = () => {
-                    backButton.style.background = 'rgba(255, 255, 255, 0.3)';
-                };
-                backButton.onmouseleave = () => {
-                    backButton.style.background = 'rgba(255, 255, 255, 0.2)';
-                };
-                
-                document.body.appendChild(backButton);
-            } else if (!document.referrer || document.referrer === '' || document.referrer.includes(window.location.host)) {
-                // Show helpful message only when truly direct access (no referrer or same domain)
-                const helpMessage = document.createElement('div');
-                helpMessage.id = 'arHelpMessage';
-                helpMessage.style.cssText = `
-                    position: fixed;
-                    bottom: 260px;
-                    left: 50%;
-                    transform: translateX(-50%);
-                    color: rgba(255, 255, 255, 0.8);
-                    font-size: 13px;
-                    text-align: center;
-                    line-height: 1.4;
-                    max-width: 280px;
-                    z-index: 9999;
-                    visibility: hidden;
-                    padding: 8px 16px;
-                `;
-                helpMessage.textContent = 'Return to your original tab to go back to the furniture website';
-                document.body.appendChild(helpMessage);
-            }
+            // 3. Always create Back button (using smart return URL system)
+            const backButton = document.createElement('button');
+            backButton.id = 'arBackButton';
+            backButton.style.cssText = `
+                position: fixed;
+                bottom: 260px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #58a6ff 0%, #4e9eff 100%);
+                border: none;
+                color: #ffffff;
+                padding: 12px 24px;
+                border-radius: 25px;
+                font-size: 14px;
+                font-weight: 600;
+                cursor: pointer;
+                box-shadow: 0 4px 20px rgba(88, 166, 255, 0.3);
+                text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
+                transition: all 0.3s ease;
+                z-index: 9999;
+                visibility: hidden;
+                min-width: 180px;
+            `;
+            backButton.textContent = `← Back to ${modelInfo.customer_name || 'Product'}`;
+            backButton.onclick = () => {
+                const returnUrl = getReturnUrl(modelInfo);
+                console.log('🔙 Going back to:', returnUrl);
+                if (returnUrl === 'javascript:history.back()' || returnUrl.startsWith('javascript:')) {
+                    console.log('🔙 Using history.back()');
+                    history.back();
+                } else if (returnUrl && returnUrl !== window.location.href) {
+                    console.log('🔙 Navigating to:', returnUrl);
+                    window.location.href = returnUrl;
+                } else {
+                    console.log('🔙 Fallback: using history.back()');
+                    history.back();
+                }
+            };
+            
+            // Add hover effect
+            backButton.onmouseenter = () => {
+                backButton.style.transform = 'translateX(-50%) scale(1.05)';
+                backButton.style.boxShadow = '0 6px 25px rgba(88, 166, 255, 0.4)';
+            };
+            backButton.onmouseleave = () => {
+                backButton.style.transform = 'translateX(-50%) scale(1)';
+                backButton.style.boxShadow = '0 4px 20px rgba(88, 166, 255, 0.3)';
+            };
+            
+            document.body.appendChild(backButton);
             
             // Show all controls after AR is activated (with delay for AR to fully load)
             setTimeout(() => {
