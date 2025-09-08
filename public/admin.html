@@ -3349,20 +3349,11 @@
                                 </div>
                                 ${model.variants.map(variant => `
                                     <div class="variant-wrapper">
-                                        <div class="variant-info">
-                                            <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
-                                                 style="background-color: ${variant.hex_color};" 
-                                                 title="${variant.variant_name}"
-                                                 onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}', '${variant.variant_type || 'upload'}')">
-                                                 ${variant.is_primary ? '★' : ''}
-                                            </div>
-                                            <div class="variant-details">
-                                                ${variant.product_url ? `
-                                                    <div class="variant-url" title="${variant.product_url}">
-                                                        <a href="${variant.product_url}" target="_blank" onclick="event.stopPropagation()">🔗</a>
-                                                    </div>
-                                                ` : ''}
-                                            </div>
+                                        <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
+                                             style="background-color: ${variant.hex_color};" 
+                                             title="${variant.variant_name}"
+                                             onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}', '${variant.variant_type || 'upload'}')">
+                                             ${variant.is_primary ? '★' : ''}
                                         </div>
                                         <div class="variant-delete" 
                                              title="Delete ${variant.variant_name}"
@@ -4772,6 +4763,7 @@
                 </h3>
                 <input type="url" 
                        id="productUrlEditInput"
+                       data-model-id="${modelId}"
                        value="${originalUrl}" 
                        placeholder="https://example.com/product" 
                        style="
@@ -4847,7 +4839,14 @@
         
         async function saveProductUrl(input) {
             const newUrl = input.value.trim();
-            const modelId = currentEditUrlElement.getAttribute('data-model-id');
+            
+            // Get model ID from the input's data attribute (set when modal was created)
+            const modelId = input.getAttribute('data-model-id');
+            
+            if (!modelId) {
+                console.error('No model ID found');
+                return;
+            }
             
             try {
                 const response = await fetch('/api/models', {
@@ -4892,24 +4891,9 @@
         }
         
         function cancelUrlEdit() {
-            if (currentEditUrlElement) {
-                const originalUrl = currentEditUrlElement.getAttribute('data-original-url') || '';
-                
-                // Restore button text and state
-                if (originalUrl) {
-                    currentEditUrlElement.textContent = originalUrl;
-                    currentEditUrlElement.removeAttribute('data-empty');
-                } else {
-                    currentEditUrlElement.textContent = '+ Add Product URL';
-                    currentEditUrlElement.setAttribute('data-empty', 'true');
-                }
-                
-                // Clean up: remove any input and show button
-                const input = currentEditUrlElement.parentNode.querySelector('.url-edit-input');
-                if (input) {
-                    input.remove();
-                }
-                currentEditUrlElement.style.display = 'block';
+            if (currentEditUrlElement && currentEditUrlElement.formContainer) {
+                // Simply remove the modal
+                currentEditUrlElement.formContainer.remove();
                 currentEditUrlElement = null;
             }
         }
