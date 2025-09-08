@@ -487,6 +487,7 @@ async function handleUpload(req, res) {
         customerId: fields.customerId?.[0] || 'unassigned',
         customerName: fields.customerName?.[0] || 'Unassigned',
         dominantColor: '#6b7280', // Will be updated by frontend after color extraction
+        productUrl: fields.product_url?.[0] || null, // Product URL for back button
         metadata: {
           mimetype: uploadedFile.headers['content-type'],
           uploadedAt: new Date().toISOString()
