@@ -3182,6 +3182,19 @@
                 // Store models data globally for variant switching
                 window.currentModelsData = data.models;
                 
+                // Initialize all product URL buttons to show original state
+                setTimeout(() => {
+                    data.models.forEach(model => {
+                        const modelCard = document.querySelector(`[data-model-id="${model.id}"]`);
+                        if (modelCard) {
+                            const card = modelCard.closest('.model-card');
+                            if (card) {
+                                updateProductUrlButton(card, model.id, 'original');
+                            }
+                        }
+                    });
+                }, 100);
+                
                 // Update main stats
                 document.getElementById('totalModels').textContent = data.stats.totalModels || 0;
                 document.getElementById('totalViews').textContent = data.stats.totalViews || 0;
@@ -5753,6 +5766,9 @@
                     productUrlButton.innerHTML = '➕ Add URL';
                     productUrlButton.setAttribute('data-empty', 'true');
                 }
+                // Clear variant attributes when switching back to original
+                productUrlButton.removeAttribute('data-variant-id');
+                productUrlButton.removeAttribute('data-editing-variant');
             } else {
                 // Switching to a variant - find the variant's product_url
                 const variant = model.variants?.find(v => v.id === variantId);
