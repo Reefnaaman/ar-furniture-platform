@@ -1199,6 +1199,48 @@
             box-shadow: 0 4px 12px rgba(255, 215, 0, 0.6);
         }
         
+        .variant-wrapper {
+            position: relative;
+            display: inline-block;
+            margin-bottom: 8px;
+        }
+        
+        .variant-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .variant-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .variant-name {
+            font-size: 0.75rem;
+            color: #c9d1d9;
+            max-width: 80px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .variant-url {
+            font-size: 0.7rem;
+        }
+        
+        .variant-url a {
+            color: #58a6ff;
+            text-decoration: none;
+            opacity: 0.8;
+            transition: opacity 0.2s ease;
+        }
+        
+        .variant-url a:hover {
+            opacity: 1;
+        }
+        
         .action-button {
             padding: 10px 16px;
             background: rgba(240, 246, 252, 0.05);
@@ -2634,11 +2676,23 @@
                                          onclick="switchToVariant('${model.id}', 'original', '${modelUrl}')">
                                     </div>
                                     ${model.variants.map(variant => `
-                                        <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
-                                             style="background-color: ${variant.hex_color};" 
-                                             title="${variant.variant_name}"
-                                             onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}', '${variant.variant_type || 'upload'}')">
-                                             ${variant.is_primary ? '★' : ''}
+                                        <div class="variant-wrapper">
+                                            <div class="variant-info">
+                                                <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
+                                                     style="background-color: ${variant.hex_color};" 
+                                                     title="${variant.variant_name}"
+                                                     onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}', '${variant.variant_type || 'upload'}')">
+                                                     ${variant.is_primary ? '★' : ''}
+                                                </div>
+                                                <div class="variant-details">
+                                                    <div class="variant-name" title="${variant.variant_name}">${variant.variant_name}</div>
+                                                    ${variant.product_url ? `
+                                                        <div class="variant-url" title="${variant.product_url}">
+                                                            <a href="${variant.product_url}" target="_blank" onclick="event.stopPropagation()">🔗</a>
+                                                        </div>
+                                                    ` : ''}
+                                                </div>
+                                            </div>
                                         </div>
                                     `).join('')}
                                 </div>

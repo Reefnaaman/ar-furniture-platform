@@ -587,6 +587,9 @@
                         if (selectedVariant) {
                             modelUrl = selectedVariant.cloudinary_url;
                             console.log(`🎨 Loading variant: ${selectedVariant.variant_name} (${selectedVariant.hex_color})`);
+                            // Set variant data for return URL purposes
+                            window.currentVariantData = selectedVariant;
+                            console.log('🔄 Set initial variant data:', selectedVariant);
                         }
                     }
                     
@@ -616,6 +619,9 @@
                     if (selectedVariant) {
                         desktopModelUrl = selectedVariant.cloudinary_url;
                         console.log(`🖥️ Desktop loading variant: ${selectedVariant.variant_name} (${selectedVariant.hex_color})`);
+                        // Set variant data for return URL purposes
+                        window.currentVariantData = selectedVariant;
+                        console.log('🔄 Set initial desktop variant data:', selectedVariant);
                     }
                 }
                 
@@ -1208,7 +1214,7 @@
                 box-shadow: ${isOriginalActive ? '0 0 20px rgba(88, 166, 255, 0.5)' : 'none'};
             `;
             originalCircle.title = 'Original';
-            originalCircle.onclick = () => switchARVariant(modelViewer, modelInfo.cloudinary_url, 'Original', originalCircle);
+            originalCircle.onclick = () => switchARVariant(modelViewer, modelInfo.cloudinary_url, 'Original', originalCircle, null);
             variantControls.appendChild(originalCircle);
             
             // Add variant color circles
@@ -1235,7 +1241,7 @@
                 `;
                 circle.title = variant.variant_name;
                 circle.innerHTML = variant.is_primary ? '★' : '';
-                circle.onclick = () => switchARVariant(modelViewer, variant.cloudinary_url, variant.variant_name, circle);
+                circle.onclick = () => switchARVariant(modelViewer, variant.cloudinary_url, variant.variant_name, circle, variant);
                 variantControls.appendChild(circle);
             });
             
@@ -1331,8 +1337,12 @@
             }, 3000);
         }
         
-        function switchARVariant(modelViewer, newUrl, variantName, clickedCircle) {
+        function switchARVariant(modelViewer, newUrl, variantName, clickedCircle, variantData) {
             console.log(`🎨 Switching AR to: ${variantName} - URL: ${newUrl}`);
+            
+            // Update current variant data for return URL purposes
+            window.currentVariantData = variantData;
+            console.log('🔄 Updated current variant data:', variantData);
             
             if (modelViewer) {
                 // Change the model source
@@ -1377,11 +1387,17 @@
             }
         }
         
-        // Get return URL using hybrid approach: product_url > returnUrl parameter > referrer > history back
+        // Get return URL using hybrid approach: variant product_url > model product_url > returnUrl parameter > referrer > history back
         function getReturnUrl(modelInfo = null) {
-            // Priority 1: Product URL from database (best option)
+            // Priority 1a: Variant-specific product URL (highest priority)
+            if (window.currentVariantData && window.currentVariantData.product_url) {
+                console.log('🎨 Using variant product URL from database:', window.currentVariantData.product_url);
+                return window.currentVariantData.product_url;
+            }
+            
+            // Priority 1b: Model product URL from database 
             if (modelInfo && modelInfo.product_url) {
-                console.log('🔗 Using product URL from database:', modelInfo.product_url);
+                console.log('🔗 Using model product URL from database:', modelInfo.product_url);
                 return modelInfo.product_url;
             }
             
