@@ -3179,6 +3179,9 @@
                 
                 const data = await response.json();
                 
+                // Store models data globally for variant switching
+                window.currentModelsData = data.models;
+                
                 // Update main stats
                 document.getElementById('totalModels').textContent = data.stats.totalModels || 0;
                 document.getElementById('totalViews').textContent = data.stats.totalViews || 0;
@@ -4760,8 +4763,16 @@
             
             currentEditUrlElement = element;
             
-            // Get the model ID and fetch current product URL from the element's data
+            // Check if we're editing a variant URL (when a variant is selected)
+            const isEditingVariant = element.getAttribute('data-editing-variant') === 'true';
+            const variantId = element.getAttribute('data-variant-id');
             const modelId = element.getAttribute('data-model-id');
+            
+            if (isEditingVariant && variantId) {
+                // Redirect to variant editing
+                startEditVariantUrl(element);
+                return;
+            }
             const isEmptyState = element.getAttribute('data-empty') === 'true';
             
             // Store the original URL (if any) as a data attribute
@@ -4946,7 +4957,19 @@
             
             const variantId = element.getAttribute('data-variant-id');
             const isEmptyState = element.getAttribute('data-empty') === 'true';
-            const originalUrl = isEmptyState ? '' : (element.getAttribute('data-url') || '');
+            
+            // Get the original URL - check if it's stored in data attribute or fetch from models data
+            let originalUrl = element.getAttribute('data-url') || '';
+            
+            if (!originalUrl && !isEmptyState && window.currentModelsData) {
+                // Try to find the variant's current URL from models data
+                const modelId = element.getAttribute('data-model-id') || element.closest('.model-card')?.querySelector('.model-id')?.textContent;
+                const model = window.currentModelsData.find(m => m.id === modelId);
+                const variant = model?.variants?.find(v => v.id === variantId);
+                if (variant?.product_url) {
+                    originalUrl = variant.product_url;
+                }
+            }
             
             // Create modal for variant URL editing
             const formContainer = document.createElement('div');
@@ -5705,8 +5728,60 @@
                     
                     // Update the copy link URL to include variant parameter
                     updateCopyLinkUrl(card, modelId, variantId);
+                    
+                    // Update the main product URL button state based on selected variant
+                    updateProductUrlButton(card, modelId, variantId);
                 }
             });
+        }
+        
+        function updateProductUrlButton(card, modelId, variantId) {
+            const productUrlButton = card.querySelector('.product-url-action');
+            if (!productUrlButton) return;
+            
+            // Get the current models data to find the variant info
+            const modelsData = window.currentModelsData || [];
+            const model = modelsData.find(m => m.id === modelId);
+            if (!model) return;
+            
+            if (variantId === 'original') {
+                // Switching to original - use model's product_url
+                if (model.product_url) {
+                    productUrlButton.innerHTML = '🔗 Edit URL';
+                    productUrlButton.removeAttribute('data-empty');
+                } else {
+                    productUrlButton.innerHTML = '➕ Add URL';
+                    productUrlButton.setAttribute('data-empty', 'true');
+                }
+            } else {
+                // Switching to a variant - find the variant's product_url
+                const variant = model.variants?.find(v => v.id === variantId);
+                if (variant) {
+                    if (variant.product_url) {
+                        productUrlButton.innerHTML = '🔗 Edit Variant URL';
+                        productUrlButton.removeAttribute('data-empty');
+                        // Store variant info for editing
+                        productUrlButton.setAttribute('data-variant-id', variantId);
+                        productUrlButton.setAttribute('data-editing-variant', 'true');
+                    } else {
+                        productUrlButton.innerHTML = '➕ Add Variant URL';
+                        productUrlButton.setAttribute('data-empty', 'true');
+                        productUrlButton.setAttribute('data-variant-id', variantId);
+                        productUrlButton.setAttribute('data-editing-variant', 'true');
+                    }
+                } else {
+                    // Fallback to model URL if variant not found
+                    if (model.product_url) {
+                        productUrlButton.innerHTML = '🔗 Edit URL';
+                        productUrlButton.removeAttribute('data-empty');
+                    } else {
+                        productUrlButton.innerHTML = '➕ Add URL';
+                        productUrlButton.setAttribute('data-empty', 'true');
+                    }
+                    productUrlButton.removeAttribute('data-variant-id');
+                    productUrlButton.removeAttribute('data-editing-variant');
+                }
+            }
         }
         
         function updateCopyLinkUrl(card, modelId, variantId) {
