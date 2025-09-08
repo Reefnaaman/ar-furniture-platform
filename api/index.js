@@ -2022,8 +2022,8 @@ async function handleBrandSettings(req, res, customerId) {
       const settings = data || {
         customer_id: customerId,
         text_direction: 'ltr',
-        primary_color: '#58a6ff',
-        secondary_color: '#4e9eff',
+        primary_color: '#667eea',
+        secondary_color: '#764ba2',
         font_family: 'Inter',
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
@@ -2048,8 +2048,8 @@ async function handleBrandSettings(req, res, customerId) {
       const settingsData = {
         customer_id: customerId,
         text_direction: textDirection || 'ltr',
-        primary_color: primaryColor || '#58a6ff',
-        secondary_color: secondaryColor || '#4e9eff', 
+        primary_color: primaryColor || '#667eea',
+        secondary_color: secondaryColor || '#764ba2', 
         font_family: fontFamily || 'Inter',
         logo_url: logoUrl || null,
         updated_at: new Date().toISOString()
@@ -2108,8 +2108,8 @@ CREATE TABLE IF NOT EXISTS brand_settings (
   id BIGSERIAL PRIMARY KEY,
   customer_id VARCHAR(100) NOT NULL UNIQUE,
   text_direction VARCHAR(10) DEFAULT 'ltr' CHECK (text_direction IN ('ltr', 'rtl')),
-  primary_color VARCHAR(7) DEFAULT '#58a6ff',
-  secondary_color VARCHAR(7) DEFAULT '#4e9eff',
+  primary_color VARCHAR(7) DEFAULT '#667eea',
+  secondary_color VARCHAR(7) DEFAULT '#764ba2',
   font_family VARCHAR(100) DEFAULT 'Inter',
   logo_url TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),

@@ -842,11 +842,20 @@
             
             console.log('🎨 Applying brand colors:', primaryColor, secondaryColor);
             
-            // Apply to buttons
-            const buttons = document.querySelectorAll('button, .button');
+            // Create gradient string
+            const brandGradient = `linear-gradient(135deg, ${primaryColor} 0%, ${secondaryColor || primaryColor} 100%)`;
+            
+            // Apply to header section - MAJOR VISUAL ELEMENT
+            const header = document.querySelector('.header');
+            if (header) {
+                header.style.background = brandGradient;
+            }
+            
+            // Apply to AR buttons
+            const buttons = document.querySelectorAll('button, .button, .ar-button');
             buttons.forEach(button => {
-                if (button.textContent.includes('View in AR')) {
-                    button.style.background = `linear-gradient(135deg, ${primaryColor}, ${secondaryColor || primaryColor})`;
+                if (button.textContent && (button.textContent.includes('View in AR') || button.classList.contains('ar-button'))) {
+                    button.style.background = brandGradient;
                 }
             });
             
@@ -856,14 +865,51 @@
                 modelViewer.style.setProperty('--poster-color', primaryColor);
             }
             
-            // Apply accent colors to links and interactive elements
+            // Create comprehensive brand styling
             const style = document.createElement('style');
             style.innerHTML = `
+                /* Links and text accents */
                 a { color: ${primaryColor} !important; }
+                
+                /* Button hover effects */
+                .ar-button:hover { 
+                    box-shadow: 0 10px 30px rgba(${hexToRgb(primaryColor)}, 0.3) !important; 
+                }
+                
+                /* Share button hover states */
+                .share-button:hover { 
+                    border-color: ${primaryColor} !important; 
+                    background: rgba(${hexToRgb(primaryColor)}, 0.1) !important; 
+                }
+                
+                /* Loading spinner */
+                .spinner { 
+                    border-top-color: ${primaryColor} !important; 
+                }
+                
+                /* Variant buttons and interactive elements */
                 .variant-button.active { border-color: ${primaryColor} !important; }
-                .loading-spinner { border-color: ${primaryColor} !important; }
+                
+                /* Stats and info elements */
+                .stats .stat-value { color: ${primaryColor} !important; }
+                
+                /* QR code border accent */
+                .qr-code { border-color: rgba(${hexToRgb(primaryColor)}, 0.3) !important; }
+                
+                /* Error page mobile fallback gradient */
+                .mobile-error-gradient { background: ${brandGradient} !important; }
+                
+                /* Error page button */
+                .mobile-error-button { background: ${brandGradient} !important; }
             `;
             document.head.appendChild(style);
+        }
+        
+        // Helper function to convert hex to RGB for rgba usage
+        function hexToRgb(hex) {
+            const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+            if (!result) return '102, 126, 234'; // fallback to default blue
+            return `${parseInt(result[1], 16)}, ${parseInt(result[2], 16)}, ${parseInt(result[3], 16)}`;
         }
         
         // Apply brand font family
@@ -1490,11 +1536,11 @@
             // Show error in a clean way
             document.body.style.visibility = 'visible';
             document.body.innerHTML = `
-                <div style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <div class="mobile-error-gradient" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; max-width: 500px;">
                         <h3 style="color: #cc0000; margin-bottom: 20px;">Oops!</h3>
                         <p style="color: #666; margin-bottom: 30px;">${message}</p>
-                        <a href="/" style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px;">
+                        <a href="/" class="mobile-error-button" style="display: inline-block; padding: 15px 30px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; text-decoration: none; border-radius: 50px;">
                             Upload a new model
                         </a>
                     </div>
