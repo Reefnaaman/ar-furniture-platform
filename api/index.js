@@ -99,8 +99,11 @@ export default async function handler(req, res) {
   try {
     // Parse route from URL path instead of query params
     const url = new URL(req.url, `https://${req.headers.host}`);
-    const pathParts = url.pathname.split('/').filter(Boolean); // ['api', 'upload-simple'] or ['api', 'models']
-    const routePath = pathParts.slice(1).join('/'); // Remove 'api' prefix: 'upload-simple' or 'models'
+    const pathParts = url.pathname.split('/').filter(Boolean); // ['api', 's7'] or ['api', 'models']
+    const externalRoutePath = pathParts.slice(1).join('/'); // Remove 'api' prefix: 's7' or 'models'
+    
+    // Convert obfuscated endpoint back to internal name
+    const routePath = getInternalEndpoint(externalRoutePath) || externalRoutePath;
     
     logger.debug('Route debug', { routePath, method: req.method });
     
