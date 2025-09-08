@@ -605,13 +605,27 @@ async function handleModels(req, res) {
         .update(updateData)
         .eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        console.error('Database update error:', error);
+        console.error('Update data attempted:', updateData);
+        throw error;
+      }
       
       res.status(200).json({ success: true, message: 'Model updated successfully' });
       
     } catch (error) {
       console.error('Error updating model:', error);
-      res.status(500).json({ error: 'Unable to save changes. Please try again.' });
+      console.error('Error details:', error.message);
+      
+      // Check if it's a column not found error
+      if (error.code === '42703') {
+        res.status(500).json({ 
+          error: 'Database column missing. Please run migration at /api/init-models-db',
+          details: 'The product_url column needs to be added to the database'
+        });
+      } else {
+        res.status(500).json({ error: 'Unable to save changes. Please try again.' });
+      }
     }
   }
   

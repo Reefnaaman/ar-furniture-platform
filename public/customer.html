@@ -91,16 +91,15 @@
             max-height: 60px;
             max-width: 100%;
             object-fit: contain;
-            border-radius: 8px;
         }
         
         .platform-logo {
-            /* No background - show original logo file */
+            /* Apply rounded corners directly to the image */
+            border-radius: 12px !important;
             background: transparent;
             padding: 2px;
-            border-radius: 12px;
-            /* Clip the actual image to rounded corners */
             overflow: hidden;
+            display: block;
         }
         
         .customer-logo {

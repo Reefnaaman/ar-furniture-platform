@@ -3288,10 +3288,6 @@
                     <div class="model-info">
                         <div class="model-title editable-title" data-model-id="${model.id}" ondblclick="startEditTitle(this)">${model.title || 'Untitled'}</div>
                         <div class="model-description">${model.description || 'No description provided'}</div>
-                        <div class="product-url-container">
-                            <small style="color: #7d8590; font-size: 0.8rem;">Product URL:</small>
-                            <button class="product-url-btn" data-model-id="${model.id}" onclick="startEditProductUrl(this)" ${!model.product_url ? 'data-empty="true"' : ''}>${model.product_url || '+ Add Product URL'}</button>
-                        </div>
                         
                         <div class="model-meta">
                             <span class="model-id" style="display: none;">${model.id}</span>
@@ -3336,6 +3332,9 @@
                             </a>
                             <button class="action-button" onclick="copyToClipboard('${viewUrl}', this)">
                                 📋 Copy Link
+                            </button>
+                            <button class="action-button product-url-action" data-model-id="${model.id}" onclick="startEditProductUrl(this)" ${!model.product_url ? 'data-empty="true"' : ''}>
+                                ${model.product_url ? '🔗 Edit URL' : '➕ Add URL'}
                             </button>
                             <div class="assign-dropdown">
                                 <button class="action-button assign-button" onclick="toggleAssignDropdown(this, '${model.id}', '${model.customer_id}', '${model.customer_name}')">
@@ -4696,38 +4695,98 @@
             }
             
             currentEditUrlElement = element;
-            const currentUrl = element.getAttribute('data-empty') === 'true' ? '' : element.textContent.replace('+ Add Product URL', '');
             
-            element.setAttribute('data-original-url', currentUrl);
+            // Get the model ID and fetch current product URL from the element's data
+            const modelId = element.getAttribute('data-model-id');
+            const isEmptyState = element.getAttribute('data-empty') === 'true';
             
-            // Create input to replace the button temporarily
-            const input = document.createElement('input');
-            input.type = 'url';
-            input.className = 'url-edit-input';
-            input.value = currentUrl;
-            input.placeholder = 'https://example.com/product';
-            input.style.cssText = `
-                width: 100%;
-                background: rgba(240, 246, 252, 0.1);
-                border: 1px solid rgba(88, 166, 255, 0.5);
-                color: #e6edf3;
-                padding: 6px 12px;
-                border-radius: 6px;
-                font-size: 0.85rem;
-                outline: none;
-                font-family: inherit;
+            // Store the original URL (if any) as a data attribute
+            const originalUrl = isEmptyState ? '' : (element.getAttribute('data-url') || '');
+            element.setAttribute('data-original-url', originalUrl);
+            
+            // Create a form container
+            const formContainer = document.createElement('div');
+            formContainer.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: linear-gradient(135deg, rgba(22, 27, 34, 0.98), rgba(30, 35, 42, 0.98));
+                border: 1px solid rgba(88, 166, 255, 0.3);
+                border-radius: 12px;
+                padding: 24px;
+                z-index: 10000;
+                box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+                min-width: 400px;
             `;
             
-            // Replace button with input
-            element.style.display = 'none';
-            element.parentNode.appendChild(input);
+            formContainer.innerHTML = `
+                <h3 style="color: #e6edf3; margin: 0 0 16px 0; font-size: 1.1rem;">
+                    ${isEmptyState ? 'Add Product URL' : 'Edit Product URL'}
+                </h3>
+                <input type="url" 
+                       id="productUrlEditInput"
+                       value="${originalUrl}" 
+                       placeholder="https://example.com/product" 
+                       style="
+                           width: 100%;
+                           background: rgba(240, 246, 252, 0.1);
+                           border: 1px solid rgba(88, 166, 255, 0.5);
+                           color: #e6edf3;
+                           padding: 10px 14px;
+                           border-radius: 8px;
+                           font-size: 0.95rem;
+                           outline: none;
+                           font-family: inherit;
+                           margin-bottom: 16px;
+                       ">
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    <button onclick="cancelUrlEdit()" style="
+                        padding: 8px 16px;
+                        background: rgba(125, 133, 144, 0.2);
+                        border: 1px solid rgba(125, 133, 144, 0.3);
+                        color: #7d8590;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                    ">Cancel</button>
+                    <button onclick="saveProductUrlFromInput()" style="
+                        padding: 8px 16px;
+                        background: rgba(88, 166, 255, 0.2);
+                        border: 1px solid rgba(88, 166, 255, 0.5);
+                        color: #58a6ff;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                    ">Save</button>
+                </div>
+            `;
             
+            document.body.appendChild(formContainer);
+            currentEditUrlElement.formContainer = formContainer;
+            
+            // Focus the input
+            const input = document.getElementById('productUrlEditInput');
             input.focus();
             input.select();
             
-            // Add event listeners
-            input.addEventListener('keydown', (e) => handleUrlKeydown(e, input));
-            input.addEventListener('blur', () => saveProductUrl(input));
+            // Handle Enter key
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    saveProductUrlFromInput();
+                } else if (e.key === 'Escape') {
+                    e.preventDefault();
+                    cancelUrlEdit();
+                }
+            });
+        }
+        
+        function saveProductUrlFromInput() {
+            const input = document.getElementById('productUrlEditInput');
+            if (input) {
+                saveProductUrl(input);
+            }
         }
         
         function handleUrlKeydown(event, input) {
@@ -4759,26 +4818,30 @@
                 if (response.ok) {
                     // Update the button display
                     if (newUrl) {
-                        currentEditUrlElement.textContent = newUrl;
+                        currentEditUrlElement.innerHTML = '🔗 Edit URL';
                         currentEditUrlElement.removeAttribute('data-empty');
+                        currentEditUrlElement.setAttribute('data-url', newUrl);
                     } else {
-                        currentEditUrlElement.textContent = '+ Add Product URL';
+                        currentEditUrlElement.innerHTML = '➕ Add URL';
                         currentEditUrlElement.setAttribute('data-empty', 'true');
+                        currentEditUrlElement.removeAttribute('data-url');
                     }
                     console.log(`Updated model ${modelId} product URL to: ${newUrl}`);
+                    
+                    // Clean up the form
+                    if (currentEditUrlElement.formContainer) {
+                        currentEditUrlElement.formContainer.remove();
+                    }
+                    currentEditUrlElement = null;
+                    
                 } else {
-                    throw new Error('Failed to update product URL');
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to update product URL');
                 }
-                
-                // Clean up: remove input and show button
-                input.remove();
-                currentEditUrlElement.style.display = 'block';
-                currentEditUrlElement = null;
                 
             } catch (error) {
                 console.error('Error updating product URL:', error);
-                alert('Failed to update product URL');
-                cancelUrlEdit();
+                alert(`Failed to update product URL: ${error.message}`);
             }
         }
         
