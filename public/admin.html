@@ -2938,6 +2938,13 @@
                     <div class="input-line"></div>
                 </div>
                 
+                <!-- Product URL Input -->
+                <div class="input-group" style="margin-bottom: 25px;">
+                    <input type="url" id="variantProductUrl" placeholder="Variant Product URL (optional)" class="futuristic-input">
+                    <div class="input-line"></div>
+                    <small class="field-hint">URL where users return after viewing this variant in AR</small>
+                </div>
+                
                 <!-- Upload Area -->
                 <div class="modern-file-upload" onclick="document.getElementById('variantFile').click()" id="fileUploadArea" style="margin-bottom: 25px;">
                     <div class="upload-content">
@@ -4871,6 +4878,7 @@
             document.getElementById('variantModal').style.display = 'none';
             document.getElementById('variantForm').reset();
             document.getElementById('variantFileName').style.display = 'none';
+            document.getElementById('variantProductUrl').value = ''; // Clear product URL
             // Reset upload area appearance
             const uploadArea = document.getElementById('fileUploadArea');
             uploadArea.style.borderColor = 'rgba(88, 166, 255, 0.3)';
@@ -4967,6 +4975,12 @@
                 formData.append('parentModelId', modelId);
                 formData.append('variantName', variantName);
                 formData.append('hexColor', hexColor);
+                
+                // Get variant product URL from form
+                const variantProductUrl = document.getElementById('variantProductUrl').value.trim();
+                if (variantProductUrl) {
+                    formData.append('variant_product_url', variantProductUrl);
+                }
                 
                 // DEBUG: Log what we're sending
                 console.log('🚨 CLIENT DEBUG - Sending FormData:');

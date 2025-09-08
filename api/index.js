@@ -472,7 +472,8 @@ async function handleUpload(req, res) {
         cloudinaryPublicId: cloudinaryResult.publicId,
         fileSize: cloudinaryResult.size,
         isPrimary: false,
-        variantType: 'upload'
+        variantType: 'upload',
+        productUrl: fields.variant_product_url?.[0] || null
       });
     } else {
       logger.debug('Saving model to database');
@@ -1322,9 +1323,34 @@ CREATE INDEX IF NOT EXISTS idx_models_created ON models(created_at);
 -- Add product_url column if it doesn't exist (migration)
 ALTER TABLE models ADD COLUMN IF NOT EXISTS product_url TEXT;
 
+-- Create model_variants table
+CREATE TABLE IF NOT EXISTS model_variants (
+  id TEXT PRIMARY KEY,
+  parent_model_id TEXT NOT NULL REFERENCES models(id) ON DELETE CASCADE,
+  variant_name VARCHAR(255) NOT NULL,
+  hex_color VARCHAR(7) DEFAULT '#000000',
+  cloudinary_url TEXT NOT NULL,
+  cloudinary_public_id VARCHAR(255) NOT NULL,
+  file_size INTEGER DEFAULT 0,
+  is_primary BOOLEAN DEFAULT FALSE,
+  variant_type VARCHAR(50) DEFAULT 'upload',
+  product_url TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW(),
+  updated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Add indexes for model_variants
+CREATE INDEX IF NOT EXISTS idx_model_variants_parent ON model_variants(parent_model_id);
+CREATE INDEX IF NOT EXISTS idx_model_variants_primary ON model_variants(is_primary);
+
+-- Add product_url column to existing model_variants table if it doesn't exist (migration)
+ALTER TABLE model_variants ADD COLUMN IF NOT EXISTS product_url TEXT;
+
 -- Grant permissions
 GRANT ALL ON models TO authenticated;
 GRANT ALL ON models TO service_role;
+GRANT ALL ON model_variants TO authenticated;
+GRANT ALL ON model_variants TO service_role;
         `,
         instructions: 'Please run the SQL above in your Supabase SQL editor'
       });
