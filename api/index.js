@@ -188,6 +188,30 @@ export default async function handler(req, res) {
       return await handleTestSaveModel(req, res);
     }
     
+    // Route: /api/test-columns (debug endpoint)
+    if (routePath === 'test-columns') {
+      try {
+        const result = await query(`
+          SELECT column_name, data_type 
+          FROM information_schema.columns 
+          WHERE table_name = 'models' AND column_name = 'product_url'
+        `);
+        
+        const variantResult = await query(`
+          SELECT column_name, data_type 
+          FROM information_schema.columns 
+          WHERE table_name = 'model_variants' AND column_name = 'product_url'
+        `);
+        
+        return res.status(200).json({
+          models_product_url: result.data,
+          model_variants_product_url: variantResult.data
+        });
+      } catch (error) {
+        return res.status(500).json({ error: error.message });
+      }
+    }
+    
     // Route: /api/create-user
     if (routePath === 'create-user') {
       return await handleCreateUser(req, res);
