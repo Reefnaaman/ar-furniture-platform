@@ -1776,24 +1776,29 @@ async function handleResetViewCounts(req, res) {
   try {
     // Check if customer parameter is provided for customer-specific reset
     const { customer } = req.body;
+    let modelsError;
     
     if (customer) {
       console.log(`🔄 Resetting view counts for customer: ${customer}`);
       
       // Reset view_count only for specific customer's models
-      const { error: modelsError } = await supabase
+      const result = await supabase
         .from('models')
         .update({ view_count: 0 })
         .eq('customer_id', customer);
+        
+      modelsError = result.error;
         
     } else {
       console.log('🔄 Resetting all view counts to 0...');
       
       // Reset view_count in models table - use not equal to impossible value to match all rows
-      const { error: modelsError } = await supabase
+      const result = await supabase
         .from('models')
         .update({ view_count: 0 })
         .not('id', 'eq', 'impossible_id_that_never_exists');
+        
+      modelsError = result.error;
     }
 
     if (modelsError) {
