@@ -1265,7 +1265,7 @@
                 `;
                 backButton.textContent = `← Back to ${modelInfo.customer_name || 'Product'}`;
                 backButton.onclick = () => {
-                    const returnUrl = getReturnUrl();
+                    const returnUrl = getReturnUrl(modelInfo);
                     console.log('🔙 Going back to:', returnUrl);
                     if (returnUrl.startsWith('javascript:')) {
                         history.back();
@@ -1377,24 +1377,33 @@
             }
         }
         
-        // Get return URL using hybrid approach: URL parameter > referrer > history back
-        function getReturnUrl() {
+        // Get return URL using hybrid approach: product_url > returnUrl parameter > referrer > history back
+        function getReturnUrl(modelInfo = null) {
+            // Priority 1: Product URL from database (best option)
+            if (modelInfo && modelInfo.product_url) {
+                console.log('🔗 Using product URL from database:', modelInfo.product_url);
+                return modelInfo.product_url;
+            }
+            
+            // Priority 2: returnUrl parameter from URL
             const urlParams = new URLSearchParams(window.location.search);
             const returnUrl = urlParams.get('returnUrl');
-            
             if (returnUrl) {
                 console.log('🔗 Using returnUrl parameter:', returnUrl);
                 return returnUrl;
             }
             
+            // Priority 3: document referrer
             if (document.referrer && document.referrer !== window.location.href && document.referrer !== '') {
                 console.log('🔗 Using document referrer:', document.referrer);
                 return document.referrer;
             }
             
-            console.log('🔗 No referrer found, using browser back as fallback');
+            // Priority 4: browser back as fallback
+            console.log('🔗 No return URL found, using browser back as fallback');
             console.log('🔗 Current URL:', window.location.href);
             console.log('🔗 Referrer:', document.referrer);
+            console.log('🔗 Model product_url:', modelInfo ? modelInfo.product_url : 'N/A');
             return 'javascript:history.back()';
         }
         
@@ -1433,7 +1442,7 @@
             `;
             backButton.textContent = `← Back to ${modelInfo.customer_name || 'Product'}`;
             backButton.onclick = () => {
-                const returnUrl = getReturnUrl();
+                const returnUrl = getReturnUrl(modelInfo);
                 console.log('🏠 Going back to:', returnUrl);
                 console.log('🏠 Button clicked, returnUrl:', returnUrl);
                 

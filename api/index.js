@@ -586,17 +586,22 @@ async function handleModels(req, res) {
   
   // Update a model
   else if (req.method === 'PUT') {
-    const { id, title } = req.body;
+    const { id, title, product_url } = req.body;
     
     if (!id) {
       return res.status(400).json({ error: 'Model ID required' });
     }
     
     try {
-      // Update model title in database
+      // Build update object with only provided fields
+      const updateData = {};
+      if (title !== undefined) updateData.title = title;
+      if (product_url !== undefined) updateData.product_url = product_url || null;
+      
+      // Update model in database
       const { error } = await supabase
         .from('models')
-        .update({ title })
+        .update(updateData)
         .eq('id', id);
 
       if (error) throw error;
@@ -1313,6 +1318,9 @@ CREATE TABLE IF NOT EXISTS models (
 
 CREATE INDEX IF NOT EXISTS idx_models_customer ON models(customer_id);
 CREATE INDEX IF NOT EXISTS idx_models_created ON models(created_at);
+
+-- Add product_url column if it doesn't exist (migration)
+ALTER TABLE models ADD COLUMN IF NOT EXISTS product_url TEXT;
 
 -- Grant permissions
 GRANT ALL ON models TO authenticated;

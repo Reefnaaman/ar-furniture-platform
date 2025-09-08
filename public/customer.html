@@ -1844,6 +1844,44 @@
         .request-eta {
             font-weight: 500;
         }
+        
+        /* Product URL editing styles */
+        .product-url-container {
+            margin-top: 8px;
+        }
+        
+        .editable-url {
+            cursor: pointer;
+            font-size: 0.85rem;
+            color: #58a6ff;
+            word-break: break-all;
+            line-height: 1.3;
+            position: relative;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+        
+        .editable-url:hover {
+            background: rgba(88, 166, 255, 0.1);
+        }
+        
+        .editable-url[data-empty="true"] {
+            color: #7d8590;
+            font-style: italic;
+        }
+        
+        .editable-title {
+            cursor: pointer;
+            position: relative;
+            padding: 2px 4px;
+            border-radius: 4px;
+            transition: background 0.2s ease;
+        }
+        
+        .editable-title:hover {
+            background: rgba(88, 166, 255, 0.1);
+        }
     </style>
 </head>
 <body>
@@ -2564,6 +2602,10 @@
                         <div class="model-info">
                             <div class="model-title editable-title" data-model-id="${model.id}" ondblclick="startEditTitle(this)">${model.title || 'Untitled'}</div>
                             ${model.description ? `<div class="model-description">${model.description}</div>` : ''}
+                            <div class="product-url-container">
+                                <small style="color: #7d8590; font-size: 0.8rem;">Product URL:</small>
+                                <div class="product-url editable-url" data-model-id="${model.id}" ondblclick="startEditProductUrl(this)" ${!model.product_url ? 'data-empty="true"' : ''}>${model.product_url || 'Click to add product URL'}</div>
+                            </div>
                             
                             <div class="model-stats">
                                 <div class="stat-item">
@@ -2830,6 +2872,113 @@
                 const originalTitle = currentEditElement.getAttribute('data-original-title') || currentEditElement.textContent;
                 currentEditElement.textContent = originalTitle;
                 currentEditElement = null;
+            }
+        }
+
+        // Product URL editing functions
+        let currentEditUrlElement = null;
+
+        function startEditProductUrl(element) {
+            if (currentEditUrlElement) {
+                cancelUrlEdit();
+            }
+            
+            currentEditUrlElement = element;
+            const currentUrl = element.getAttribute('data-empty') === 'true' ? '' : element.textContent;
+            
+            element.setAttribute('data-original-url', currentUrl);
+            element.innerHTML = `
+                <input type="url" 
+                       class="url-edit-input" 
+                       value="${currentUrl}" 
+                       onkeydown="handleUrlKeydown(event, this)" 
+                       onblur="saveProductUrl(this)"
+                       placeholder="https://example.com/product" 
+                       style="
+                           width: 100%;
+                           background: rgba(240, 246, 252, 0.1);
+                           border: 1px solid rgba(88, 166, 255, 0.5);
+                           color: #e6edf3;
+                           padding: 4px 6px;
+                           border-radius: 4px;
+                           font-size: 0.85rem;
+                           outline: none;
+                       ">
+            `;
+            
+            const input = element.querySelector('.url-edit-input');
+            input.focus();
+            input.select();
+        }
+        
+        function handleUrlKeydown(event, input) {
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                saveProductUrl(input);
+            } else if (event.key === 'Escape') {
+                event.preventDefault();
+                cancelUrlEdit();
+            }
+        }
+        
+        async function saveProductUrl(input) {
+            const newUrl = input.value.trim();
+            const modelId = currentEditUrlElement.getAttribute('data-model-id');
+            
+            try {
+                const response = await fetch('/api/models', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: modelId,
+                        product_url: newUrl
+                    })
+                });
+                
+                if (response.ok) {
+                    // Update the display
+                    if (newUrl) {
+                        currentEditUrlElement.textContent = newUrl;
+                        currentEditUrlElement.removeAttribute('data-empty');
+                        currentEditUrlElement.style.color = '#58a6ff';
+                        currentEditUrlElement.style.fontStyle = 'normal';
+                    } else {
+                        currentEditUrlElement.textContent = 'Click to add product URL';
+                        currentEditUrlElement.setAttribute('data-empty', 'true');
+                        currentEditUrlElement.style.color = '#7d8590';
+                        currentEditUrlElement.style.fontStyle = 'italic';
+                    }
+                    console.log(`Updated model ${modelId} product URL to: ${newUrl}`);
+                } else {
+                    throw new Error('Failed to update product URL');
+                }
+                
+                currentEditUrlElement = null;
+                
+            } catch (error) {
+                console.error('Error updating product URL:', error);
+                alert('Failed to update product URL');
+                cancelUrlEdit();
+            }
+        }
+        
+        function cancelUrlEdit() {
+            if (currentEditUrlElement) {
+                const originalUrl = currentEditUrlElement.getAttribute('data-original-url') || '';
+                if (originalUrl) {
+                    currentEditUrlElement.textContent = originalUrl;
+                    currentEditUrlElement.removeAttribute('data-empty');
+                    currentEditUrlElement.style.color = '#58a6ff';
+                    currentEditUrlElement.style.fontStyle = 'normal';
+                } else {
+                    currentEditUrlElement.textContent = 'Click to add product URL';
+                    currentEditUrlElement.setAttribute('data-empty', 'true');
+                    currentEditUrlElement.style.color = '#7d8590';
+                    currentEditUrlElement.style.fontStyle = 'italic';
+                }
+                currentEditUrlElement = null;
             }
         }
         
