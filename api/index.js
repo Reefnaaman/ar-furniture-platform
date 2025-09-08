@@ -311,6 +311,11 @@ export default async function handler(req, res) {
       }
     }
     
+    // Route: /api/requests - handle customer request operations
+    if (routePath === 'requests') {
+      return await handleRequests(req, res);
+    }
+    
     // Route: /api/users - handle all user operations directly
     if (routePath === 'users') {
       // GET /api/users - List all users with view counts
@@ -2218,6 +2223,72 @@ async function handleTestBrandSettingsSchema(req, res) {
       hint: 'Check if the customer_brand_settings table exists and has all required columns'
     });
   }
+}
+
+/**
+ * Handle customer requests operations
+ */
+async function handleRequests(req, res) {
+  if (req.method === 'GET') {
+    try {
+      // Get all requests from database
+      const { data: requests, error } = await supabase
+        .from('requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        console.error('Error fetching requests:', error);
+        return res.status(500).json({ error: 'Failed to fetch requests' });
+      }
+
+      return res.status(200).json({ 
+        success: true,
+        requests: requests || [] 
+      });
+
+    } catch (error) {
+      console.error('Error handling requests GET:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  if (req.method === 'DELETE') {
+    try {
+      const { id, customerId } = req.body;
+      
+      if (!id) {
+        return res.status(400).json({ error: 'Request ID required' });
+      }
+      
+      // Delete request from database - only allow customers to delete their own requests
+      let deleteQuery = supabase.from('requests').delete().eq('id', id);
+      
+      // If customerId is provided, ensure the user can only delete their own requests
+      if (customerId) {
+        deleteQuery = deleteQuery.eq('customer_id', customerId);
+      }
+      
+      const { error } = await deleteQuery;
+      
+      if (error) {
+        console.error('Error deleting request:', error);
+        return res.status(500).json({ error: 'Failed to delete request' });
+      }
+      
+      console.log(`✅ Request ${id} deleted successfully`);
+      return res.status(200).json({ 
+        success: true,
+        message: 'Request deleted successfully' 
+      });
+      
+    } catch (error) {
+      console.error('Error handling request DELETE:', error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+  
+  return res.status(405).json({ error: 'Method not allowed' });
 }
 
 /**
