@@ -732,6 +732,7 @@ async function handleModelInfo(req, res, modelId) {
       dominant_color: model.dominant_color,
       customer_id: model.customer_id, // Include for logo loading
       customer_name: model.customer_name, // Include for logo loading
+      product_url: model.product_url, // Include for back button functionality
       metadata: model.metadata,
       cloudinary_url: model.cloudinary_url, // Include for AR original variant switching
       variants: (variants || []).map(variant => ({
@@ -1303,6 +1304,7 @@ CREATE TABLE IF NOT EXISTS models (
   customer_name VARCHAR(255) DEFAULT 'Unassigned',
   view_count INTEGER DEFAULT 0,
   dominant_color VARCHAR(7) DEFAULT '#6b7280',
+  product_url TEXT,
   metadata JSONB DEFAULT '{}',
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
