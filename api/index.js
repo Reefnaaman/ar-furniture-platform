@@ -212,6 +212,41 @@ export default async function handler(req, res) {
       }
     }
     
+    // Route: /api/debug-update (test update functionality)
+    if (routePath === 'debug-update') {
+      try {
+        // Test a simple update on the first model
+        const testResult = await query(`
+          SELECT id, title, product_url FROM models LIMIT 1
+        `);
+        
+        if (!testResult.success || !testResult.data || testResult.data.length === 0) {
+          return res.status(400).json({ error: 'No models found to test with' });
+        }
+        
+        const testModel = testResult.data[0];
+        const testUrl = 'https://test-url.com';
+        
+        console.log('🧪 Testing update on model:', testModel.id);
+        
+        const updateResult = await query(`
+          UPDATE models 
+          SET product_url = $1, updated_at = NOW() 
+          WHERE id = $2
+        `, [testUrl, testModel.id]);
+        
+        return res.status(200).json({
+          original_model: testModel,
+          update_result: updateResult,
+          test_url_set: testUrl
+        });
+        
+      } catch (error) {
+        console.error('Debug update error:', error);
+        return res.status(500).json({ error: error.message, stack: error.stack });
+      }
+    }
+    
     // Route: /api/create-user
     if (routePath === 'create-user') {
       return await handleCreateUser(req, res);
