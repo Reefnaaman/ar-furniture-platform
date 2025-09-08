@@ -874,25 +874,39 @@
             margin-top: 8px;
         }
         
-        .editable-url {
-            cursor: pointer;
-            font-size: 0.85rem;
+        .product-url-btn {
+            background: rgba(88, 166, 255, 0.1);
+            border: 1px solid rgba(88, 166, 255, 0.3);
             color: #58a6ff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+            width: 100%;
+            text-align: left;
             word-break: break-all;
             line-height: 1.3;
-            position: relative;
-            padding: 2px 4px;
-            border-radius: 4px;
-            transition: background 0.2s ease;
+            margin-top: 4px;
         }
         
-        .editable-url:hover {
-            background: rgba(88, 166, 255, 0.1);
+        .product-url-btn:hover {
+            background: rgba(88, 166, 255, 0.2);
+            border-color: rgba(88, 166, 255, 0.5);
+            transform: translateY(-1px);
         }
         
-        .editable-url[data-empty="true"] {
+        .product-url-btn[data-empty="true"] {
             color: #7d8590;
-            font-style: italic;
+            border-color: rgba(125, 133, 144, 0.3);
+            background: rgba(125, 133, 144, 0.05);
+        }
+        
+        .product-url-btn[data-empty="true"]:hover {
+            color: #58a6ff;
+            border-color: rgba(88, 166, 255, 0.5);
+            background: rgba(88, 166, 255, 0.1);
         }
         
         .editable-title {
@@ -3276,7 +3290,7 @@
                         <div class="model-description">${model.description || 'No description provided'}</div>
                         <div class="product-url-container">
                             <small style="color: #7d8590; font-size: 0.8rem;">Product URL:</small>
-                            <div class="product-url editable-url" data-model-id="${model.id}" ondblclick="startEditProductUrl(this)" ${!model.product_url ? 'data-empty="true"' : ''}>${model.product_url || 'Click to add product URL'}</div>
+                            <button class="product-url-btn" data-model-id="${model.id}" onclick="startEditProductUrl(this)" ${!model.product_url ? 'data-empty="true"' : ''}>${model.product_url || '+ Add Product URL'}</button>
                         </div>
                         
                         <div class="model-meta">
@@ -4682,31 +4696,38 @@
             }
             
             currentEditUrlElement = element;
-            const currentUrl = element.getAttribute('data-empty') === 'true' ? '' : element.textContent;
+            const currentUrl = element.getAttribute('data-empty') === 'true' ? '' : element.textContent.replace('+ Add Product URL', '');
             
             element.setAttribute('data-original-url', currentUrl);
-            element.innerHTML = `
-                <input type="url" 
-                       class="url-edit-input" 
-                       value="${currentUrl}" 
-                       onkeydown="handleUrlKeydown(event, this)" 
-                       onblur="saveProductUrl(this)"
-                       placeholder="https://example.com/product" 
-                       style="
-                           width: 100%;
-                           background: rgba(240, 246, 252, 0.1);
-                           border: 1px solid rgba(88, 166, 255, 0.5);
-                           color: #e6edf3;
-                           padding: 4px 6px;
-                           border-radius: 4px;
-                           font-size: 0.85rem;
-                           outline: none;
-                       ">
+            
+            // Create input to replace the button temporarily
+            const input = document.createElement('input');
+            input.type = 'url';
+            input.className = 'url-edit-input';
+            input.value = currentUrl;
+            input.placeholder = 'https://example.com/product';
+            input.style.cssText = `
+                width: 100%;
+                background: rgba(240, 246, 252, 0.1);
+                border: 1px solid rgba(88, 166, 255, 0.5);
+                color: #e6edf3;
+                padding: 6px 12px;
+                border-radius: 6px;
+                font-size: 0.85rem;
+                outline: none;
+                font-family: inherit;
             `;
             
-            const input = element.querySelector('.url-edit-input');
+            // Replace button with input
+            element.style.display = 'none';
+            element.parentNode.appendChild(input);
+            
             input.focus();
             input.select();
+            
+            // Add event listeners
+            input.addEventListener('keydown', (e) => handleUrlKeydown(e, input));
+            input.addEventListener('blur', () => saveProductUrl(input));
         }
         
         function handleUrlKeydown(event, input) {
@@ -4736,23 +4757,22 @@
                 });
                 
                 if (response.ok) {
-                    // Update the display
+                    // Update the button display
                     if (newUrl) {
                         currentEditUrlElement.textContent = newUrl;
                         currentEditUrlElement.removeAttribute('data-empty');
-                        currentEditUrlElement.style.color = '#58a6ff';
-                        currentEditUrlElement.style.fontStyle = 'normal';
                     } else {
-                        currentEditUrlElement.textContent = 'Click to add product URL';
+                        currentEditUrlElement.textContent = '+ Add Product URL';
                         currentEditUrlElement.setAttribute('data-empty', 'true');
-                        currentEditUrlElement.style.color = '#7d8590';
-                        currentEditUrlElement.style.fontStyle = 'italic';
                     }
                     console.log(`Updated model ${modelId} product URL to: ${newUrl}`);
                 } else {
                     throw new Error('Failed to update product URL');
                 }
                 
+                // Clean up: remove input and show button
+                input.remove();
+                currentEditUrlElement.style.display = 'block';
                 currentEditUrlElement = null;
                 
             } catch (error) {
@@ -4765,17 +4785,22 @@
         function cancelUrlEdit() {
             if (currentEditUrlElement) {
                 const originalUrl = currentEditUrlElement.getAttribute('data-original-url') || '';
+                
+                // Restore button text and state
                 if (originalUrl) {
                     currentEditUrlElement.textContent = originalUrl;
                     currentEditUrlElement.removeAttribute('data-empty');
-                    currentEditUrlElement.style.color = '#58a6ff';
-                    currentEditUrlElement.style.fontStyle = 'normal';
                 } else {
-                    currentEditUrlElement.textContent = 'Click to add product URL';
+                    currentEditUrlElement.textContent = '+ Add Product URL';
                     currentEditUrlElement.setAttribute('data-empty', 'true');
-                    currentEditUrlElement.style.color = '#7d8590';
-                    currentEditUrlElement.style.fontStyle = 'italic';
                 }
+                
+                // Clean up: remove any input and show button
+                const input = currentEditUrlElement.parentNode.querySelector('.url-edit-input');
+                if (input) {
+                    input.remove();
+                }
+                currentEditUrlElement.style.display = 'block';
                 currentEditUrlElement = null;
             }
         }
