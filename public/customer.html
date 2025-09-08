@@ -3833,16 +3833,11 @@
                 const secondaryColor = document.getElementById('secondaryColor')?.value || '#4e9eff';
                 const fontFamily = document.getElementById('fontFamily')?.value || 'Inter';
                 
-                // Get logo data if uploaded
-                const logoImg = document.getElementById('logoPreview');
-                const logoUrl = logoImg && logoImg.src && !logoImg.src.includes('placeholder') ? logoImg.src : null;
-                
                 const settingsData = {
                     textDirection: textDirection,
                     primaryColor: primaryColor,
                     secondaryColor: secondaryColor,
-                    fontFamily: fontFamily,
-                    logoUrl: logoUrl
+                    fontFamily: fontFamily
                 };
 
                 console.log('Saving brand settings:', settingsData);
@@ -3876,35 +3871,66 @@
         }
 
         // ===== BRAND SETTINGS LIVE PREVIEW FUNCTIONS =====
-        function handleLogoUpload(event) {
+        async function handleLogoUpload(event) {
             const file = event.target.files[0];
             if (!file) return;
             
             // Validate file type and size
-            if (!file.type.match(/^image\/(png|jpe?g)$/)) {
-                alert('Please upload a PNG or JPG image.');
+            if (!file.type.match(/^image\/(png|jpe?g|webp|svg)$/)) {
+                alert('Please upload a PNG, JPG, WebP, or SVG image.');
                 return;
             }
             
-            if (file.size > 2 * 1024 * 1024) { // 2MB
-                alert('Image size must be less than 2MB.');
+            if (file.size > 10 * 1024 * 1024) { // 10MB
+                alert('Image size must be less than 10MB.');
                 return;
             }
             
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const logoPreview = document.getElementById('logoPreview');
+            if (!customerId) {
+                alert('❌ Error: No customer ID available');
+                return;
+            }
+            
+            try {
+                // Show loading state
                 const logoPlaceholder = document.getElementById('logoPlaceholder');
+                const logoPreview = document.getElementById('logoPreview');
+                logoPlaceholder.innerHTML = '<div class="upload-icon">⏳</div><div class="upload-text">Uploading...</div>';
                 
-                logoPreview.src = e.target.result;
+                // Create form data for upload
+                const formData = new FormData();
+                formData.append('file', file);
+                
+                // Upload logo to customer-specific endpoint
+                const response = await fetch(`/api/customers/${customerId}/logo`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to upload logo');
+                }
+                
+                const result = await response.json();
+                console.log('✅ Logo uploaded successfully:', result);
+                
+                // Update preview with uploaded logo URL
+                logoPreview.src = result.logoUrl;
                 logoPreview.style.display = 'block';
                 logoPlaceholder.style.display = 'none';
                 
-                // Update preview iframe
-                updatePreviewLogo(e.target.result);
-            };
-            
-            reader.readAsDataURL(file);
+                // Show success message
+                alert('🎉 Logo uploaded successfully! It will appear in your AR viewer.');
+                
+            } catch (error) {
+                console.error('Error uploading logo:', error);
+                alert(`❌ Failed to upload logo: ${error.message}`);
+                
+                // Reset UI on error
+                const logoPlaceholder = document.getElementById('logoPlaceholder');
+                logoPlaceholder.innerHTML = '<div class="upload-icon">📎</div><div class="upload-text">Click to upload logo</div>';
+            }
         }
 
         function updatePreviewColors() {
