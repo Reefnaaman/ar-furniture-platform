@@ -1997,6 +1997,21 @@ async function handleBrandSettings(req, res, customerId) {
         return res.status(500).json({ error: 'Failed to fetch brand settings' });
       }
 
+      // If no logo_url in settings, check Images table for admin-uploaded customer logo
+      let logoUrl = data?.logo_url;
+      if (!logoUrl) {
+        const { data: imageData } = await supabase
+          .from('images')
+          .select('cloudinary_url')
+          .eq('customer_id', customerId)
+          .in('image_type', ['customer_logo', 'brand'])  // Check both types
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single();
+        
+        logoUrl = imageData?.cloudinary_url || null;
+      }
+
       // Return settings or defaults
       const settings = data || {
         customer_id: customerId,
@@ -2004,10 +2019,12 @@ async function handleBrandSettings(req, res, customerId) {
         primary_color: '#58a6ff',
         secondary_color: '#4e9eff',
         font_family: 'Inter',
-        logo_url: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString()
       };
+      
+      // Always use the discovered logo (from settings or Images table)
+      settings.logo_url = logoUrl;
 
       return res.status(200).json(settings);
 
