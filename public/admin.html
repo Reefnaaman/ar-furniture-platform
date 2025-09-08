@@ -1921,16 +1921,10 @@
             opacity: 1;
         }
         
-        .variant-actions {
-            display: flex;
-            flex-direction: column;
-            gap: 2px;
+        .variant-url-button {
             position: absolute;
             top: -8px;
-            right: -8px;
-        }
-        
-        .variant-url-button {
+            left: -8px;
             width: 16px;
             height: 16px;
             border-radius: 50%;
@@ -1943,7 +1937,7 @@
             justify-content: center;
             font-size: 10px;
             transition: all 0.2s ease;
-            margin-bottom: 2px;
+            z-index: 10;
         }
         
         .variant-url-button:hover {
@@ -3385,14 +3379,12 @@
                                              onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}', '${variant.variant_type || 'upload'}')">
                                              ${variant.is_primary ? '★' : ''}
                                         </div>
-                                        <div class="variant-actions">
-                                            <button class="variant-url-button" data-variant-id="${variant.id}" onclick="startEditVariantUrl(this)" ${!variant.product_url ? 'data-empty="true"' : ''}>
-                                                ${variant.product_url ? '🔗' : '➕'}
-                                            </button>
-                                            <div class="variant-delete" 
-                                                 title="Delete ${variant.variant_name}"
-                                                 onclick="deleteVariant('${variant.id}', '${model.id}', event)">×</div>
-                                        </div>
+                                        <button class="variant-url-button" data-variant-id="${variant.id}" onclick="startEditVariantUrl(this)" ${!variant.product_url ? 'data-empty="true"' : ''}>
+                                            ${variant.product_url ? '🔗' : '➕'}
+                                        </button>
+                                        <div class="variant-delete" 
+                                             title="Delete ${variant.variant_name}"
+                                             onclick="deleteVariant('${variant.id}', '${model.id}', event)">×</div>
                                     </div>
                                 `).join('')}
                             </div>
