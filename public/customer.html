@@ -770,6 +770,18 @@
                 margin-top: 30px;
             }
             
+            /* Responsive buttons for tablet/mobile */
+            .action-button {
+                padding: 8px 12px;
+                font-size: 0.85rem;
+                flex: 0 1 auto;
+                white-space: nowrap;
+            }
+            
+            .model-actions {
+                gap: 8px;
+            }
+            
             /* Responsive Typography */
             .header h1 {
                 font-size: 28px;
@@ -789,6 +801,18 @@
             .container {
                 margin-top: 20px;
             }
+            
+            /* Ultra compact buttons for very small screens */
+            .action-button {
+                padding: 6px 10px;
+                font-size: 0.75rem;
+                gap: 4px;
+            }
+            
+            .model-actions {
+                gap: 6px;
+            }
+            
             .header h1 {
                 font-size: 24px;
             }
@@ -1138,6 +1162,8 @@
         .model-actions {
             display: flex;
             gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
         }
 
         /* Variant colors styles */
@@ -1575,6 +1601,40 @@
             color: #7d8590;
         }
         
+        /* Coming Soon Overlay */
+        .coming-soon-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(13, 17, 23, 0.8);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            border-radius: 8px;
+        }
+        
+        .coming-soon-content {
+            text-align: center;
+            color: #ffffff;
+            padding: 20px;
+        }
+        
+        .coming-soon-content h4 {
+            margin: 0 0 8px 0;
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+        
+        .coming-soon-content p {
+            margin: 0;
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+        
         .logo-preview {
             max-width: 100%;
             max-height: 80px;
@@ -1639,6 +1699,7 @@
             border-radius: 12px;
             padding: 16px;
             transition: all 0.3s ease;
+            position: relative;
         }
         
         .settings-card:hover:not(.disabled) {
