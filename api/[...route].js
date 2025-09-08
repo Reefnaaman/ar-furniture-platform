@@ -1,6 +1,7 @@
 import { uploadModel } from '../lib/cloudinary.js';
 import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, saveModelVariant, supabase, query } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
+import { getInternalEndpoint } from '../lib/endpoints.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
 
@@ -43,14 +44,18 @@ export default async function handler(req, res) {
   try {
     // Parse route from URL path instead of query params
     const url = new URL(req.url, `https://${req.headers.host}`);
-    const pathParts = url.pathname.split('/').filter(Boolean); // ['api', 'upload-simple'] or ['api', 'models']
-    const routePath = pathParts.slice(1).join('/'); // Remove 'api' prefix: 'upload-simple' or 'models'
+    const pathParts = url.pathname.split('/').filter(Boolean); // ['api', 's7'] or ['api', 'models']
+    const externalRoutePath = pathParts.slice(1).join('/'); // Remove 'api' prefix: 's7' or 'models'
+    
+    // Convert obfuscated endpoint back to internal name
+    const routePath = getInternalEndpoint(externalRoutePath) || externalRoutePath;
     
     // Debug logging
     console.log('Route debug:', { 
       url: req.url, 
       pathname: url.pathname, 
-      pathParts, 
+      pathParts,
+      externalRoutePath,
       routePath, 
       method: req.method 
     });
@@ -141,6 +146,11 @@ export default async function handler(req, res) {
     // Route: /api/test-save-model
     if (routePath === 'test-save-model') {
       return await handleTestSaveModel(req, res);
+    }
+    
+    // Route: /api/test-brand-settings-schema
+    if (routePath === 'test-brand-settings-schema') {
+      return await handleTestBrandSettingsSchema(req, res);
     }
     
     // Route: /api/create-user
@@ -1624,11 +1634,15 @@ async function handleCreateBrandSettingsTable(req, res) {
   return res.status(200).json({
     message: 'Please run the following SQL in your Supabase SQL editor to create the customer_brand_settings table',
     sql: `
--- Create customer_brand_settings table for RTL/LTR and future theming options
+-- Create customer_brand_settings table for complete brand customization
 CREATE TABLE IF NOT EXISTS customer_brand_settings (
   id SERIAL PRIMARY KEY,
   customer_id VARCHAR(100) NOT NULL UNIQUE,
   text_direction VARCHAR(3) DEFAULT 'ltr', -- 'ltr' or 'rtl'
+  logo_url VARCHAR(500), -- URL to customer's logo in Cloudinary
+  primary_color VARCHAR(7) DEFAULT '#58a6ff', -- Hex color for primary brand color
+  secondary_color VARCHAR(7) DEFAULT '#79c0ff', -- Hex color for secondary brand color  
+  font_family VARCHAR(100) DEFAULT 'Inter', -- Font family name
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
@@ -1641,15 +1655,35 @@ GRANT ALL ON customer_brand_settings TO authenticated;
 GRANT ALL ON customer_brand_settings TO service_role;
 
 -- Add comments for documentation
-COMMENT ON TABLE customer_brand_settings IS 'Stores brand customization settings for each customer';
+COMMENT ON TABLE customer_brand_settings IS 'Stores complete brand customization settings for each customer';
 COMMENT ON COLUMN customer_brand_settings.text_direction IS 'Text direction: ltr (Left-to-Right) or rtl (Right-to-Left)';
+COMMENT ON COLUMN customer_brand_settings.logo_url IS 'URL to customer logo stored in Cloudinary';
+COMMENT ON COLUMN customer_brand_settings.primary_color IS 'Primary brand color in hex format (#RRGGBB)';
+COMMENT ON COLUMN customer_brand_settings.secondary_color IS 'Secondary brand color in hex format (#RRGGBB)';
+COMMENT ON COLUMN customer_brand_settings.font_family IS 'Brand font family name (e.g., Inter, Arial, Roboto)';
+    `,
+    migration: `
+-- If table already exists, add new columns (safe migration)
+ALTER TABLE customer_brand_settings 
+  ADD COLUMN IF NOT EXISTS logo_url VARCHAR(500),
+  ADD COLUMN IF NOT EXISTS primary_color VARCHAR(7) DEFAULT '#58a6ff',
+  ADD COLUMN IF NOT EXISTS secondary_color VARCHAR(7) DEFAULT '#79c0ff',
+  ADD COLUMN IF NOT EXISTS font_family VARCHAR(100) DEFAULT 'Inter';
+
+-- Update comments
+COMMENT ON TABLE customer_brand_settings IS 'Stores complete brand customization settings for each customer';
+COMMENT ON COLUMN customer_brand_settings.logo_url IS 'URL to customer logo stored in Cloudinary';
+COMMENT ON COLUMN customer_brand_settings.primary_color IS 'Primary brand color in hex format (#RRGGBB)';
+COMMENT ON COLUMN customer_brand_settings.secondary_color IS 'Secondary brand color in hex format (#RRGGBB)';
+COMMENT ON COLUMN customer_brand_settings.font_family IS 'Brand font family name (e.g., Inter, Arial, Roboto)';
     `,
     instructions: [
       '1. Go to your Supabase dashboard',
       '2. Navigate to SQL Editor',
-      '3. Copy and paste the SQL above',
-      '4. Click "Run" to create the customer_brand_settings table',
-      '5. Test by visiting /api/customers/[customer-id]/brand-settings'
+      '3. If table does NOT exist: Copy and paste the "sql" above',
+      '4. If table ALREADY exists: Copy and paste the "migration" above instead',
+      '5. Click "Run" to create/update the customer_brand_settings table',
+      '6. Test by visiting /api/customers/[customer-id]/brand-settings'
     ]
   });
 }
@@ -1973,5 +2007,96 @@ async function handleRequests(req, res) {
   
   else {
     return res.status(405).json({ error: 'Method not allowed' });
+  }
+}
+
+/**
+ * Test brand settings schema with sample data
+ */
+async function handleTestBrandSettingsSchema(req, res) {
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const testCustomerId = 'TEST_CUSTOMER_001';
+    
+    if (req.method === 'POST') {
+      // Test inserting sample brand settings data
+      console.log('🧪 Testing brand settings schema with sample data...');
+      
+      const sampleData = {
+        customer_id: testCustomerId,
+        text_direction: 'rtl',
+        logo_url: 'https://res.cloudinary.com/example/image/upload/v1/brand-assets/test-logo.png',
+        primary_color: '#ff6b6b',
+        secondary_color: '#4ecdc4',
+        font_family: 'Roboto',
+        updated_at: new Date().toISOString()
+      };
+
+      const { data, error } = await supabase
+        .from('customer_brand_settings')
+        .upsert(sampleData)
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Schema test failed:', error);
+        return res.status(500).json({ 
+          error: 'Schema test failed', 
+          details: error.message,
+          hint: 'Make sure you ran the database migration first'
+        });
+      }
+
+      console.log('✅ Sample data inserted successfully');
+      return res.status(200).json({
+        success: true,
+        message: 'Brand settings schema test passed!',
+        testData: data,
+        schemaFields: ['id', 'customer_id', 'text_direction', 'logo_url', 'primary_color', 'secondary_color', 'font_family', 'created_at', 'updated_at']
+      });
+    }
+    
+    else if (req.method === 'GET') {
+      // Test retrieving the sample data
+      const { data, error } = await supabase
+        .from('customer_brand_settings')
+        .select('*')
+        .eq('customer_id', testCustomerId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        return res.status(500).json({ error: 'Failed to retrieve test data', details: error.message });
+      }
+
+      if (!data) {
+        return res.status(200).json({
+          message: 'No test data found. Use POST to create test data first.',
+          instructions: 'Send a POST request to this endpoint to create sample data'
+        });
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: 'Schema validation successful!',
+        testData: data,
+        validation: {
+          hasAllFields: !!(data.customer_id && data.text_direction !== undefined && 
+                         data.logo_url !== undefined && data.primary_color && 
+                         data.secondary_color && data.font_family),
+          missingFields: []
+        }
+      });
+    }
+
+  } catch (error) {
+    console.error('❌ Schema test error:', error);
+    return res.status(500).json({ 
+      error: 'Schema test failed', 
+      details: error.message,
+      hint: 'Check if the customer_brand_settings table exists and has all required columns'
+    });
   }
 }
