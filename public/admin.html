@@ -4848,6 +4848,15 @@
                 return;
             }
             
+            // Store references before they might become null
+            const buttonElement = currentEditUrlElement;
+            const formContainer = currentEditUrlElement ? currentEditUrlElement.formContainer : null;
+            
+            if (!buttonElement) {
+                console.error('No button element found');
+                return;
+            }
+            
             try {
                 const response = await fetch('/api/models', {
                     method: 'PUT',
@@ -4861,21 +4870,21 @@
                 });
                 
                 if (response.ok) {
-                    // Update the button display
+                    // Update the button display using stored reference
                     if (newUrl) {
-                        currentEditUrlElement.innerHTML = '🔗 Edit URL';
-                        currentEditUrlElement.removeAttribute('data-empty');
-                        currentEditUrlElement.setAttribute('data-url', newUrl);
+                        buttonElement.innerHTML = '🔗 Edit URL';
+                        buttonElement.removeAttribute('data-empty');
+                        buttonElement.setAttribute('data-url', newUrl);
                     } else {
-                        currentEditUrlElement.innerHTML = '➕ Add URL';
-                        currentEditUrlElement.setAttribute('data-empty', 'true');
-                        currentEditUrlElement.removeAttribute('data-url');
+                        buttonElement.innerHTML = '➕ Add URL';
+                        buttonElement.setAttribute('data-empty', 'true');
+                        buttonElement.removeAttribute('data-url');
                     }
                     console.log(`Updated model ${modelId} product URL to: ${newUrl}`);
                     
-                    // Clean up the form
-                    if (currentEditUrlElement.formContainer) {
-                        currentEditUrlElement.formContainer.remove();
+                    // Clean up the form using stored reference
+                    if (formContainer) {
+                        formContainer.remove();
                     }
                     currentEditUrlElement = null;
                     
