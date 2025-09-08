@@ -623,19 +623,45 @@ async function handleModels(req, res) {
       if (title !== undefined) updateData.title = title;
       if (product_url !== undefined) updateData.product_url = product_url || null;
       
-      // Update model in database
-      const { error } = await supabase
-        .from('models')
-        .update(updateData)
-        .eq('id', id);
-
-      if (error) {
-        console.error('Database update error:', error);
-        console.error('Error code:', error.code);
-        console.error('Error message:', error.message);
-        console.error('Update data attempted:', updateData);
-        console.error('Model ID:', id);
-        throw error;
+      // Build SQL query dynamically for the fields we want to update
+      const setClauses = [];
+      const values = [];
+      let paramIndex = 1;
+      
+      if (title !== undefined) {
+        setClauses.push(`title = $${paramIndex}`);
+        values.push(title);
+        paramIndex++;
+      }
+      
+      if (product_url !== undefined) {
+        setClauses.push(`product_url = $${paramIndex}`);
+        values.push(product_url || null);
+        paramIndex++;
+      }
+      
+      if (setClauses.length === 0) {
+        return res.status(400).json({ error: 'No fields to update' });
+      }
+      
+      // Add the ID parameter for WHERE clause
+      values.push(id);
+      
+      const updateQuery = `
+        UPDATE models 
+        SET ${setClauses.join(', ')}, updated_at = NOW() 
+        WHERE id = $${paramIndex}
+      `;
+      
+      console.log('🔄 Executing update query:', updateQuery);
+      console.log('🔄 With values:', values);
+      
+      // Update model in database using raw query (same as migration)
+      const result = await query(updateQuery, values);
+      
+      if (!result.success) {
+        console.error('Query execution failed:', result.error);
+        throw new Error(result.error || 'Database update failed');
       }
       
       res.status(200).json({ success: true, message: 'Model updated successfully' });
