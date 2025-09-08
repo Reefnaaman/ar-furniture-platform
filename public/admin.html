@@ -1921,6 +1921,36 @@
             opacity: 1;
         }
         
+        .variant-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            position: absolute;
+            top: -8px;
+            right: -8px;
+        }
+        
+        .variant-url-button {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            background: rgba(88, 166, 255, 0.1);
+            color: #58a6ff;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            transition: all 0.2s ease;
+            margin-bottom: 2px;
+        }
+        
+        .variant-url-button:hover {
+            background: rgba(88, 166, 255, 0.2);
+            transform: scale(1.1);
+        }
+        
         .variant-delete {
             position: absolute;
             top: -8px;
@@ -3355,9 +3385,14 @@
                                              onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}', '${variant.variant_type || 'upload'}')">
                                              ${variant.is_primary ? '★' : ''}
                                         </div>
-                                        <div class="variant-delete" 
-                                             title="Delete ${variant.variant_name}"
-                                             onclick="deleteVariant('${variant.id}', '${model.id}', event)">×</div>
+                                        <div class="variant-actions">
+                                            <button class="variant-url-button" data-variant-id="${variant.id}" onclick="startEditVariantUrl(this)" ${!variant.product_url ? 'data-empty="true"' : ''}>
+                                                ${variant.product_url ? '🔗' : '➕'}
+                                            </button>
+                                            <div class="variant-delete" 
+                                                 title="Delete ${variant.variant_name}"
+                                                 onclick="deleteVariant('${variant.id}', '${model.id}', event)">×</div>
+                                        </div>
                                     </div>
                                 `).join('')}
                             </div>
@@ -4904,6 +4939,159 @@
                 // Simply remove the modal
                 currentEditUrlElement.formContainer.remove();
                 currentEditUrlElement = null;
+            }
+        }
+
+        // Variant URL editing functions
+        let currentEditVariantElement = null;
+
+        function startEditVariantUrl(element) {
+            if (currentEditVariantElement) {
+                cancelVariantUrlEdit();
+            }
+            
+            currentEditVariantElement = element;
+            
+            const variantId = element.getAttribute('data-variant-id');
+            const isEmptyState = element.getAttribute('data-empty') === 'true';
+            const originalUrl = isEmptyState ? '' : (element.getAttribute('data-url') || '');
+            
+            // Create modal for variant URL editing
+            const formContainer = document.createElement('div');
+            formContainer.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(13, 17, 23, 0.95);
+                border: 1px solid rgba(240, 246, 252, 0.1);
+                border-radius: 12px;
+                padding: 24px;
+                z-index: 10000;
+                min-width: 400px;
+                backdrop-filter: blur(10px);
+            `;
+            
+            formContainer.innerHTML = `
+                <h3 style="color: #e6edf3; margin: 0 0 16px 0; font-size: 1.1rem;">
+                    ${isEmptyState ? 'Add Variant URL' : 'Edit Variant URL'}
+                </h3>
+                <input type="url" 
+                       id="variantUrlEditInput"
+                       data-variant-id="${variantId}"
+                       value="${originalUrl}" 
+                       placeholder="https://example.com/product-variant" 
+                       style="
+                           width: 100%;
+                           background: rgba(240, 246, 252, 0.1);
+                           border: 1px solid rgba(88, 166, 255, 0.5);
+                           color: #e6edf3;
+                           padding: 10px 14px;
+                           border-radius: 8px;
+                           font-size: 0.95rem;
+                           outline: none;
+                           font-family: inherit;
+                           margin-bottom: 16px;
+                       ">
+                <div style="display: flex; gap: 8px; justify-content: flex-end;">
+                    <button onclick="cancelVariantUrlEdit()" style="
+                        padding: 8px 16px;
+                        background: rgba(125, 133, 144, 0.2);
+                        border: 1px solid rgba(125, 133, 144, 0.3);
+                        color: #7d8590;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                    ">Cancel</button>
+                    <button onclick="saveVariantUrlFromInput()" style="
+                        padding: 8px 16px;
+                        background: rgba(88, 166, 255, 0.2);
+                        border: 1px solid rgba(88, 166, 255, 0.5);
+                        color: #58a6ff;
+                        border-radius: 6px;
+                        cursor: pointer;
+                        font-size: 0.9rem;
+                    ">Save</button>
+                </div>
+            `;
+            
+            document.body.appendChild(formContainer);
+            currentEditVariantElement.formContainer = formContainer;
+            
+            const input = document.getElementById('variantUrlEditInput');
+            input.focus();
+            input.select();
+        }
+
+        function saveVariantUrlFromInput() {
+            const input = document.getElementById('variantUrlEditInput');
+            if (input) {
+                saveVariantUrl(input);
+            }
+        }
+
+        async function saveVariantUrl(input) {
+            const newUrl = input.value.trim();
+            const variantId = input.getAttribute('data-variant-id');
+            
+            if (!variantId) {
+                console.error('No variant ID found');
+                return;
+            }
+            
+            const buttonElement = currentEditVariantElement;
+            const formContainer = currentEditVariantElement ? currentEditVariantElement.formContainer : null;
+            
+            if (!buttonElement) {
+                console.error('No button element found');
+                return;
+            }
+            
+            try {
+                const response = await fetch('/api/variants', {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: variantId,
+                        product_url: newUrl
+                    })
+                });
+                
+                if (response.ok) {
+                    // Update the button display
+                    if (newUrl) {
+                        buttonElement.innerHTML = '🔗';
+                        buttonElement.removeAttribute('data-empty');
+                        buttonElement.setAttribute('data-url', newUrl);
+                    } else {
+                        buttonElement.innerHTML = '➕';
+                        buttonElement.setAttribute('data-empty', 'true');
+                        buttonElement.removeAttribute('data-url');
+                    }
+                    console.log(`Updated variant ${variantId} product URL to: ${newUrl}`);
+                    
+                    // Clean up the form
+                    if (formContainer) {
+                        formContainer.remove();
+                    }
+                    currentEditVariantElement = null;
+                    
+                } else {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Failed to update variant URL');
+                }
+            } catch (error) {
+                console.error('Error updating variant URL:', error);
+                alert(`Failed to update variant URL: ${error.message}`);
+            }
+        }
+
+        function cancelVariantUrlEdit() {
+            if (currentEditVariantElement && currentEditVariantElement.formContainer) {
+                currentEditVariantElement.formContainer.remove();
+                currentEditVariantElement = null;
             }
         }
 

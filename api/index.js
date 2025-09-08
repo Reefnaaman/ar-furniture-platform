@@ -260,6 +260,57 @@ export default async function handler(req, res) {
       return await handleCreateUser(req, res);
     }
     
+    // Route: /api/variants - handle variant operations
+    if (routePath === 'variants') {
+      if (req.method === 'PUT') {
+        // Update a variant's product URL
+        const { id, product_url } = req.body;
+        
+        if (!id) {
+          return res.status(400).json({ error: 'Variant ID required' });
+        }
+        
+        try {
+          // Build SQL query for variant update
+          const updateQuery = `
+            UPDATE model_variants 
+            SET product_url = $1, updated_at = NOW() 
+            WHERE id = $2
+          `;
+          
+          console.log('🔄 Executing variant update query:', updateQuery);
+          console.log('🔄 With values:', [product_url || null, id]);
+          
+          const result = await query(updateQuery, [product_url || null, id]);
+          
+          if (!result.success) {
+            console.error('Variant query execution failed:', result.error);
+            throw new Error(result.error || 'Database update failed');
+          }
+          
+          res.status(200).json({ success: true, message: 'Variant updated successfully' });
+          
+        } catch (error) {
+          console.error('Error updating variant:', error);
+          console.error('Full error object:', JSON.stringify(error, null, 2));
+          
+          if (error.message && error.message.includes('column')) {
+            res.status(500).json({ 
+              error: 'Database schema issue. Column might be missing.',
+              details: error.message
+            });
+          } else {
+            res.status(500).json({ 
+              error: 'Unable to save variant changes. Please try again.',
+              details: error.message || 'Unknown error'
+            });
+          }
+        }
+      } else {
+        return res.status(405).json({ error: 'Method not allowed' });
+      }
+    }
+    
     // Route: /api/users - handle all user operations directly
     if (routePath === 'users') {
       // GET /api/users - List all users with view counts
