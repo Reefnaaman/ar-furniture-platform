@@ -88,20 +88,22 @@
         .platform-logo,
         .customer-logo {
             flex: 1;
-            height: 50px;
+            max-height: 60px;
+            max-width: 100%;
             object-fit: contain;
             border-radius: 8px;
-            background: rgba(240, 246, 252, 0.1);
-            padding: 8px;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
         
         .platform-logo {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            /* No background - show original logo file */
+            background: transparent;
+            padding: 2px;
         }
         
         .customer-logo {
             background: rgba(240, 246, 252, 0.1);
+            padding: 8px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
         }
         
         .customer-logo.placeholder {
@@ -1889,7 +1891,7 @@
     <div class="sidebar">
         <div class="sidebar-header">
             <div class="logo-container">
-                <img src="/favicon-32x32.png" class="platform-logo" alt="NewFurniture" />
+                <img src="/android-chrome-192x192.png" class="platform-logo" alt="NewFurniture" />
                 <img id="customerLogo" class="customer-logo" style="display: none;" alt="Customer Logo" />
             </div>
         </div>
@@ -2447,7 +2449,7 @@
                     // Show placeholder when no customer logo is available
                     const logoElement = document.getElementById('customerLogo');
                     logoElement.style.display = 'block';
-                    logoElement.src = '/favicon-32x32.png'; // Fallback to platform favicon
+                    logoElement.src = '/android-chrome-192x192.png'; // Fallback to platform logo
                     logoElement.classList.add('placeholder');
                     console.log('📝 No customer logo found for:', customerId, '- showing placeholder');
                 }
