@@ -607,7 +607,10 @@ async function handleModels(req, res) {
 
       if (error) {
         console.error('Database update error:', error);
+        console.error('Error code:', error.code);
+        console.error('Error message:', error.message);
         console.error('Update data attempted:', updateData);
+        console.error('Model ID:', id);
         throw error;
       }
       
@@ -616,6 +619,7 @@ async function handleModels(req, res) {
     } catch (error) {
       console.error('Error updating model:', error);
       console.error('Error details:', error.message);
+      console.error('Full error object:', JSON.stringify(error, null, 2));
       
       // Check if it's a column not found error
       if (error.code === '42703') {
@@ -623,8 +627,16 @@ async function handleModels(req, res) {
           error: 'Database column missing. Please run migration at /api/init-models-db',
           details: 'The product_url column needs to be added to the database'
         });
+      } else if (error.message && error.message.includes('column')) {
+        res.status(500).json({ 
+          error: 'Database schema issue. Column might be missing.',
+          details: error.message
+        });
       } else {
-        res.status(500).json({ error: 'Unable to save changes. Please try again.' });
+        res.status(500).json({ 
+          error: 'Unable to save changes. Please try again.',
+          details: error.message || 'Unknown error'
+        });
       }
     }
   }
