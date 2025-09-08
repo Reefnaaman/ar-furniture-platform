@@ -1774,13 +1774,27 @@ async function handleResetViewCounts(req, res) {
   }
 
   try {
-    console.log('🔄 Resetting all view counts to 0...');
+    // Check if customer parameter is provided for customer-specific reset
+    const { customer } = req.body;
     
-    // Reset view_count in models table - use not equal to impossible value to match all rows
-    const { error: modelsError } = await supabase
-      .from('models')
-      .update({ view_count: 0 })
-      .not('id', 'eq', 'impossible_id_that_never_exists');
+    if (customer) {
+      console.log(`🔄 Resetting view counts for customer: ${customer}`);
+      
+      // Reset view_count only for specific customer's models
+      const { error: modelsError } = await supabase
+        .from('models')
+        .update({ view_count: 0 })
+        .eq('customer_id', customer);
+        
+    } else {
+      console.log('🔄 Resetting all view counts to 0...');
+      
+      // Reset view_count in models table - use not equal to impossible value to match all rows
+      const { error: modelsError } = await supabase
+        .from('models')
+        .update({ view_count: 0 })
+        .not('id', 'eq', 'impossible_id_that_never_exists');
+    }
 
     if (modelsError) {
       console.error('Error resetting models view counts:', modelsError);
@@ -1790,30 +1804,58 @@ async function handleResetViewCounts(req, res) {
       });
     }
 
-    // Clear all records from model_views table (if it exists)
+    // Clear records from model_views table (if it exists)
     let viewsCleared = 0;
     try {
-      const { error: viewsError, count } = await supabase
-        .from('model_views')
-        .delete()
-        .neq('id', 0); // Delete all records
-
-      if (!viewsError) {
-        viewsCleared = count || 0;
-        console.log(`✅ Cleared ${viewsCleared} detailed view records`);
+      let deleteQuery;
+      
+      if (customer) {
+        // Get model IDs for this customer first
+        const { data: customerModels } = await supabase
+          .from('models')
+          .select('id')
+          .eq('customer_id', customer);
+          
+        if (customerModels && customerModels.length > 0) {
+          const modelIds = customerModels.map(m => m.id);
+          deleteQuery = supabase
+            .from('model_views')
+            .delete()
+            .in('model_id', modelIds);
+        }
+      } else {
+        deleteQuery = supabase
+          .from('model_views')
+          .delete()
+          .neq('id', 0); // Delete all records
+      }
+      
+      if (deleteQuery) {
+        const { error: viewsError, count } = await deleteQuery;
+        
+        if (!viewsError) {
+          viewsCleared = count || 0;
+          console.log(`✅ Cleared ${viewsCleared} detailed view records${customer ? ` for customer ${customer}` : ''}`);
+        }
       }
     } catch (viewsTableError) {
       console.log('📝 model_views table not found (this is okay for first setup)');
     }
 
-    console.log('✅ All view counts reset to 0');
+    const resetMessage = customer ? 
+      `✅ View counts reset to 0 for customer '${customer}'` : 
+      '✅ All view counts reset to 0';
+    console.log(resetMessage);
 
     return res.status(200).json({
       success: true,
-      message: 'All view counts reset to 0',
+      message: customer ? `View counts reset to 0 for customer '${customer}'` : 'All view counts reset to 0',
+      customer: customer || null,
       modelsReset: true,
       detailedViewsCleared: viewsCleared,
-      instructions: 'You can now test the per-variant view tracking system from a clean state'
+      instructions: customer ? 
+        `View counts for customer '${customer}' have been reset to 0` :
+        'You can now test the per-variant view tracking system from a clean state'
     });
 
   } catch (error) {
