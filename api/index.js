@@ -1,4 +1,4 @@
-import { uploadModel } from '../lib/cloudinary.js';
+import { uploadModel, uploadImage } from '../lib/cloudinary.js';
 import { saveModel, saveModelVariant, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase, query } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import { validateFileContent, sanitizeFilename, checkRateLimit, getRateLimitHeaders, hashIP } from '../lib/security.js';
@@ -462,6 +462,12 @@ export default async function handler(req, res) {
     if (routePath?.match(/^customers\/[^\/]+\/brand-settings$/)) {
       const customerId = routePath.split('/')[1];
       return await handleBrandSettings(req, res, customerId);
+    }
+    
+    // Route: /api/customers/[id]/logo - Customer logo upload
+    if (routePath?.match(/^customers\/[^\/]+\/logo$/)) {
+      const customerId = routePath.split('/')[1];
+      return await handleCustomerLogoUpload(req, res, customerId);
     }
     
     // Route: /api/customer/[id]
@@ -1981,7 +1987,7 @@ async function handleBrandSettings(req, res, customerId) {
     // Get brand settings for customer
     try {
       const { data, error } = await supabase
-        .from('brand_settings')
+        .from('customer_brand_settings')
         .select('*')
         .eq('customer_id', customerId)
         .single();
@@ -2028,7 +2034,7 @@ async function handleBrandSettings(req, res, customerId) {
 
       // Upsert brand settings
       const { data, error } = await supabase
-        .from('brand_settings')
+        .from('customer_brand_settings')
         .upsert(settingsData, {
           onConflict: 'customer_id'
         })
@@ -2193,6 +2199,107 @@ async function handleTestBrandSettingsSchema(req, res) {
       error: 'Schema test failed', 
       details: error.message,
       hint: 'Check if the customer_brand_settings table exists and has all required columns'
+    });
+  }
+}
+
+/**
+ * Handle customer logo upload - integrates with admin Images system
+ */
+async function handleCustomerLogoUpload(req, res, customerId) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    // Parse multipart form data
+    const form = new multiparty.Form();
+    
+    const { fields, files } = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve({ fields, files });
+      });
+    });
+
+    // Get uploaded file
+    const uploadedFile = files.file?.[0];
+    if (!uploadedFile) {
+      return res.status(400).json({ error: 'No logo file provided' });
+    }
+
+    // Validate file type (images only)
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/svg+xml'];
+    if (!allowedTypes.includes(uploadedFile.headers['content-type'])) {
+      return res.status(400).json({ error: 'Invalid file type. Only JPG, PNG, WebP, and SVG are allowed.' });
+    }
+
+    // Upload to Cloudinary
+    const fs = require('fs');
+    const fileBuffer = fs.readFileSync(uploadedFile.path);
+    
+    const uploadResult = await uploadImage(fileBuffer, uploadedFile.originalFilename);
+    
+    // Save to admin Images table with customer context
+    const imageId = Date.now().toString(); // Simple ID generation
+    
+    const { data: imageData, error: imageError } = await supabase
+      .from('images')
+      .insert({
+        id: imageId,
+        filename: uploadedFile.originalFilename,
+        cloudinary_url: uploadResult.url,
+        cloudinary_public_id: uploadResult.publicId,
+        file_size: uploadResult.size,
+        width: uploadResult.width,
+        height: uploadResult.height,
+        format: uploadResult.format,
+        image_type: 'customer_logo', // Special type for customer logos
+        customer_id: customerId,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
+      })
+      .select()
+      .single();
+
+    if (imageError) {
+      console.error('Error saving logo to Images table:', imageError);
+      return res.status(500).json({ error: 'Failed to save logo information' });
+    }
+
+    // Update customer's brand settings with logo URL
+    const { data: brandData, error: brandError } = await supabase
+      .from('customer_brand_settings')
+      .upsert({
+        customer_id: customerId,
+        logo_url: uploadResult.url,
+        updated_at: new Date().toISOString()
+      }, {
+        onConflict: 'customer_id'
+      })
+      .select()
+      .single();
+
+    if (brandError) {
+      console.error('Error updating brand settings with logo:', brandError);
+      return res.status(500).json({ error: 'Failed to update brand settings' });
+    }
+
+    console.log(`✅ Logo uploaded for customer ${customerId}: ${uploadResult.url}`);
+    
+    return res.status(200).json({
+      success: true,
+      message: 'Logo uploaded successfully',
+      logoUrl: uploadResult.url,
+      imageData: imageData,
+      brandSettings: brandData
+    });
+
+  } catch (error) {
+    console.error('Error uploading customer logo:', error);
+    return res.status(500).json({ 
+      error: 'Failed to upload logo',
+      details: error.message 
     });
   }
 }
