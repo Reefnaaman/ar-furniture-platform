@@ -2801,6 +2801,67 @@
                     <small class="field-hint">Example: https://yourstore.com/products/sofa-123</small>
                 </div>
                 
+                <!-- Dimensions Section -->
+                <div class="dimensions-section" style="margin-top: 20px; padding-top: 20px; border-top: 1px solid rgba(88, 166, 255, 0.2);">
+                    <h4 style="color: #58a6ff; margin-bottom: 15px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">
+                        📏 Real-World Dimensions (Optional)
+                    </h4>
+                    <p style="color: #7d8590; font-size: 12px; margin-bottom: 15px;">
+                        Enter actual furniture dimensions to ensure accurate AR scaling
+                    </p>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;">
+                        <div class="input-group">
+                            <input type="number" 
+                                   id="widthInput" 
+                                   placeholder="Width" 
+                                   class="futuristic-input" 
+                                   step="0.01" 
+                                   min="0">
+                            <div class="input-line"></div>
+                            <small class="field-hint">cm</small>
+                        </div>
+                        
+                        <div class="input-group">
+                            <input type="number" 
+                                   id="heightInput" 
+                                   placeholder="Height" 
+                                   class="futuristic-input" 
+                                   step="0.01" 
+                                   min="0">
+                            <div class="input-line"></div>
+                            <small class="field-hint">cm</small>
+                        </div>
+                        
+                        <div class="input-group">
+                            <input type="number" 
+                                   id="depthInput" 
+                                   placeholder="Depth" 
+                                   class="futuristic-input" 
+                                   step="0.01" 
+                                   min="0">
+                            <div class="input-line"></div>
+                            <small class="field-hint">cm</small>
+                        </div>
+                    </div>
+                    
+                    <div class="input-group" style="margin-top: 15px;">
+                        <select id="unitSelect" class="futuristic-input" style="width: 100%;">
+                            <option value="cm" selected>Centimeters (cm)</option>
+                            <option value="m">Meters (m)</option>
+                            <option value="in">Inches (in)</option>
+                            <option value="ft">Feet (ft)</option>
+                        </select>
+                        <div class="input-line"></div>
+                    </div>
+                    
+                    <div style="background: rgba(88, 166, 255, 0.1); border-radius: 8px; padding: 10px; margin-top: 15px;">
+                        <p style="color: #58a6ff; font-size: 11px; margin: 0;">
+                            💡 <strong>Tip:</strong> For a couch: Width = left to right, Height = floor to top, Depth = front to back
+                        </p>
+                    </div>
+                </div>
+                
                 <div class="modal-buttons">
                     <button type="button" class="modal-button secondary" onclick="closeUploadModal()">Cancel</button>
                     <button type="submit" class="modal-button primary futuristic-primary" id="uploadButton">
@@ -3192,6 +3253,18 @@
                                 updateProductUrlButton(card, model.id, 'original');
                             }
                         }
+                        
+                        // Trigger dimension validation if dimensions exist
+                        if (model.width_meters || model.height_meters || model.depth_meters) {
+                            console.log('📏 Triggering dimension validation for model:', model.id);
+                            validateModelDimensions(
+                                model.id,
+                                model.width_meters,
+                                model.height_meters, 
+                                model.depth_meters,
+                                model.dimension_unit || 'cm'
+                            );
+                        }
                     });
                 }, 100);
                 
@@ -3378,6 +3451,21 @@
                             </div>
                         </div>
                         
+                        <!-- Dimensions Section -->
+                        ${model.width_meters || model.height_meters || model.depth_meters ? `
+                            <div class="dimensions-info" data-model-id="${model.id}" style="margin: 12px 0; padding: 8px; background: rgba(88, 166, 255, 0.1); border-radius: 8px; border: 1px solid rgba(88, 166, 255, 0.2);">
+                                <div style="font-size: 11px; color: #58a6ff; font-weight: 500; margin-bottom: 4px;">📏 Dimensions (${model.dimension_unit || 'cm'})</div>
+                                <div style="font-size: 10px; color: #7d8590;">
+                                    ${[
+                                        model.width_meters ? `W: ${formatDimensionFromMeters(model.width_meters, model.dimension_unit || 'cm')}` : null,
+                                        model.height_meters ? `H: ${formatDimensionFromMeters(model.height_meters, model.dimension_unit || 'cm')}` : null,
+                                        model.depth_meters ? `D: ${formatDimensionFromMeters(model.depth_meters, model.dimension_unit || 'cm')}` : null
+                                    ].filter(Boolean).join(' × ')}
+                                </div>
+                                <div class="dimension-validation" id="validation-${model.id}" style="margin-top: 4px; font-size: 9px; display: none;"></div>
+                            </div>
+                        ` : ''}
+                        
                         ${model.variants && model.variants.length > 0 ? `
                             <div class="variants-circles">
                                 <!-- Always show original as first variant with extracted color -->
@@ -3513,6 +3601,68 @@
             return date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
         }
         
+        // Format dimensions from meters to display unit
+        function formatDimensionFromMeters(meters, unit) {
+            if (!meters) return '0';
+            
+            switch(unit) {
+                case 'm': 
+                    return meters.toFixed(2);
+                case 'in':
+                    return (meters / 0.0254).toFixed(1);
+                case 'ft':
+                    return (meters / 0.3048).toFixed(2);
+                default: // cm
+                    return (meters * 100).toFixed(0);
+            }
+        }
+        
+        // Validate model dimensions against user input
+        function validateModelDimensions(modelId, expectedWidth, expectedHeight, expectedDepth, unit) {
+            const modelViewer = document.querySelector(`[data-model-id="${modelId}"] model-viewer`);
+            if (!modelViewer) return;
+            
+            const validationDiv = document.getElementById(`validation-${modelId}`);
+            if (!validationDiv) return;
+            
+            // Add small delay to ensure model is loaded
+            setTimeout(() => {
+                try {
+                    const actualDimensions = modelViewer.getDimensions();
+                    if (actualDimensions) {
+                        console.log(`📏 Model ${modelId} actual dimensions (meters):`, actualDimensions);
+                        
+                        const tolerance = 0.1; // 10cm tolerance
+                        const warnings = [];
+                        
+                        const checkDimension = (actual, expected, name) => {
+                            if (expected && actual && Math.abs(actual - expected) > tolerance) {
+                                const actualFormatted = formatDimensionFromMeters(actual, unit);
+                                const expectedFormatted = formatDimensionFromMeters(expected, unit);
+                                warnings.push(`${name}: model ${actualFormatted}${unit} vs input ${expectedFormatted}${unit}`);
+                            }
+                        };
+                        
+                        checkDimension(actualDimensions.x, expectedWidth, 'Width');
+                        checkDimension(actualDimensions.y, expectedHeight, 'Height');  
+                        checkDimension(actualDimensions.z, expectedDepth, 'Depth');
+                        
+                        if (warnings.length > 0) {
+                            validationDiv.innerHTML = `⚠️ Scale mismatch: ${warnings.join(', ')}`;
+                            validationDiv.style.color = '#f59e0b';
+                            validationDiv.style.display = 'block';
+                        } else if (expectedWidth || expectedHeight || expectedDepth) {
+                            validationDiv.innerHTML = `✅ Dimensions match input`;
+                            validationDiv.style.color = '#10b981';
+                            validationDiv.style.display = 'block';
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Could not validate dimensions for model', modelId, error);
+                }
+            }, 2000);
+        }
+        
         let selectedFile = null;
 
         // Upload modal functions
@@ -3639,6 +3789,12 @@
             const productUrlInput = document.getElementById('productUrlInput');
             const customerSelect = document.getElementById('customerSelect');
             
+            // Get dimension inputs
+            const widthInput = document.getElementById('widthInput');
+            const heightInput = document.getElementById('heightInput');
+            const depthInput = document.getElementById('depthInput');
+            const unitSelect = document.getElementById('unitSelect');
+            
             // Parse customer selection
             const [customerId, customerName] = customerSelect.value.split(':');
             
@@ -3649,6 +3805,37 @@
             formData.append('product_url', productUrlInput.value || '');
             formData.append('customerId', customerId);
             formData.append('customerName', customerName);
+            
+            // Add dimension data if provided
+            if (widthInput.value || heightInput.value || depthInput.value) {
+                const unit = unitSelect.value || 'cm';
+                
+                // Convert all dimensions to meters for consistent storage
+                const convertToMeters = (value, unit) => {
+                    if (!value || isNaN(value)) return null;
+                    const num = parseFloat(value);
+                    switch(unit) {
+                        case 'm': return num;
+                        case 'cm': return num / 100;
+                        case 'in': return num * 0.0254;
+                        case 'ft': return num * 0.3048;
+                        default: return num / 100; // Default to cm
+                    }
+                };
+                
+                const dimensions = {
+                    width: convertToMeters(widthInput.value, unit),
+                    height: convertToMeters(heightInput.value, unit),
+                    depth: convertToMeters(depthInput.value, unit),
+                    unit: unit,
+                    original_width: widthInput.value,
+                    original_height: heightInput.value,
+                    original_depth: depthInput.value
+                };
+                
+                formData.append('dimensions', JSON.stringify(dimensions));
+                console.log('📏 Adding dimensions:', dimensions);
+            }
             
             // Show progress
             document.getElementById('uploadProgress').style.display = 'block';

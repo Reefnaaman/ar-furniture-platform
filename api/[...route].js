@@ -373,6 +373,17 @@ async function handleUpload(req, res) {
         fileSize: cloudinaryResult.size
       });
       
+      // Parse dimensions if provided
+      let dimensions = null;
+      if (fields.dimensions?.[0]) {
+        try {
+          dimensions = JSON.parse(fields.dimensions[0]);
+          console.log('📏 Parsed dimensions:', dimensions);
+        } catch (error) {
+          console.warn('⚠️ Failed to parse dimensions, skipping:', error.message);
+        }
+      }
+      
       dbResult = await saveModel({
       title: fields.title?.[0] || uploadedFile.originalFilename.replace(/\.(glb|gltf)$/i, ''),
       description: fields.description?.[0] || '',
@@ -382,7 +393,9 @@ async function handleUpload(req, res) {
       fileSize: cloudinaryResult.size,
       customerId: fields.customerId?.[0] || 'unassigned',
       customerName: fields.customerName?.[0] || 'Unassigned',
+      productUrl: fields.product_url?.[0] || null,
       dominantColor: '#6b7280', // Will be updated by frontend after color extraction
+      dimensions: dimensions,
       metadata: {
         mimetype: uploadedFile.headers['content-type'],
         uploadedAt: new Date().toISOString()
@@ -1283,6 +1296,13 @@ CREATE TABLE IF NOT EXISTS models (
   view_count INTEGER DEFAULT 0,
   dominant_color VARCHAR(7) DEFAULT '#6b7280',
   metadata JSONB DEFAULT '{}',
+  product_url TEXT,
+  -- Real-world dimensions in meters (for AR scaling)
+  width_meters DECIMAL(10,4),
+  height_meters DECIMAL(10,4), 
+  depth_meters DECIMAL(10,4),
+  dimension_unit VARCHAR(10) DEFAULT 'cm',
+  dimension_notes TEXT,
   created_at TIMESTAMPTZ DEFAULT NOW(),
   updated_at TIMESTAMPTZ DEFAULT NOW()
 );
