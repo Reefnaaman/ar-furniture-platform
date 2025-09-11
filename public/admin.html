@@ -564,7 +564,7 @@
         
         /* Futuristic Upload Styles */
         .futuristic-upload {
-            max-width: 800px !important;
+            max-width: 550px !important;
             background: linear-gradient(135deg, rgba(22, 27, 34, 0.98) 0%, rgba(30, 35, 42, 0.95) 100%);
             border: 2px solid rgba(88, 166, 255, 0.2);
             box-shadow: 
@@ -2890,17 +2890,15 @@
 
     <!-- Wallpaper Upload Modal -->
     <div class="password-modal" id="wallpaperUploadModal" style="display: none;">
-        <div class="modal-content futuristic-upload">
-            <div class="upload-header">
-                <div class="upload-icon-container">
-                    <div class="upload-icon-bg">
-                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none">
-                            <path d="M3 7V5C3 3.9 3.9 3 5 3H19C20.1 3 21 3.9 21 5V7M3 7L21 7M3 7V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V7M9 11H15M9 15H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                        </svg>
+        <div class="modal-content futuristic-upload" style="max-height: 85vh; overflow-y: auto; max-width: 600px;">
+            <div class="upload-header" style="padding: 15px 20px 10px;">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 8px;">
+                    <div style="width: 32px; height: 32px; background: rgba(163, 113, 247, 0.15); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                        🧱
                     </div>
+                    <h3 style="margin: 0; font-size: 18px; color: #e6edf3;">Upload Wallpaper</h3>
                 </div>
-                <h3 class="upload-title">Upload Wallpaper Textures</h3>
-                <p class="upload-subtitle">Upload PBR texture maps to create AR wallpaper experiences</p>
+                <p style="margin: 0; color: #7d8590; font-size: 13px;">Create AR wallpaper from texture maps</p>
             </div>
             
             <form id="wallpaperUploadForm">
