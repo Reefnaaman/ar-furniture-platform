@@ -563,7 +563,7 @@
         
         /* Futuristic Upload Styles */
         .futuristic-upload {
-            max-width: 500px !important;
+            max-width: 800px !important;
             background: linear-gradient(135deg, rgba(22, 27, 34, 0.98) 0%, rgba(30, 35, 42, 0.95) 100%);
             border: 2px solid rgba(88, 166, 255, 0.2);
             box-shadow: 
@@ -2882,6 +2882,176 @@
                         <div class="progress-glow"></div>
                     </div>
                     <div class="progress-percentage" id="progressPercentage">0%</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Wallpaper Upload Modal -->
+    <div class="password-modal" id="wallpaperUploadModal" style="display: none;">
+        <div class="modal-content futuristic-upload">
+            <div class="upload-header">
+                <div class="upload-icon-container">
+                    <div class="upload-icon-bg">
+                        <svg class="upload-icon" viewBox="0 0 24 24" fill="none">
+                            <path d="M3 7V5C3 3.9 3.9 3 5 3H19C20.1 3 21 3.9 21 5V7M3 7L21 7M3 7V19C3 20.1 3.9 21 5 21H19C20.1 21 21 20.1 21 19V7M9 11H15M9 15H12" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        </svg>
+                    </div>
+                </div>
+                <h3 class="upload-title">Upload Wallpaper Textures</h3>
+                <p class="upload-subtitle">Upload PBR texture maps to create AR wallpaper experiences</p>
+            </div>
+            
+            <form id="wallpaperUploadForm">
+                <!-- Customer Selection -->
+                <div class="input-group">
+                    <label class="input-label">👤 Customer</label>
+                    <select class="futuristic-input" id="wallpaperCustomerId" required>
+                        <option value="">Select Customer</option>
+                        <!-- Options will be populated dynamically -->
+                    </select>
+                </div>
+
+                <!-- Wallpaper Title -->
+                <div class="input-group">
+                    <label class="input-label">📝 Wallpaper Title</label>
+                    <input type="text" class="futuristic-input" id="wallpaperTitle" placeholder="e.g., Vintage Brick Mosaic" required>
+                </div>
+
+                <!-- Texture Upload Section -->
+                <div class="texture-upload-section">
+                    <h4 style="color: #a371f7; margin-bottom: 15px; font-size: 16px;">🎨 Texture Maps</h4>
+                    <p style="color: #7d8590; font-size: 14px; margin-bottom: 20px;">Upload texture maps. Albedo is required, others are optional for enhanced realism.</p>
+                    
+                    <!-- Texture Grid -->
+                    <div class="texture-grid" style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; margin-bottom: 20px;">
+                        <!-- Albedo Texture -->
+                        <div class="texture-slot" data-type="albedo">
+                            <div class="texture-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span style="color: #a371f7;">🎨</span>
+                                <label class="texture-label" style="font-size: 14px; font-weight: 500;">Albedo (Required)</label>
+                            </div>
+                            <input type="file" class="texture-input" accept="image/*" data-type="albedo" style="display: none;">
+                            <div class="texture-drop-zone" data-type="albedo" style="border: 2px dashed rgba(163, 113, 247, 0.3); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: rgba(163, 113, 247, 0.05);">
+                                <div class="texture-preview" style="display: none;">
+                                    <img class="texture-image" style="max-width: 100%; height: 60px; object-fit: cover; border-radius: 4px;">
+                                    <div class="texture-name" style="margin-top: 5px; font-size: 12px; color: #7d8590;"></div>
+                                    <button type="button" class="remove-texture" style="background: #f85149; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 12px; margin-top: 5px; cursor: pointer;">Remove</button>
+                                </div>
+                                <div class="texture-placeholder">
+                                    <div style="font-size: 24px; margin-bottom: 5px;">📁</div>
+                                    <div style="font-size: 12px; color: #7d8590;">Base Color</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Normal Texture -->
+                        <div class="texture-slot" data-type="normal">
+                            <div class="texture-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span style="color: #58a6ff;">🌊</span>
+                                <label class="texture-label" style="font-size: 14px; font-weight: 500;">Normal</label>
+                            </div>
+                            <input type="file" class="texture-input" accept="image/*" data-type="normal" style="display: none;">
+                            <div class="texture-drop-zone" data-type="normal" style="border: 2px dashed rgba(88, 166, 255, 0.3); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: rgba(88, 166, 255, 0.05);">
+                                <div class="texture-preview" style="display: none;">
+                                    <img class="texture-image" style="max-width: 100%; height: 60px; object-fit: cover; border-radius: 4px;">
+                                    <div class="texture-name" style="margin-top: 5px; font-size: 12px; color: #7d8590;"></div>
+                                    <button type="button" class="remove-texture" style="background: #f85149; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 12px; margin-top: 5px; cursor: pointer;">Remove</button>
+                                </div>
+                                <div class="texture-placeholder">
+                                    <div style="font-size: 24px; margin-bottom: 5px;">📁</div>
+                                    <div style="font-size: 12px; color: #7d8590;">Surface Bumps</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Roughness Texture -->
+                        <div class="texture-slot" data-type="roughness">
+                            <div class="texture-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span style="color: #ffa500;">✨</span>
+                                <label class="texture-label" style="font-size: 14px; font-weight: 500;">Roughness</label>
+                            </div>
+                            <input type="file" class="texture-input" accept="image/*" data-type="roughness" style="display: none;">
+                            <div class="texture-drop-zone" data-type="roughness" style="border: 2px dashed rgba(255, 165, 0, 0.3); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: rgba(255, 165, 0, 0.05);">
+                                <div class="texture-preview" style="display: none;">
+                                    <img class="texture-image" style="max-width: 100%; height: 60px; object-fit: cover; border-radius: 4px;">
+                                    <div class="texture-name" style="margin-top: 5px; font-size: 12px; color: #7d8590;"></div>
+                                    <button type="button" class="remove-texture" style="background: #f85149; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 12px; margin-top: 5px; cursor: pointer;">Remove</button>
+                                </div>
+                                <div class="texture-placeholder">
+                                    <div style="font-size: 24px; margin-bottom: 5px;">📁</div>
+                                    <div style="font-size: 12px; color: #7d8590;">Surface Shine</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Height/Displacement Texture -->
+                        <div class="texture-slot" data-type="height">
+                            <div class="texture-header" style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
+                                <span style="color: #10b981;">⛰️</span>
+                                <label class="texture-label" style="font-size: 14px; font-weight: 500;">Height</label>
+                            </div>
+                            <input type="file" class="texture-input" accept="image/*" data-type="height" style="display: none;">
+                            <div class="texture-drop-zone" data-type="height" style="border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 8px; padding: 15px; text-align: center; cursor: pointer; transition: all 0.3s ease; background: rgba(16, 185, 129, 0.05);">
+                                <div class="texture-preview" style="display: none;">
+                                    <img class="texture-image" style="max-width: 100%; height: 60px; object-fit: cover; border-radius: 4px;">
+                                    <div class="texture-name" style="margin-top: 5px; font-size: 12px; color: #7d8590;"></div>
+                                    <button type="button" class="remove-texture" style="background: #f85149; color: white; border: none; border-radius: 4px; padding: 4px 8px; font-size: 12px; margin-top: 5px; cursor: pointer;">Remove</button>
+                                </div>
+                                <div class="texture-placeholder">
+                                    <div style="font-size: 24px; margin-bottom: 5px;">📁</div>
+                                    <div style="font-size: 12px; color: #7d8590;">Depth Map</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Bulk Upload Option -->
+                    <div style="text-align: center; margin-bottom: 20px;">
+                        <p style="color: #7d8590; font-size: 14px; margin-bottom: 10px;">Or upload multiple files at once:</p>
+                        <input type="file" id="bulkTextureUpload" accept="image/*" multiple style="display: none;">
+                        <button type="button" onclick="document.getElementById('bulkTextureUpload').click()" style="background: rgba(163, 113, 247, 0.1); color: #a371f7; border: 1px solid rgba(163, 113, 247, 0.3); padding: 8px 16px; border-radius: 8px; cursor: pointer; font-size: 14px;">
+                            📂 Upload Multiple Textures
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Wall Dimensions -->
+                <div class="dimensions-section" style="background: rgba(240, 246, 252, 0.02); border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                    <h4 style="color: #58a6ff; margin-bottom: 15px; font-size: 16px;">📐 Wall Dimensions</h4>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px;">
+                        <div class="input-group">
+                            <label class="input-label">Width (m)</label>
+                            <input type="number" class="futuristic-input" id="wallWidth" value="2.0" min="0.5" max="10" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Height (m)</label>
+                            <input type="number" class="futuristic-input" id="wallHeight" value="2.5" min="0.5" max="5" step="0.1">
+                        </div>
+                        <div class="input-group">
+                            <label class="input-label">Tile Repeat</label>
+                            <input type="number" class="futuristic-input" id="tileRepeat" value="1" min="0.1" max="10" step="0.1">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="modal-buttons">
+                    <button type="button" class="modal-button secondary" onclick="closeWallpaperUploadModal()">Cancel</button>
+                    <button type="submit" class="modal-button primary futuristic-primary" id="wallpaperUploadButton" disabled>
+                        <span class="button-text">Generate AR Wallpaper</span>
+                        <div class="button-glow"></div>
+                    </button>
+                </div>
+            </form>
+            
+            <div id="wallpaperUploadProgress" class="upload-progress" style="display: none;">
+                <div class="progress-label" id="wallpaperUploadStatus">Processing textures...</div>
+                <div class="progress-container">
+                    <div class="progress-track">
+                        <div id="wallpaperProgressBar" class="progress-fill"></div>
+                        <div class="progress-glow"></div>
+                    </div>
+                    <div class="progress-percentage" id="wallpaperProgressPercentage">0%</div>
                 </div>
             </div>
         </div>
