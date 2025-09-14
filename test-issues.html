@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>System Issue Diagnostics</title>
+    <meta charset="UTF-8">
+    <style>
+        body { font-family: monospace; padding: 20px; background: #0d1117; color: #c9d1d9; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #30363d; border-radius: 8px; }
+        .pass { background: #0d2d1f; border-color: #2ea043; }
+        .fail { background: #2d1f1f; border-color: #f85149; }
+        .pending { background: #1f2d3d; border-color: #58a6ff; }
+        h2 { color: #58a6ff; }
+        button { padding: 10px 20px; background: #238636; color: white; border: none; border-radius: 6px; cursor: pointer; margin: 5px; }
+        button:hover { background: #2ea043; }
+        #results { margin-top: 20px; }
+        pre { overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Comprehensive System Diagnostic</h1>
+
+    <div id="tests"></div>
+
+    <h2>Test Controls</h2>
+    <button onclick="runAllTests()">Run All Tests</button>
+    <button onclick="testUploadSmall()">Test Small Upload (1MB)</button>
+    <button onclick="testUploadMedium()">Test Medium Upload (4MB)</button>
+    <button onclick="testUploadLarge()">Test Large Upload (10MB)</button>
+
+    <div id="results"></div>
+
+    <script>
+        const tests = [];
+        let testResults = {};
+
+        function addTest(name, testFn) {
+            tests.push({ name, testFn });
+        }
+
+        function updateUI(testName, status, details = '') {
+            const div = document.getElementById('test-' + testName.replace(/\s/g, '-'));
+            if (!div) {
+                const container = document.getElementById('tests');
+                const newDiv = document.createElement('div');
+                newDiv.id = 'test-' + testName.replace(/\s/g, '-');
+                newDiv.className = 'test ' + status;
+                newDiv.innerHTML = `<h3>${testName}</h3><pre>${details}</pre>`;
+                container.appendChild(newDiv);
+            } else {
+                div.className = 'test ' + status;
+                div.innerHTML = `<h3>${testName}</h3><pre>${details}</pre>`;
+            }
+        }
+
+        // Test 1: Check API availability
+        addTest('API Availability', async () => {
+            try {
+                const response = await fetch('/api/models');
+                return {
+                    success: response.ok,
+                    details: `Status: ${response.status}, Headers: ${response.headers.get('content-type')}`
+                };
+            } catch (error) {
+                return { success: false, details: error.message };
+            }
+        });
+
+        // Test 2: Check Vercel Function Limits
+        addTest('Vercel Function Response', async () => {
+            try {
+                const response = await fetch('/api/models');
+                const text = await response.text();
+                return {
+                    success: true,
+                    details: `Response size: ${text.length} bytes, Status: ${response.status}`
+                };
+            } catch (error) {
+                return { success: false, details: error.message };
+            }
+        });
+
+        // Test 3: Check Cloudinary Configuration
+        addTest('Cloudinary Config', async () => {
+            try {
+                const response = await fetch('/api/cloudinary-config');
+                if (!response.ok) {
+                    const text = await response.text();
+                    return { success: false, details: `Config endpoint failed: ${response.status} - ${text}` };
+                }
+                const config = await response.json();
+                return {
+                    success: true,
+                    details: `Cloud: ${config.cloudName}, Has API Key: ${!!config.apiKey}, Has Signature: ${!!config.signature}`
+                };
+            } catch (error) {
+                return { success: false, details: error.message };
+            }
+        });
+
+        // Test 4: Check multiparty limits
+        addTest('Form Data Size Test', async () => {
+            try {
+                const formData = new FormData();
+                // Create a 1MB test data
+                const testData = new Blob(['x'.repeat(1024 * 1024)], { type: 'text/plain' });
+                formData.append('test', testData);
+                formData.append('title', 'Test');
+
+                const response = await fetch('/api/upload-simple', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                return {
+                    success: response.status !== 413,
+                    details: `Status: ${response.status}, Size: 1MB test`
+                };
+            } catch (error) {
+                return { success: false, details: error.message };
+            }
+        });
+
+        // Test 5: Check CORS
+        addTest('CORS Headers', async () => {
+            try {
+                const response = await fetch('/api/models');
+                const cors = response.headers.get('access-control-allow-origin');
+                return {
+                    success: !!cors,
+                    details: `CORS: ${cors || 'NOT SET'}`
+                };
+            } catch (error) {
+                return { success: false, details: error.message };
+            }
+        });
+
+        // Test 6: Environment Variables
+        addTest('Environment Check', async () => {
+            try {
+                // Try to trigger an endpoint that would fail without proper env vars
+                const response = await fetch('/api/stats');
+                return {
+                    success: response.status !== 500,
+                    details: `Stats endpoint: ${response.status}`
+                };
+            } catch (error) {
+                return { success: false, details: error.message };
+            }
+        });
+
+        // Test 7: Database connectivity
+        addTest('Database Connection', async () => {
+            try {
+                const response = await fetch('/api/models');
+                const data = await response.json();
+                return {
+                    success: !!data.models,
+                    details: `Models found: ${data.models?.length || 0}, Total size: ${data.stats?.totalSize || 0}`
+                };
+            } catch (error) {
+                return { success: false, details: error.message };
+            }
+        });
+
+        // Test 8: Check browser limitations
+        addTest('Browser Capabilities', async () => {
+            const details = [
+                `User Agent: ${navigator.userAgent}`,
+                `Max Touch Points: ${navigator.maxTouchPoints}`,
+                `WebGL: ${!!document.createElement('canvas').getContext('webgl')}`,
+                `Service Worker: ${!!navigator.serviceWorker}`,
+                `Local Storage: ${!!window.localStorage}`,
+            ].join('\n');
+
+            return { success: true, details };
+        });
+
+        // Test 9: Network timing
+        addTest('Network Latency', async () => {
+            const start = performance.now();
+            try {
+                await fetch('/api/models');
+                const end = performance.now();
+                const latency = Math.round(end - start);
+                return {
+                    success: latency < 5000,
+                    details: `API Response time: ${latency}ms`
+                };
+            } catch (error) {
+                return { success: false, details: error.message };
+            }
+        });
+
+        // Test 10: Check specific error endpoints
+        addTest('Error Handling', async () => {
+            try {
+                const response = await fetch('/api/nonexistent');
+                return {
+                    success: response.status === 404,
+                    details: `404 handling: ${response.status === 404 ? 'Working' : 'Broken'}`
+                };
+            } catch (error) {
+                return { success: false, details: error.message };
+            }
+        });
+
+        async function runAllTests() {
+            document.getElementById('results').innerHTML = '<h2>Running tests...</h2>';
+
+            for (const test of tests) {
+                updateUI(test.name, 'pending', 'Running...');
+                try {
+                    const result = await test.testFn();
+                    testResults[test.name] = result;
+                    updateUI(test.name, result.success ? 'pass' : 'fail', result.details);
+                } catch (error) {
+                    testResults[test.name] = { success: false, details: error.message };
+                    updateUI(test.name, 'fail', error.message);
+                }
+            }
+
+            // Summary
+            const passed = Object.values(testResults).filter(r => r.success).length;
+            const failed = Object.values(testResults).filter(r => !r.success).length;
+
+            document.getElementById('results').innerHTML = `
+                <h2>Results Summary</h2>
+                <p>✅ Passed: ${passed}</p>
+                <p>❌ Failed: ${failed}</p>
+                <pre>${JSON.stringify(testResults, null, 2)}</pre>
+            `;
+        }
+
+        // Upload test functions
+        async function testUploadSmall() {
+            await testUploadSize(1);
+        }
+
+        async function testUploadMedium() {
+            await testUploadSize(4);
+        }
+
+        async function testUploadLarge() {
+            await testUploadSize(10);
+        }
+
+        async function testUploadSize(sizeMB) {
+            const size = sizeMB * 1024 * 1024;
+            const blob = new Blob([new ArrayBuffer(size)], { type: 'model/gltf-binary' });
+            const file = new File([blob], `test-${sizeMB}mb.glb`, { type: 'model/gltf-binary' });
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('title', `Test ${sizeMB}MB Upload`);
+            formData.append('customerId', 'test');
+            formData.append('customerName', 'Test');
+
+            try {
+                console.log(`Testing ${sizeMB}MB upload...`);
+                const response = await fetch('/api/upload-simple', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.text();
+                alert(`${sizeMB}MB Upload: ${response.status} - ${result.substring(0, 100)}`);
+            } catch (error) {
+                alert(`${sizeMB}MB Upload failed: ${error.message}`);
+            }
+        }
+
+        // Auto-run on load
+        window.addEventListener('load', () => {
+            setTimeout(runAllTests, 1000);
+        });
+    </script>
+</body>
+</html>
