@@ -39,39 +39,23 @@
         }
         
         :root {
-            /* Apple spacing system (8px base) */
-            --space-1: 8px;
-            --space-2: 16px;
-            --space-3: 24px;
-            --space-4: 32px;
-            --space-5: 40px;
-            --space-6: 48px;
-            --space-8: 64px;
-            --space-10: 80px;
-            --space-12: 96px;
-            --space-16: 128px;
+            --spacing-micro: 8px;
+            --spacing-small: 16px;
+            --spacing-medium: 32px;
+            --spacing-large: 64px;
+            --spacing-xlarge: 128px;
+            --spacing-section: 160px;
             
-            /* Apple semantic colors */
-            --primary: #007AFF;
-            --secondary: #FF3B30;
-            --text-primary: #FFFFFF;
-            --text-secondary: rgba(255, 255, 255, 0.8);
-            --text-tertiary: rgba(255, 255, 255, 0.6);
-            --label-secondary: rgba(255, 255, 255, 0.5);
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --bg-primary: #0a0c10;
+            --bg-secondary: rgba(22, 27, 34, 0.95);
+            --glass: rgba(240, 246, 252, 0.05);
+            --glass-hover: rgba(240, 246, 252, 0.08);
+            --border: rgba(240, 246, 252, 0.1);
             
-            /* Apple backgrounds */
-            --bg-primary: #000000;
-            --bg-secondary: #1C1C1E;
-            --bg-tertiary: #2C2C2E;
-            --glass: rgba(255, 255, 255, 0.08);
-            --glass-hover: rgba(255, 255, 255, 0.12);
-            --border: rgba(255, 255, 255, 0.15);
-            
-            --max-width: 1280px;
-            --border-radius: 16px;
-            --border-radius-large: 24px;
-            --transition: all 0.4s cubic-bezier(0.25, 0.1, 0.25, 1);
-            --shadow-large: 0 24px 80px rgba(0, 0, 0, 0.4);
+            --max-width: 1200px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
         
         html {
@@ -79,17 +63,34 @@
         }
         
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
-            background: var(--bg-primary);
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 119, 198, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 255, 0.05) 0%, transparent 50%),
+                linear-gradient(135deg, #0a0c10 0%, #0d1117 50%, #111418 100%);
             color: var(--text-primary);
             min-height: 100vh;
             position: relative;
             overflow-x: hidden;
-            line-height: 1.5;
+            line-height: 1.6;
             -webkit-font-smoothing: antialiased;
             -moz-osx-font-smoothing: grayscale;
         }
         
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="0.5" fill="%23ffffff" opacity="0.02"/><circle cx="75" cy="75" r="0.3" fill="%23ffffff" opacity="0.02"/><circle cx="50" cy="10" r="0.4" fill="%23ffffff" opacity="0.01"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>'),
+                linear-gradient(180deg, rgba(88, 166, 255, 0.02) 0%, transparent 100%);
+            pointer-events: none;
+            z-index: 1;
+        }
         
         /* Navigation */
         .nav {
@@ -174,7 +175,7 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: var(--space-10) var(--space-4);
+            padding: var(--spacing-xlarge) var(--spacing-medium);
             position: relative;
             z-index: 2;
         }
@@ -184,7 +185,7 @@
             margin: 0 auto;
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: var(--space-12);
+            gap: var(--spacing-xlarge);
             align-items: center;
         }
         
@@ -193,29 +194,45 @@
         }
         
         .hero-title {
-            font-size: 80px;
-            font-weight: 600;
-            line-height: 1.05;
+            font-size: 72px;
+            font-weight: 300;
+            line-height: 1.1;
             letter-spacing: -2px;
-            margin-bottom: var(--space-6);
-            color: var(--text-primary);
+            margin-bottom: var(--spacing-medium);
+            background: linear-gradient(135deg, #ffffff 0%, #a8a8a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
         
         .hero-title .highlight-yours {
-            color: var(--primary);
+            font-weight: 600;
+            background: linear-gradient(135deg, #58A6FF 0%, #7877C6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
         }
         
         .hero-title .highlight-theirs {
-            color: var(--secondary);
+            font-weight: 600;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+            text-decoration: underline;
+            text-decoration-color: rgba(255, 107, 107, 0.4);
+            text-underline-offset: 8px;
         }
         
         .hero-subtitle {
-            font-size: 28px;
-            font-weight: 400;
+            font-size: 20px;
+            font-weight: 300;
             color: var(--text-secondary);
-            line-height: 1.4;
-            margin-bottom: var(--space-8);
-            max-width: 600px;
+            line-height: 1.6;
+            margin-bottom: var(--spacing-large);
+            max-width: 480px;
         }
         
         .hero-buttons {
@@ -871,7 +888,7 @@
                 margin: var(--spacing-small) 0;
                 max-width: 100%;
                 gap: var(--spacing-medium);
-                justify-content: flex-start;
+                justify-content: center;
             }
             
             .hero-stat {
