@@ -3903,7 +3903,7 @@
                 console.log('Creating customer group:', customer.id, customer.name);
                 html += `
                     <div class="customer-group collapsed" data-customer="${customer.id}">
-                        <div class="customer-header" onclick="toggleCustomerGroup('${customer.id}')">
+                        <div class="customer-header" onclick="toggleCustomerGroup('${customer.id.replace(/'/g, "\\'")}')">
                             <div class="customer-name">
                                 ${customer.name}
                                 <span class="customer-badge">${customer.models.length}</span>
@@ -4065,9 +4065,15 @@
 
         function toggleCustomerGroup(customerId) {
             console.log('Toggling customer group:', customerId);
-            // Escape any special characters in the customer ID for CSS selector
-            const escapedId = customerId.replace(/'/g, "\\'").replace(/"/g, '\\"');
-            const group = document.querySelector(`[data-customer="${escapedId}"]`);
+            // Find the group by iterating through all customer groups to avoid CSS selector escaping issues
+            const groups = document.querySelectorAll('[data-customer]');
+            let group = null;
+            for (const g of groups) {
+                if (g.getAttribute('data-customer') === customerId) {
+                    group = g;
+                    break;
+                }
+            }
             console.log('Found group element:', group);
             if (!group) {
                 console.error('Could not find group with ID:', customerId);
@@ -4955,7 +4961,7 @@
                 targetGroup.className = 'customer-group collapsed';
                 targetGroup.setAttribute('data-customer', customerId);
                 targetGroup.innerHTML = `
-                    <div class="customer-header" onclick="toggleCustomerGroup('${customerId}')">
+                    <div class="customer-header" onclick="toggleCustomerGroup('${customerId.replace(/'/g, "\\'")}')">
                         <div class="customer-name">
                             ${customerName}
                             <span class="customer-badge">0</span>

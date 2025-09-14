@@ -115,7 +115,17 @@ export default async function handler(req, res) {
     if (routePath === 'upload-simple') {
       return await handleUpload(req, res);
     }
-    
+
+    // Route: /api/cloudinary-config - Get signed upload configuration
+    if (routePath === 'cloudinary-config') {
+      return await handleCloudinaryConfig(req, res);
+    }
+
+    // Route: /api/cloudinary-save - Save metadata after direct upload
+    if (routePath === 'cloudinary-save') {
+      return await handleCloudinarySave(req, res);
+    }
+
     // Route: /api/upload-wallpaper
     if (routePath === 'upload-wallpaper') {
       return await handleWallpaperUpload(req, res);
