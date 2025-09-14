@@ -2033,19 +2033,12 @@ async function handleCloudinaryConfig(req, res) {
     // NOTE: resource_type is NOT included in signature for raw uploads
     const uploadParams = {
       folder: 'furniture-models',
-      timestamp: timestamp
+      timestamp: timestamp,
+      upload_preset: 'furniture_models' // May be required for security
     };
 
-    // Generate signature manually (Cloudinary library might be buggy)
-    const crypto = require('crypto');
-    const sortedParams = Object.keys(uploadParams)
-      .sort()
-      .map(key => `${key}=${uploadParams[key]}`)
-      .join('&');
-
-    const signature = crypto.createHash('sha1')
-      .update(sortedParams + process.env.CLOUDINARY_API_SECRET)
-      .digest('hex');
+    // Generate signature
+    const signature = cloudinary.utils.api_sign_request(uploadParams, process.env.CLOUDINARY_API_SECRET);
 
     return res.status(200).json({
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
