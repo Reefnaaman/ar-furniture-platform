@@ -2037,7 +2037,7 @@ async function handleCloudinaryConfig(req, res) {
     };
 
     // Generate signature manually (Cloudinary library might be buggy)
-    const crypto = await import('crypto');
+    const crypto = require('crypto');
     const sortedParams = Object.keys(uploadParams)
       .sort()
       .map(key => `${key}=${uploadParams[key]}`)
