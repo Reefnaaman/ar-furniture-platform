@@ -3900,6 +3900,7 @@
             });
             
             sortedCustomers.forEach(customer => {
+                console.log('Creating customer group:', customer.id, customer.name);
                 html += `
                     <div class="customer-group collapsed" data-customer="${customer.id}">
                         <div class="customer-header" onclick="toggleCustomerGroup('${customer.id}')">
@@ -4063,7 +4064,16 @@
         }
 
         function toggleCustomerGroup(customerId) {
-            const group = document.querySelector(`[data-customer="${customerId}"]`);
+            console.log('Toggling customer group:', customerId);
+            // Escape any special characters in the customer ID for CSS selector
+            const escapedId = customerId.replace(/'/g, "\\'").replace(/"/g, '\\"');
+            const group = document.querySelector(`[data-customer="${escapedId}"]`);
+            console.log('Found group element:', group);
+            if (!group) {
+                console.error('Could not find group with ID:', customerId);
+                console.log('Available groups:', document.querySelectorAll('[data-customer]'));
+                return;
+            }
             group.classList.toggle('collapsed');
 
             // Save state to localStorage
