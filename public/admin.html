@@ -2409,7 +2409,7 @@
         }
     </style>
 </head>
-<body>
+<body style="display: none;">
     
     <!-- Admin Layout -->
     <div class="admin-layout">
@@ -3383,7 +3383,16 @@
         function checkAuthentication() {
             // Check if user is authenticated via session storage
             const authToken = sessionStorage.getItem('adminAuthenticated');
-            if (!authToken || authToken !== 'true') {
+            const userRole = localStorage.getItem('user_role');
+            
+            // Verify both tokens exist and role is admin
+            if (!authToken || authToken !== 'true' || userRole !== 'admin') {
+                // Clear any invalid tokens
+                sessionStorage.removeItem('adminAuthenticated');
+                localStorage.removeItem('user_role');
+                localStorage.removeItem('username');
+                localStorage.removeItem('customer_id');
+                
                 // Redirect to login page if not authenticated
                 window.location.href = '/login.html';
                 return false;
@@ -3394,6 +3403,8 @@
         
         // Load models ONLY if authenticated
         if (checkAuthentication()) {
+            // Show the body content after authentication is verified
+            document.body.style.display = 'block';
             loadModels();
         }
         
@@ -4170,8 +4181,10 @@
             }
         });
         
-        // Now initialize customers (after customerManager is ready)
-        initializeCustomers();
+        // Now initialize customers (after customerManager is ready) - ONLY if authenticated
+        if (isAuthenticated) {
+            initializeCustomers();
+        }
         
         // Sidebar functionality
         let currentCustomerFilter = null;
@@ -6461,7 +6474,10 @@
         
         // Update colors when page loads (for existing models)
         document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(updateOriginalVariantColors, 3000); // Give models time to load and render
+            // Only update colors if authenticated
+            if (isAuthenticated) {
+                setTimeout(updateOriginalVariantColors, 3000); // Give models time to load and render
+            }
             
             // Check if we need to extract color for a newly uploaded variant
             const extractColorData = sessionStorage.getItem('extractColorForVariant');
@@ -6851,13 +6867,16 @@
         
         // Initialize on page load
         document.addEventListener('DOMContentLoaded', () => {
-            console.log('🚀 Modern page system initialized');
-            
-            // Restore current page from URL
-            restorePageFromURL();
-            
-            // Hide variant delete buttons for non-admin users
-            hideVariantDeletesForCustomers();
+            // Only initialize if authenticated
+            if (isAuthenticated) {
+                console.log('🚀 Modern page system initialized');
+                
+                // Restore current page from URL
+                restorePageFromURL();
+                
+                // Hide variant delete buttons for non-admin users
+                hideVariantDeletesForCustomers();
+            }
         });
         
         // Hide variant delete buttons for customer users
