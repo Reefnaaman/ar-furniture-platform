@@ -4393,7 +4393,13 @@
                     return; // Exit early - it worked!
                 } else {
                     const errorText = await testResponse.text();
-                    console.log('❌ Original API failed:', testResponse.status, errorText);
+                    console.error('❌ ORIGINAL API STILL FAILING:', {
+                        status: testResponse.status,
+                        statusText: testResponse.statusText,
+                        body: errorText,
+                        fileSize: selectedFile.size,
+                        fileSizeMB: (selectedFile.size / (1024 * 1024)).toFixed(2)
+                    });
                     console.log('🔄 Falling back to Cloudinary direct upload...');
                 }
             } catch (error) {

@@ -1271,15 +1271,23 @@
                 }
             });
 
-            // Add AR session status monitoring
+            // Add AR session status monitoring with fallback
+            let arSessionStarted = false;
             modelViewer.addEventListener('ar-status', (event) => {
                 console.log('📱 AR Status:', event.detail.status);
                 if (event.detail.status === 'session-started') {
                     console.log('✅ AR session started successfully');
+                    arSessionStarted = true;
                 } else if (event.detail.status === 'failed') {
-                    console.error('❌ AR session failed');
+                    console.error('❌ AR session failed - redirecting to desktop view');
+                    redirectToDesktopView();
                 } else if (event.detail.status === 'not-presenting') {
                     console.log('⚠️ AR not presenting - session ended or failed to start');
+                    // Only redirect if AR never actually started (immediate failure)
+                    if (!arSessionStarted) {
+                        console.log('🔄 AR never started, redirecting to desktop view');
+                        setTimeout(() => redirectToDesktopView(), 500);
+                    }
                 }
             });
 
@@ -1301,9 +1309,27 @@
                 }
             }, 3000); // Increased to 3 seconds for slower networks
 
+            // Final fallback: If AR completely fails to start within 5 seconds, redirect
+            setTimeout(() => {
+                if (!arActivated && !arSessionStarted) {
+                    console.warn('🚨 AR failed to start within 5 seconds - redirecting to desktop view');
+                    redirectToDesktopView();
+                }
+            }, 5000);
+
             // View already tracked once per page load
         }
-        
+
+        // Redirect to desktop variant selection view when AR fails
+        function redirectToDesktopView() {
+            console.log('🔄 Redirecting to desktop variant selection view');
+            // Remove black screen
+            document.body.style.visibility = 'visible';
+            document.body.style.background = '';
+            // Clear body and reload the page without mobile AR
+            window.location.reload();
+        }
+
         function createARVariantControls(modelId, modelInfo, selectedVariant, modelViewer) {
             // 1. Create title (separate element, much higher up)
             const instructionText = document.createElement('div');
