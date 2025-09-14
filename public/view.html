@@ -539,6 +539,11 @@
             showError('No model ID provided');
         } else {
             console.log('✅ Loading model with ID:', modelId);
+            console.log('🔍 User agent:', navigator.userAgent);
+            console.log('🔍 Is mobile:', /Android|iPhone|iPad/i.test(navigator.userAgent));
+            console.log('🔍 Document referrer:', document.referrer);
+            console.log('🔍 Window location:', window.location.href);
+
             loadModel(modelId, variantId);
         }
         
@@ -678,14 +683,20 @@
 
                 // For mobile - go straight to AR with variant support
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                    console.log('📱 Mobile device detected - preparing AR launch');
+                    console.log('📱 Is wallpaper:', isWallpaper);
+
                     if (isWallpaper) {
                         // Handle wallpaper AR differently
+                        console.log('🧱 Launching wallpaper AR');
                         launchWallpaperAR(modelInfo);
                         return;
                     }
+
+                    console.log('📱 Setting up mobile AR for furniture');
                     document.body.style.visibility = 'hidden';
                     document.body.style.background = '#000';
-                    
+
                     let modelUrl = `/api/model/${id}`;
                     let selectedVariant = null;
                     
@@ -701,7 +712,9 @@
                         }
                     }
                     
+                    console.log('📱 About to call launchDirectAR with:', { id, modelUrl, modelInfo: !!modelInfo, selectedVariant: !!selectedVariant });
                     launchDirectAR(id, modelUrl, modelInfo, selectedVariant);
+                    console.log('📱 launchDirectAR call completed');
                     return;
                 }
                 
@@ -1282,11 +1295,14 @@
 
         // Direct AR launch with variant support
         function launchDirectAR(modelId, modelUrl, modelInfo = null, selectedVariant = null) {
+            console.log('🚀 launchDirectAR started with:', { modelId, modelUrl, modelInfo: !!modelInfo, selectedVariant: !!selectedVariant });
+
             // Keep body completely black and hidden
             document.body.style.cssText = 'visibility: hidden; background: #000 !important; margin: 0; padding: 0;';
-            
+
             // Clear any existing content
             document.body.innerHTML = '';
+            console.log('📱 Body cleared and hidden for AR');
             
             // Create invisible model-viewer
             const modelViewer = document.createElement('model-viewer');
@@ -1324,21 +1340,54 @@
 
             // Wait for model to load, then activate AR
             let arActivated = false;
-            
+
             modelViewer.addEventListener('load', () => {
+                console.log('📱 Model load event fired');
+                console.log('📱 canActivateAR:', modelViewer.canActivateAR);
+                console.log('📱 arActivated flag:', arActivated);
+
                 if (!arActivated && modelViewer.canActivateAR) {
                     arActivated = true;
                     console.log('🚀 Model loaded, activating AR...');
-                    modelViewer.activateAR();
+                    try {
+                        modelViewer.activateAR();
+                        console.log('✅ AR activation called successfully');
+                    } catch (error) {
+                        console.error('❌ AR activation failed:', error);
+                    }
+                } else {
+                    console.warn('⚠️ Cannot activate AR - canActivateAR:', modelViewer.canActivateAR, 'arActivated:', arActivated);
                 }
             });
-            
+
+            modelViewer.addEventListener('error', (error) => {
+                console.error('❌ Model viewer error:', error);
+            });
+
+            // Add AR status tracking
+            modelViewer.addEventListener('ar-status', (event) => {
+                console.log('📱 AR Status changed:', event.detail.status);
+                if (event.detail.status === 'failed') {
+                    console.error('❌ AR failed to start');
+                }
+            });
+
             // Backup: Try AR after a delay if load event doesn't fire
             setTimeout(() => {
+                console.log('⏰ Timeout check - arActivated:', arActivated);
+                console.log('⏰ canActivateAR:', modelViewer.canActivateAR);
+
                 if (!arActivated && modelViewer.activateAR) {
                     arActivated = true;
                     console.log('🚀 Activating AR via timeout...');
-                    modelViewer.activateAR();
+                    try {
+                        modelViewer.activateAR();
+                        console.log('✅ Timeout AR activation called successfully');
+                    } catch (error) {
+                        console.error('❌ Timeout AR activation failed:', error);
+                    }
+                } else {
+                    console.log('⏰ Timeout check - not activating AR');
                 }
             }, 2000);
 
@@ -1630,6 +1679,9 @@
         
         // Get return URL using hybrid approach: variant product_url > model product_url > returnUrl parameter > referrer > history back
         function getReturnUrl(modelInfo = null) {
+            console.log('🔍 getReturnUrl called with modelInfo:', modelInfo);
+            console.log('🔍 currentVariantData:', window.currentVariantData);
+
             // Priority 1a: Variant-specific product URL (highest priority)
             if (window.currentVariantData && window.currentVariantData.product_url) {
                 console.log('🎨 Using variant product URL from database:', window.currentVariantData.product_url);
