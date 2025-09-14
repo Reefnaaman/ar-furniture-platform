@@ -2542,6 +2542,18 @@ async function handleWallpaperUpload(req, res) {
       title
     });
 
+    // Upload albedo texture to Cloudinary for preview
+    let albedoUrl = null;
+    if (textures.albedo) {
+      try {
+        const albedoFilename = `${title.replace(/[^a-zA-Z0-9]/g, '_')}_albedo.jpg`;
+        const albedoResult = await uploadImage(textures.albedo.buffer, albedoFilename);
+        albedoUrl = albedoResult.url;
+      } catch (e) {
+        console.warn('Failed to upload albedo texture:', e);
+      }
+    }
+
     // Upload GLB to Cloudinary
     const filename = `${title.replace(/[^a-zA-Z0-9]/g, '_')}_wallpaper.glb`;
     const cloudinaryResult = await uploadModel(glbBuffer, filename);
@@ -2572,6 +2584,7 @@ async function handleWallpaperUpload(req, res) {
         dimensions: { width, height },
         tileRepeat,
         textureTypes: Object.keys(textures),
+        albedoUrl: albedoUrl,
         generatedAt: new Date().toISOString()
       }
     });
