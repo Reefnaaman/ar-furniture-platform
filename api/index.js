@@ -2929,11 +2929,11 @@ async function handleCloudinaryConfig(req, res) {
     // Generate timestamp for signature
     const timestamp = Math.round(new Date().getTime() / 1000);
 
-    // Upload parameters (must match exactly what's sent in form data)
+    // Upload parameters (must match exactly what Cloudinary signs)
+    // NOTE: resource_type is NOT included in signature for raw uploads
     const uploadParams = {
-      timestamp: timestamp,
       folder: 'furniture-models',
-      resource_type: 'raw'
+      timestamp: timestamp
     };
 
     // Generate signature
