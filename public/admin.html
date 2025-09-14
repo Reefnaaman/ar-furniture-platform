@@ -2978,7 +2978,7 @@
                                 <label style="font-size: 12px; font-weight: 500; color: #10b981;">Height</label>
                             </div>
                             <input type="file" id="wallpaperHeightInput" accept="image/*" onchange="handleWallpaperTextureUpload('height', this)" style="display: none;">
-                            <div onclick="console.log('Height clicked'); document.getElementById('wallpaperHeightInput').click()" style="border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(16, 185, 129, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
+                            <div onclick="document.getElementById('wallpaperHeightInput').click()" style="border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(16, 185, 129, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
                                 <div id="heightPreview"></div>
                                 <div id="heightPlaceholder">
                                     <div style="font-size: 16px; margin-bottom: 3px;">📁</div>
@@ -7367,9 +7367,7 @@
         }
 
         function handleWallpaperTextureUpload(textureType, inputElement) {
-            console.log('handleWallpaperTextureUpload called:', textureType, inputElement);
             const file = inputElement.files[0];
-            console.log('File selected:', file);
             if (!file) return;
 
             // Validate file type
@@ -7441,18 +7439,31 @@
         }
 
         function updateWallpaperUploadButton() {
-            const uploadBtn = document.querySelector('#wallpaperUploadModal .modal-button.primary');
+            const uploadBtn = document.getElementById('wallpaperUploadButton');
+            
+            if (!uploadBtn) {
+                console.error('wallpaperUploadButton element not found! Available buttons:', 
+                    document.querySelectorAll('#wallpaperUploadModal button'));
+                return;
+            }
+            
             const hasAlbedo = wallpaperTextures.albedo;
             const textureCount = Object.keys(wallpaperTextures).length;
             
             if (hasAlbedo) {
                 uploadBtn.disabled = false;
-                uploadBtn.textContent = `🧱 Generate Wallpaper (${textureCount} textures)`;
+                if (textureCount === 1) {
+                    uploadBtn.textContent = '🧱 Generate AR Wallpaper';
+                } else {
+                    uploadBtn.textContent = `🧱 Generate AR Wallpaper (${textureCount} textures)`;
+                }
                 uploadBtn.style.opacity = '1';
+                uploadBtn.style.cursor = 'pointer';
             } else {
                 uploadBtn.disabled = true;
-                uploadBtn.textContent = '🧱 Upload Albedo texture first';
+                uploadBtn.textContent = '🧱 Upload Albedo first';
                 uploadBtn.style.opacity = '0.6';
+                uploadBtn.style.cursor = 'not-allowed';
             }
         }
 

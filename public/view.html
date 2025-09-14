@@ -733,6 +733,7 @@
                                 <model-viewer
                                     id="desktopModelViewer"
                                     src="${desktopModelUrl}"
+                                    ios-src="/api/model/${id}/usdz"
                                     alt="${modelInfo.title}"
                                     ar-scale="fixed"
                                     camera-controls
@@ -1221,6 +1222,8 @@
             const modelViewer = document.createElement('model-viewer');
             modelViewer.setAttribute('id', 'modelViewer');
             modelViewer.setAttribute('src', modelUrl);
+            // Add iOS-specific USDZ file with proper scaling for Quick Look
+            modelViewer.setAttribute('ios-src', `/api/model/${modelId}/usdz`);
             modelViewer.setAttribute('ar', '');
             // Prioritize WebXR and Scene Viewer for better scaling support
             // Quick Look doesn't respect ar-scale="fixed" so we put it last

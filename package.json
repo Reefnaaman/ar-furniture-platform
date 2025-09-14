@@ -8,13 +8,14 @@
     "deploy": "vercel --prod"
   },
   "dependencies": {
-    "cloudinary": "^1.41.0",
     "@supabase/supabase-js": "^2.38.0",
-    "nanoid": "^5.0.4",
-    "multiparty": "^4.2.3",
     "bcryptjs": "^2.4.3",
-    "three": "^0.157.0",
-    "sharp": "^0.32.6"
+    "cloudinary": "^1.41.0",
+    "multiparty": "^4.2.3",
+    "nanoid": "^5.0.4",
+    "node-fetch": "^2.7.0",
+    "sharp": "^0.32.6",
+    "three": "^0.157.0"
   },
   "devDependencies": {
     "vercel": "^32.5.0"
