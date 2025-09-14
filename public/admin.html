@@ -4357,6 +4357,50 @@
             // Parse customer selection
             const [customerId, customerName] = customerSelect.value.split(':');
 
+            // RADICAL TEST: Let's try the old API method first to isolate the issue
+            console.log('🧪 RADICAL TEST: Trying original API upload first (no dimensions)');
+
+            const testFormData = new FormData();
+            testFormData.append('file', selectedFile);
+            testFormData.append('title', titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''));
+            testFormData.append('description', descriptionInput.value || '');
+            testFormData.append('customerId', customerId);
+            testFormData.append('customerName', customerName);
+
+            console.log('📦 Testing with original API (file size: ' + (selectedFile.size / (1024 * 1024)).toFixed(2) + 'MB)');
+
+            try {
+                document.getElementById('uploadStatus').textContent = 'Testing original API...';
+
+                const testResponse = await fetch('/api/upload-simple', {
+                    method: 'POST',
+                    body: testFormData
+                });
+
+                if (testResponse.ok) {
+                    console.log('✅ ORIGINAL API WORKS! The issue is not Vercel limits.');
+                    const result = await testResponse.json();
+
+                    document.getElementById('progressBar').style.width = '100%';
+                    document.getElementById('progressPercentage').textContent = '100%';
+                    document.getElementById('uploadStatus').textContent = '✅ Upload successful!';
+
+                    setTimeout(() => {
+                        closeUploadModal();
+                        loadModels();
+                    }, 2000);
+
+                    return; // Exit early - it worked!
+                } else {
+                    const errorText = await testResponse.text();
+                    console.log('❌ Original API failed:', testResponse.status, errorText);
+                    console.log('🔄 Falling back to Cloudinary direct upload...');
+                }
+            } catch (error) {
+                console.log('❌ Original API error:', error);
+                console.log('🔄 Falling back to Cloudinary direct upload...');
+            }
+
             // Prepare dimension data if provided
             let dimensions = null;
             if (widthInput.value || heightInput.value || depthInput.value) {
@@ -4407,7 +4451,21 @@
                 cloudinaryFormData.append('upload_preset', 'ml_default'); // Use default unsigned preset
                 cloudinaryFormData.append('folder', 'furniture-models');
 
-                console.log('📤 Using unsigned upload to Cloudinary');
+                console.log('📤 Testing basic Cloudinary connectivity first...');
+
+                // RADICAL DEBUG: Test if we can even reach Cloudinary
+                try {
+                    const testResponse = await fetch('https://api.cloudinary.com/v1_1/djjixqxzy/image/upload', {
+                        method: 'POST',
+                        body: new FormData() // Empty request just to test connectivity
+                    });
+                    console.log('🌐 Cloudinary connectivity test - Status:', testResponse.status);
+                } catch (error) {
+                    console.error('🌐 CANNOT REACH CLOUDINARY AT ALL:', error);
+                    throw new Error('Cannot reach Cloudinary - network/firewall issue?');
+                }
+
+                console.log('📤 Now attempting actual upload...');
 
                 const cloudinaryUpload = await fetch(
                     `https://api.cloudinary.com/v1_1/djjixqxzy/raw/upload`,
@@ -4418,7 +4476,15 @@
                 );
 
                 if (!cloudinaryUpload.ok) {
-                    throw new Error('Failed to upload to Cloudinary');
+                    // RADICAL DEBUG: Get the exact error from Cloudinary
+                    const errorText = await cloudinaryUpload.text();
+                    console.error('🚨 CLOUDINARY REJECTED REQUEST:', {
+                        status: cloudinaryUpload.status,
+                        statusText: cloudinaryUpload.statusText,
+                        headers: Object.fromEntries(cloudinaryUpload.headers.entries()),
+                        body: errorText
+                    });
+                    throw new Error(`Cloudinary error ${cloudinaryUpload.status}: ${errorText}`);
                 }
 
                 const cloudinaryResult = await cloudinaryUpload.json();
