@@ -1222,8 +1222,12 @@
             modelViewer.setAttribute('id', 'modelViewer');
             modelViewer.setAttribute('src', modelUrl);
             modelViewer.setAttribute('ar', '');
+            // Prioritize WebXR and Scene Viewer for better scaling support
+            // Quick Look doesn't respect ar-scale="fixed" so we put it last
             modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
             modelViewer.setAttribute('ar-scale', 'fixed'); // Use fixed scaling for accurate real-world dimensions
+            modelViewer.setAttribute('environment-image', 'neutral'); // Use neutral lighting
+            modelViewer.setAttribute('exposure', '1'); // Optimize exposure for AR
             
             // Apply dimension scaling if available
             if (modelInfo.width_meters || modelInfo.height_meters || modelInfo.depth_meters) {
@@ -1289,7 +1293,7 @@
                 overflow: hidden;
                 text-overflow: ellipsis;
             `;
-            instructionText.textContent = 'Want to see in more colors?';
+            instructionText.textContent = 'Move your phone side-to-side to help find the floor, then tap to place';
             document.body.appendChild(instructionText);
             
             // 2. Create variant circles (higher up)

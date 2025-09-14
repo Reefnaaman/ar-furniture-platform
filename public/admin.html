@@ -2830,7 +2830,7 @@
                         
                         <div class="input-group">
                             <input type="number" 
-                                   id="heightInput" 
+                                   id="furnitureHeightInput" 
                                    placeholder="Height" 
                                    class="futuristic-input" 
                                    style="font-size: 13px; padding: 6px 10px;"
@@ -2978,7 +2978,7 @@
                                 <label style="font-size: 12px; font-weight: 500; color: #10b981;">Height</label>
                             </div>
                             <input type="file" id="wallpaperHeightInput" accept="image/*" onchange="handleWallpaperTextureUpload('height', this)" style="display: none;">
-                            <div onclick="document.getElementById('wallpaperHeightInput').click()" style="border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(16, 185, 129, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
+                            <div onclick="console.log('Height clicked'); document.getElementById('wallpaperHeightInput').click()" style="border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(16, 185, 129, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
                                 <div id="heightPreview"></div>
                                 <div id="heightPlaceholder">
                                     <div style="font-size: 16px; margin-bottom: 3px;">📁</div>
@@ -3969,7 +3969,7 @@
             
             // Get dimension inputs
             const widthInput = document.getElementById('widthInput');
-            const heightInput = document.getElementById('heightInput');
+            const heightInput = document.getElementById('furnitureHeightInput');
             const depthInput = document.getElementById('depthInput');
             const unitSelect = document.getElementById('unitSelect');
             
@@ -7367,7 +7367,9 @@
         }
 
         function handleWallpaperTextureUpload(textureType, inputElement) {
+            console.log('handleWallpaperTextureUpload called:', textureType, inputElement);
             const file = inputElement.files[0];
+            console.log('File selected:', file);
             if (!file) return;
 
             // Validate file type
@@ -7382,8 +7384,13 @@
 
             // Show preview
             const previewContainer = document.getElementById(`${textureType}Preview`);
+            const placeholderElement = document.getElementById(`${textureType}Placeholder`);
+            
             const reader = new FileReader();
             reader.onload = function(e) {
+                // Hide placeholder and show preview
+                if (placeholderElement) placeholderElement.style.display = 'none';
+                
                 previewContainer.innerHTML = `
                     <div style="display: flex; align-items: center; gap: 12px; padding: 12px; background: rgba(88, 166, 255, 0.1); border: 1px solid rgba(88, 166, 255, 0.3); border-radius: 8px;">
                         <img src="${e.target.result}" style="width: 48px; height: 48px; object-fit: cover; border-radius: 6px;">
@@ -7403,15 +7410,31 @@
 
         function removeWallpaperTexture(textureType) {
             delete wallpaperTextures[textureType];
-            document.getElementById(`${textureType}Preview`).innerHTML = '';
+            
+            // Clear preview and show placeholder again
+            const previewContainer = document.getElementById(`${textureType}Preview`);
+            const placeholderElement = document.getElementById(`${textureType}Placeholder`);
+            
+            if (previewContainer) previewContainer.innerHTML = '';
+            if (placeholderElement) placeholderElement.style.display = 'block';
+            
+            // Clear file input
             const input = document.getElementById(`wallpaper${textureType.charAt(0).toUpperCase() + textureType.slice(1)}Input`);
             if (input) input.value = '';
+            
             updateWallpaperUploadButton();
         }
 
         function clearAllWallpaperPreviews() {
             ['albedo', 'normal', 'roughness', 'height'].forEach(type => {
-                document.getElementById(`${type}Preview`).innerHTML = '';
+                // Clear preview and show placeholder
+                const previewContainer = document.getElementById(`${type}Preview`);
+                const placeholderElement = document.getElementById(`${type}Placeholder`);
+                
+                if (previewContainer) previewContainer.innerHTML = '';
+                if (placeholderElement) placeholderElement.style.display = 'block';
+                
+                // Clear file input
                 const input = document.getElementById(`wallpaper${type.charAt(0).toUpperCase() + type.slice(1)}Input`);
                 if (input) input.value = '';
             });
