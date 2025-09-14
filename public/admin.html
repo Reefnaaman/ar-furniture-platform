@@ -4408,6 +4408,15 @@
                 }
                 const config = await configResponse.json();
 
+                // DEBUG: Log the config to see what we're getting
+                console.log('🔧 Cloudinary config received:', {
+                    cloudName: config.cloudName,
+                    apiKey: config.apiKey,
+                    timestamp: config.timestamp,
+                    signature: config.signature?.substring(0, 10) + '...',
+                    uploadParams: config.uploadParams
+                });
+
                 // Step 2: Upload directly to Cloudinary
                 document.getElementById('uploadStatus').textContent = `Uploading ${fileSizeMB}MB directly to Cloudinary...`;
                 document.getElementById('progressBar').style.width = '30%';
@@ -4420,6 +4429,17 @@
                 cloudinaryFormData.append('api_key', config.apiKey);
                 cloudinaryFormData.append('folder', 'furniture-models');
                 cloudinaryFormData.append('resource_type', 'raw');
+
+                // DEBUG: Log what we're sending to Cloudinary
+                console.log('📤 Sending to Cloudinary:', {
+                    url: `https://api.cloudinary.com/v1_1/${config.cloudName}/raw/upload`,
+                    timestamp: config.timestamp,
+                    signature: config.signature?.substring(0, 10) + '...',
+                    api_key: config.apiKey,
+                    folder: 'furniture-models',
+                    resource_type: 'raw',
+                    fileSize: selectedFile.size
+                });
 
                 const cloudinaryUpload = await fetch(
                     `https://api.cloudinary.com/v1_1/${config.cloudName}/raw/upload`,

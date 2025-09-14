@@ -678,8 +678,26 @@
                 fetch(`/api/model/${id}/view${viewVariantParam}`, { method: 'POST' }).catch(() => {});
                 console.log(`📊 View tracked for model ${id}, variant: ${variantId || 'original'}`);
                 
-                // Check if this is a wallpaper
-                const isWallpaper = modelInfo.metadata && modelInfo.metadata.type === 'wallpaper';
+                // Check if this is a wallpaper with safe metadata parsing
+                let isWallpaper = false;
+                let metadata = null;
+                try {
+                    metadata = modelInfo.metadata;
+                    // Parse metadata if it's a string
+                    if (typeof metadata === 'string') {
+                        metadata = JSON.parse(metadata);
+                    }
+                    isWallpaper = metadata && metadata.type === 'wallpaper';
+                    console.log('🔍 Wallpaper check:', {
+                        originalMetadata: modelInfo.metadata,
+                        parsedMetadata: metadata,
+                        isWallpaper: isWallpaper
+                    });
+                } catch (error) {
+                    console.warn('⚠️ Error parsing metadata:', error);
+                    isWallpaper = false;
+                    metadata = null;
+                }
 
                 // For mobile - go straight to AR with variant support
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
@@ -806,8 +824,8 @@
                                         <h2 class="gradient-text" style="margin: 0 0 8px 0; font-size: 32px;">${modelInfo.title}</h2>
                                     </div>
                                 </div>
-                                ${isWallpaper && modelInfo.metadata && modelInfo.metadata.albedoUrl ? `
-                                    <div class="wallpaper-desktop-preview" style="width: 500px; height: 450px; background: url('${modelInfo.metadata.albedoUrl}') center/cover; border-radius: 12px; border: 1px solid rgba(240, 246, 252, 0.08); position: relative; display: flex; align-items: center; justify-content: center;">
+                                ${isWallpaper && metadata && metadata.albedoUrl ? `
+                                    <div class="wallpaper-desktop-preview" style="width: 500px; height: 450px; background: url('${metadata.albedoUrl}') center/cover; border-radius: 12px; border: 1px solid rgba(240, 246, 252, 0.08); position: relative; display: flex; align-items: center; justify-content: center;">
                                         <div style="position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.7); color: white; padding: 8px 12px; border-radius: 8px; font-size: 14px;">🧱 AR Wallpaper</div>
                                         <div style="background: rgba(0,0,0,0.5); color: white; padding: 12px 20px; border-radius: 12px; font-size: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">Tap to View in AR</div>
                                     </div>
