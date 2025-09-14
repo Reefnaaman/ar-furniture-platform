@@ -600,7 +600,62 @@
                 console.error('❌ Error applying dimension scaling:', error);
             }
         }
-        
+
+        function launchWallpaperAR(modelInfo) {
+            console.log('🧱 Launching wallpaper AR:', modelInfo);
+
+            if (!modelInfo.metadata || !modelInfo.metadata.albedoUrl) {
+                showError('Wallpaper texture not available');
+                return;
+            }
+
+            // For wallpapers, we need to create a simple textured plane in AR
+            // Since model-viewer doesn't directly support this, we'll show instructions
+            // and fallback to the texture image
+
+            document.body.style.cssText = 'margin: 0; padding: 20px; background: linear-gradient(135deg, #0d1117, #161b22); color: white; font-family: Inter, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;';
+
+            const dimensions = modelInfo.metadata.dimensions || { width: 2.44, height: 2.44 };
+
+            document.body.innerHTML = `
+                <div style="text-align: center; max-width: 400px;">
+                    <div style="margin-bottom: 30px;">
+                        <h1 style="font-size: 24px; margin-bottom: 16px;">🧱 ${modelInfo.title}</h1>
+                        <p style="color: #7d8590; font-size: 16px;">Wallpaper Preview - ${dimensions.width}m × ${dimensions.height}m</p>
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <img src="${modelInfo.metadata.albedoUrl}"
+                             style="width: 300px; height: 300px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(240, 246, 252, 0.1);"
+                             alt="Wallpaper texture" />
+                    </div>
+
+                    <div style="background: rgba(240, 246, 252, 0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(240, 246, 252, 0.1); margin-bottom: 20px;">
+                        <p style="color: #e6edf3; font-size: 14px; line-height: 1.6;">
+                            <strong>AR Wallpaper Instructions:</strong><br>
+                            This wallpaper texture will cover ${dimensions.width}m × ${dimensions.height}m when applied to a wall.
+                            Open this link on a device with AR support for full experience.
+                        </p>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
+                        <button onclick="copyLink()" style="background: rgba(88, 166, 255, 0.2); color: #58a6ff; border: 1px solid rgba(88, 166, 255, 0.3); padding: 14px 20px; border-radius: 8px; font-size: 16px; cursor: pointer;">
+                            📋 Copy Link
+                        </button>
+                        <button onclick="window.history.back()" style="background: rgba(240, 246, 252, 0.1); color: #7d8590; border: 1px solid rgba(240, 246, 252, 0.2); padding: 14px 20px; border-radius: 8px; font-size: 16px; cursor: pointer;">
+                            ← Back
+                        </button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function copyLink() {
+            navigator.clipboard.writeText(window.location.href).then(() => {
+                alert('Link copied to clipboard!');
+            });
+        }
+
         async function loadModel(id, variantId = null) {
             try {
                 // Fetch model info first (needed for both desktop and mobile)
@@ -618,8 +673,16 @@
                 fetch(`/api/model/${id}/view${viewVariantParam}`, { method: 'POST' }).catch(() => {});
                 console.log(`📊 View tracked for model ${id}, variant: ${variantId || 'original'}`);
                 
+                // Check if this is a wallpaper
+                const isWallpaper = modelInfo.metadata && modelInfo.metadata.type === 'wallpaper';
+
                 // For mobile - go straight to AR with variant support
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                    if (isWallpaper) {
+                        // Handle wallpaper AR differently
+                        launchWallpaperAR(modelInfo);
+                        return;
+                    }
                     document.body.style.visibility = 'hidden';
                     document.body.style.background = '#000';
                     
@@ -730,16 +793,23 @@
                                         <h2 class="gradient-text" style="margin: 0 0 8px 0; font-size: 32px;">${modelInfo.title}</h2>
                                     </div>
                                 </div>
-                                <model-viewer
-                                    id="desktopModelViewer"
-                                    src="${desktopModelUrl}"
-                                    ios-src="/api/model/${id}/usdz"
-                                    alt="${modelInfo.title}"
-                                    ar-scale="fixed"
-                                    camera-controls
-                                    auto-rotate
-                                    style="width: 500px; height: 450px; background: ${backgroundColorParam ? generateBackgroundGradient(backgroundColorParam) : 'linear-gradient(135deg, #0d1117, #161b22)'}; border-radius: 12px; padding: 20px; border: 1px solid rgba(240, 246, 252, 0.08);">
-                                </model-viewer>
+                                ${isWallpaper && modelInfo.metadata && modelInfo.metadata.albedoUrl ? `
+                                    <div class="wallpaper-desktop-preview" style="width: 500px; height: 450px; background: url('${modelInfo.metadata.albedoUrl}') center/cover; border-radius: 12px; border: 1px solid rgba(240, 246, 252, 0.08); position: relative; display: flex; align-items: center; justify-content: center;">
+                                        <div style="position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.7); color: white; padding: 8px 12px; border-radius: 8px; font-size: 14px;">🧱 AR Wallpaper</div>
+                                        <div style="background: rgba(0,0,0,0.5); color: white; padding: 12px 20px; border-radius: 12px; font-size: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">Tap to View in AR</div>
+                                    </div>
+                                ` : `
+                                    <model-viewer
+                                        id="desktopModelViewer"
+                                        src="${desktopModelUrl}"
+                                        ios-src="/api/model/${id}/usdz"
+                                        alt="${modelInfo.title}"
+                                        ar-scale="fixed"
+                                        camera-controls
+                                        auto-rotate
+                                        style="width: 500px; height: 450px; background: ${backgroundColorParam ? generateBackgroundGradient(backgroundColorParam) : 'linear-gradient(135deg, #0d1117, #161b22)'}; border-radius: 12px; padding: 20px; border: 1px solid rgba(240, 246, 252, 0.08);">
+                                    </model-viewer>
+                                `}
                                 
                                 <!-- Variant Colors Section -->
                                 ${modelInfo.variants && modelInfo.variants.length > 0 ? `

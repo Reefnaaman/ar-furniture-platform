@@ -2544,29 +2544,40 @@ async function handleWallpaperUpload(req, res) {
       dimensions: { width, height, tileRepeat }
     });
 
-    // Generate GLB file with PBR materials
-    const glbBuffer = await generateWallpaperGLB(textures, {
-      width,
-      height,
-      tileRepeat,
-      title
-    });
-
-    // Upload albedo texture to Cloudinary for preview
+    // Upload albedo texture to Cloudinary for preview and AR viewing
     let albedoUrl = null;
+    let cloudinaryResult = null;
+
     if (textures.albedo) {
       try {
         const albedoFilename = `${title.replace(/[^a-zA-Z0-9]/g, '_')}_albedo.jpg`;
         const albedoResult = await uploadImage(textures.albedo.buffer, albedoFilename);
         albedoUrl = albedoResult.url;
+
+        // For wallpapers, we'll use the albedo texture directly instead of GLB
+        // This provides better quality and faster loading
+        cloudinaryResult = {
+          url: albedoResult.url,
+          publicId: albedoResult.publicId,
+          size: albedoResult.size || textures.albedo.size || 0
+        };
       } catch (e) {
         console.warn('Failed to upload albedo texture:', e);
+        // Fallback: create a basic GLB if texture upload fails
+        const glbBuffer = await generateWallpaperGLB(textures, {
+          width, height, tileRepeat, title
+        });
+        const filename = `${title.replace(/[^a-zA-Z0-9]/g, '_')}_wallpaper.glb`;
+        cloudinaryResult = await uploadModel(glbBuffer, filename);
       }
+    } else {
+      // No albedo texture - create basic GLB as fallback
+      const glbBuffer = await generateWallpaperGLB(textures, {
+        width, height, tileRepeat, title
+      });
+      const filename = `${title.replace(/[^a-zA-Z0-9]/g, '_')}_wallpaper.glb`;
+      cloudinaryResult = await uploadModel(glbBuffer, filename);
     }
-
-    // Upload GLB to Cloudinary
-    const filename = `${title.replace(/[^a-zA-Z0-9]/g, '_')}_wallpaper.glb`;
-    const cloudinaryResult = await uploadModel(glbBuffer, filename);
 
     // Get customer name for database
     let customerName = 'Unknown Customer';
@@ -2595,6 +2606,7 @@ async function handleWallpaperUpload(req, res) {
         tileRepeat,
         textureTypes: Object.keys(textures),
         albedoUrl: albedoUrl,
+        isImageBased: !!albedoUrl, // Flag to indicate this uses texture instead of GLB
         generatedAt: new Date().toISOString()
       }
     });
@@ -2896,9 +2908,172 @@ async function handleCustomerLogoUpload(req, res, customerId) {
 
   } catch (error) {
     console.error('Error uploading customer logo:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Failed to upload logo',
-      details: error.message 
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Handle Cloudinary upload configuration for direct browser uploads
+ */
+async function handleCloudinaryConfig(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { v2: cloudinary } = await import('cloudinary');
+
+    // Generate timestamp for signature
+    const timestamp = Math.round(new Date().getTime() / 1000);
+
+    // Upload parameters
+    const uploadParams = {
+      timestamp: timestamp,
+      folder: 'furniture-models',
+      resource_type: 'raw',
+      max_file_size: 100000000, // 100MB
+    };
+
+    // Generate signature
+    const signature = cloudinary.utils.api_sign_request(uploadParams, process.env.CLOUDINARY_API_SECRET);
+
+    return res.status(200).json({
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      timestamp: timestamp,
+      signature: signature,
+      uploadParams: uploadParams
+    });
+
+  } catch (error) {
+    console.error('Error generating Cloudinary config:', error);
+    return res.status(500).json({
+      error: 'Failed to generate upload configuration',
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Handle saving model metadata after successful Cloudinary upload
+ */
+async function handleCloudinarySave(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const {
+      cloudinaryUrl,
+      cloudinaryPublicId,
+      fileSize,
+      title,
+      description,
+      customerId,
+      customerName,
+      dimensions,
+      // Variant-specific fields
+      parentModelId,
+      variantName,
+      hexColor,
+      isVariant
+    } = req.body;
+
+    if (!cloudinaryUrl || !cloudinaryPublicId) {
+      return res.status(400).json({ error: 'Cloudinary URL and public ID are required' });
+    }
+
+    let dbResult;
+
+    if (isVariant && parentModelId && variantName) {
+      // Handle variant upload
+      console.log('Saving variant after direct upload...');
+      dbResult = await saveModelVariant({
+        parentModelId: parentModelId,
+        variantName: variantName,
+        hexColor: hexColor || '#000000',
+        cloudinaryUrl: cloudinaryUrl,
+        cloudinaryPublicId: cloudinaryPublicId,
+        fileSize: fileSize || 0,
+        isPrimary: false,
+        variantType: 'upload'
+      });
+    } else {
+      // Handle regular model upload
+      console.log('Saving model after direct upload...');
+
+      // Parse dimensions if provided
+      let parsedDimensions = null;
+      if (dimensions) {
+        try {
+          parsedDimensions = typeof dimensions === 'string' ? JSON.parse(dimensions) : dimensions;
+        } catch (error) {
+          console.warn('Failed to parse dimensions:', error.message);
+        }
+      }
+
+      dbResult = await saveModel({
+        title: title || 'Untitled Model',
+        description: description || '',
+        filename: cloudinaryPublicId.split('/').pop() + '.glb',
+        cloudinaryUrl: cloudinaryUrl,
+        cloudinaryPublicId: cloudinaryPublicId,
+        fileSize: fileSize || 0,
+        customerId: customerId || 'unassigned',
+        customerName: customerName || 'Unassigned',
+        dominantColor: '#6b7280',
+        dimensions: parsedDimensions,
+        metadata: {
+          uploadMethod: 'direct',
+          uploadedAt: new Date().toISOString()
+        }
+      });
+    }
+
+    if (!dbResult.success) {
+      console.error('Database save failed:', dbResult.error);
+      return res.status(500).json({
+        error: 'Failed to save model to database',
+        details: dbResult.error
+      });
+    }
+
+    const domain = process.env.DOMAIN || 'newfurniture.live';
+
+    if (isVariant) {
+      // Variant response
+      return res.status(200).json({
+        success: true,
+        id: dbResult.id,
+        parentModelId: parentModelId,
+        variantName: variantName,
+        hexColor: hexColor || '#000000',
+        cloudinaryUrl: cloudinaryUrl,
+        viewUrl: `https://${domain}/view?id=${parentModelId}&variant=${dbResult.id}`,
+        message: 'Variant uploaded successfully!'
+      });
+    } else {
+      // Model response
+      return res.status(200).json({
+        success: true,
+        id: dbResult.id,
+        viewUrl: `https://${domain}/view?id=${dbResult.id}`,
+        directUrl: cloudinaryUrl,
+        shareUrl: `https://${domain}/view?id=${dbResult.id}`,
+        title: title,
+        fileSize: fileSize,
+        message: 'Model uploaded successfully!'
+      });
+    }
+
+  } catch (error) {
+    console.error('Error saving after Cloudinary upload:', error);
+    return res.status(500).json({
+      error: 'Failed to save model metadata',
+      details: error.message
     });
   }
 }

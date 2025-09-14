@@ -82,8 +82,17 @@ export default async function handler(req, res) {
     if (routePath === 'upload-simple') {
       return await handleUpload(req, res);
     }
-    
-    
+
+    // Route: /api/cloudinary-config - Get signed upload configuration
+    if (routePath === 'cloudinary-config') {
+      return await handleCloudinaryConfig(req, res);
+    }
+
+    // Route: /api/cloudinary-save - Save metadata after direct upload
+    if (routePath === 'cloudinary-save') {
+      return await handleCloudinarySave(req, res);
+    }
+
     // Route: /api/models
     if (routePath === 'models') {
       return await handleModels(req, res);
@@ -1996,12 +2005,175 @@ async function handleModelUSDZ(req, res, modelId) {
     res.status(200).send(Buffer.from(usdzBuffer));
     
     console.log(`✅ USDZ generated successfully for model: ${modelId}`);
-    
+
   } catch (error) {
     console.error('❌ Error generating USDZ:', error);
-    res.status(500).json({ 
-      error: 'Failed to generate USDZ file', 
-      details: error.message 
+    res.status(500).json({
+      error: 'Failed to generate USDZ file',
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Handle Cloudinary upload configuration for direct browser uploads
+ */
+async function handleCloudinaryConfig(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { v2: cloudinary } = await import('cloudinary');
+
+    // Generate timestamp for signature
+    const timestamp = Math.round(new Date().getTime() / 1000);
+
+    // Upload parameters
+    const uploadParams = {
+      timestamp: timestamp,
+      folder: 'furniture-models',
+      resource_type: 'raw',
+      max_file_size: 100000000, // 100MB
+    };
+
+    // Generate signature
+    const signature = cloudinary.utils.api_sign_request(uploadParams, process.env.CLOUDINARY_API_SECRET);
+
+    return res.status(200).json({
+      cloudName: process.env.CLOUDINARY_CLOUD_NAME,
+      apiKey: process.env.CLOUDINARY_API_KEY,
+      timestamp: timestamp,
+      signature: signature,
+      uploadParams: uploadParams
+    });
+
+  } catch (error) {
+    console.error('Error generating Cloudinary config:', error);
+    return res.status(500).json({
+      error: 'Failed to generate upload configuration',
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Handle saving model metadata after successful Cloudinary upload
+ */
+async function handleCloudinarySave(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const {
+      cloudinaryUrl,
+      cloudinaryPublicId,
+      fileSize,
+      title,
+      description,
+      customerId,
+      customerName,
+      dimensions,
+      // Variant-specific fields
+      parentModelId,
+      variantName,
+      hexColor,
+      isVariant
+    } = req.body;
+
+    if (!cloudinaryUrl || !cloudinaryPublicId) {
+      return res.status(400).json({ error: 'Cloudinary URL and public ID are required' });
+    }
+
+    let dbResult;
+
+    if (isVariant && parentModelId && variantName) {
+      // Handle variant upload
+      console.log('Saving variant after direct upload...');
+      dbResult = await saveModelVariant({
+        parentModelId: parentModelId,
+        variantName: variantName,
+        hexColor: hexColor || '#000000',
+        cloudinaryUrl: cloudinaryUrl,
+        cloudinaryPublicId: cloudinaryPublicId,
+        fileSize: fileSize || 0,
+        isPrimary: false,
+        variantType: 'upload'
+      });
+    } else {
+      // Handle regular model upload
+      console.log('Saving model after direct upload...');
+
+      // Parse dimensions if provided
+      let parsedDimensions = null;
+      if (dimensions) {
+        try {
+          parsedDimensions = typeof dimensions === 'string' ? JSON.parse(dimensions) : dimensions;
+        } catch (error) {
+          console.warn('Failed to parse dimensions:', error.message);
+        }
+      }
+
+      dbResult = await saveModel({
+        title: title || 'Untitled Model',
+        description: description || '',
+        filename: cloudinaryPublicId.split('/').pop() + '.glb',
+        cloudinaryUrl: cloudinaryUrl,
+        cloudinaryPublicId: cloudinaryPublicId,
+        fileSize: fileSize || 0,
+        customerId: customerId || 'unassigned',
+        customerName: customerName || 'Unassigned',
+        dominantColor: '#6b7280',
+        dimensions: parsedDimensions,
+        metadata: {
+          uploadMethod: 'direct',
+          uploadedAt: new Date().toISOString()
+        }
+      });
+    }
+
+    if (!dbResult.success) {
+      console.error('Database save failed:', dbResult.error);
+      return res.status(500).json({
+        error: 'Failed to save model to database',
+        details: dbResult.error
+      });
+    }
+
+    const domain = process.env.DOMAIN || 'newfurniture.live';
+
+    if (isVariant) {
+      // Variant response
+      return res.status(200).json({
+        success: true,
+        id: dbResult.id,
+        parentModelId: parentModelId,
+        variantName: variantName,
+        hexColor: hexColor || '#000000',
+        cloudinaryUrl: cloudinaryUrl,
+        viewUrl: `https://${domain}/view?id=${parentModelId}&variant=${dbResult.id}`,
+        message: 'Variant uploaded successfully!'
+      });
+    } else {
+      // Model response
+      return res.status(200).json({
+        success: true,
+        id: dbResult.id,
+        viewUrl: `https://${domain}/view?id=${dbResult.id}`,
+        directUrl: cloudinaryUrl,
+        shareUrl: `https://${domain}/view?id=${dbResult.id}`,
+        title: title,
+        fileSize: fileSize,
+        message: 'Model uploaded successfully!'
+      });
+    }
+
+  } catch (error) {
+    console.error('Error saving after Cloudinary upload:', error);
+    return res.status(500).json({
+      error: 'Failed to save model metadata',
+      details: error.message
     });
   }
 }
