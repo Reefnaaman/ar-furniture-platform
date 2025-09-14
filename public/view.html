@@ -556,6 +556,51 @@
             return `linear-gradient(135deg, rgba(${r}, ${g}, ${b}, 0.4) 0%, rgba(${r}, ${g}, ${b}, 0.2) 100%)`;
         }
         
+        // Function to apply dimension scaling to match real-world dimensions
+        function applyDimensionScaling(modelViewer, modelInfo) {
+            try {
+                // Get the current model dimensions (in meters)
+                const currentDimensions = modelViewer.getDimensions();
+                console.log('📐 Current model dimensions:', currentDimensions);
+                
+                // Calculate scale factors for each dimension
+                const targetWidth = modelInfo.width_meters;
+                const targetHeight = modelInfo.height_meters;
+                const targetDepth = modelInfo.depth_meters;
+                
+                let scaleX = 1, scaleY = 1, scaleZ = 1;
+                
+                if (targetWidth && currentDimensions.x > 0) {
+                    scaleX = targetWidth / currentDimensions.x;
+                }
+                if (targetHeight && currentDimensions.y > 0) {
+                    scaleY = targetHeight / currentDimensions.y;
+                }
+                if (targetDepth && currentDimensions.z > 0) {
+                    scaleZ = targetDepth / currentDimensions.z;
+                }
+                
+                // Use uniform scaling (take the average of provided scales)
+                const scales = [];
+                if (targetWidth) scales.push(scaleX);
+                if (targetHeight) scales.push(scaleY);
+                if (targetDepth) scales.push(scaleZ);
+                
+                const uniformScale = scales.length > 0 ? scales.reduce((a, b) => a + b, 0) / scales.length : 1;
+                
+                console.log('🎯 Calculated scale factor:', uniformScale);
+                console.log('📏 Target dimensions:', { width: targetWidth, height: targetHeight, depth: targetDepth });
+                
+                // Apply the scale
+                modelViewer.scale = `${uniformScale} ${uniformScale} ${uniformScale}`;
+                
+                console.log('✅ Applied dimension scaling to model');
+                
+            } catch (error) {
+                console.error('❌ Error applying dimension scaling:', error);
+            }
+        }
+        
         async function loadModel(id, variantId = null) {
             try {
                 // Fetch model info first (needed for both desktop and mobile)
@@ -749,6 +794,15 @@
                 document.body.style.margin = '0';
                 document.body.style.padding = '0';
                 document.body.style.background = 'none';
+                
+                // Apply dimension scaling to desktop model viewer if available
+                if (modelInfo.width_meters || modelInfo.height_meters || modelInfo.depth_meters) {
+                    const desktopModelViewer = document.getElementById('desktopModelViewer');
+                    desktopModelViewer.addEventListener('load', () => {
+                        console.log('📏 Applying dimension scaling for desktop view');
+                        applyDimensionScaling(desktopModelViewer, modelInfo);
+                    });
+                }
                 
                 // View already tracked once per page load
                 
@@ -1170,6 +1224,14 @@
             modelViewer.setAttribute('ar', '');
             modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
             modelViewer.setAttribute('ar-scale', 'fixed'); // Use fixed scaling for accurate real-world dimensions
+            
+            // Apply dimension scaling if available
+            if (modelInfo.width_meters || modelInfo.height_meters || modelInfo.depth_meters) {
+                modelViewer.addEventListener('load', () => {
+                    console.log('📏 Applying dimension scaling for AR');
+                    applyDimensionScaling(modelViewer, modelInfo);
+                });
+            }
             modelViewer.setAttribute('auto-rotate', '');
             modelViewer.setAttribute('camera-controls', '');
             modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';

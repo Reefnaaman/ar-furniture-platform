@@ -2929,8 +2929,8 @@
                                 <span style="font-size: 12px;">🎨</span>
                                 <label style="font-size: 12px; font-weight: 500; color: #a371f7;">Albedo*</label>
                             </div>
-                            <input type="file" id="albedoInput" accept="image/*" onchange="handleWallpaperTextureUpload('albedo', this)" style="display: none;">
-                            <div onclick="document.getElementById('albedoInput').click()" style="border: 2px dashed rgba(163, 113, 247, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(163, 113, 247, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
+                            <input type="file" id="wallpaperAlbedoInput" accept="image/*" onchange="handleWallpaperTextureUpload('albedo', this)" style="display: none;">
+                            <div onclick="document.getElementById('wallpaperAlbedoInput').click()" style="border: 2px dashed rgba(163, 113, 247, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(163, 113, 247, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
                                 <div id="albedoPreview"></div>
                                 <div id="albedoPlaceholder">
                                     <div style="font-size: 16px; margin-bottom: 3px;">📁</div>
@@ -2945,8 +2945,8 @@
                                 <span style="font-size: 12px;">🌊</span>
                                 <label style="font-size: 12px; font-weight: 500; color: #58a6ff;">Normal</label>
                             </div>
-                            <input type="file" id="normalInput" accept="image/*" onchange="handleWallpaperTextureUpload('normal', this)" style="display: none;">
-                            <div onclick="document.getElementById('normalInput').click()" style="border: 2px dashed rgba(88, 166, 255, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(88, 166, 255, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
+                            <input type="file" id="wallpaperNormalInput" accept="image/*" onchange="handleWallpaperTextureUpload('normal', this)" style="display: none;">
+                            <div onclick="document.getElementById('wallpaperNormalInput').click()" style="border: 2px dashed rgba(88, 166, 255, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(88, 166, 255, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
                                 <div id="normalPreview"></div>
                                 <div id="normalPlaceholder">
                                     <div style="font-size: 16px; margin-bottom: 3px;">📁</div>
@@ -2961,8 +2961,8 @@
                                 <span style="font-size: 12px;">✨</span>
                                 <label style="font-size: 12px; font-weight: 500; color: #ffa500;">Roughness</label>
                             </div>
-                            <input type="file" id="roughnessInput" accept="image/*" onchange="handleWallpaperTextureUpload('roughness', this)" style="display: none;">
-                            <div onclick="document.getElementById('roughnessInput').click()" style="border: 2px dashed rgba(255, 165, 0, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(255, 165, 0, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
+                            <input type="file" id="wallpaperRoughnessInput" accept="image/*" onchange="handleWallpaperTextureUpload('roughness', this)" style="display: none;">
+                            <div onclick="document.getElementById('wallpaperRoughnessInput').click()" style="border: 2px dashed rgba(255, 165, 0, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(255, 165, 0, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
                                 <div id="roughnessPreview"></div>
                                 <div id="roughnessPlaceholder">
                                     <div style="font-size: 16px; margin-bottom: 3px;">📁</div>
@@ -2977,8 +2977,8 @@
                                 <span style="font-size: 12px;">⛰️</span>
                                 <label style="font-size: 12px; font-weight: 500; color: #10b981;">Height</label>
                             </div>
-                            <input type="file" id="heightInput" accept="image/*" onchange="handleWallpaperTextureUpload('height', this)" style="display: none;">
-                            <div onclick="document.getElementById('heightInput').click()" style="border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(16, 185, 129, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
+                            <input type="file" id="wallpaperHeightInput" accept="image/*" onchange="handleWallpaperTextureUpload('height', this)" style="display: none;">
+                            <div onclick="document.getElementById('wallpaperHeightInput').click()" style="border: 2px dashed rgba(16, 185, 129, 0.3); border-radius: 6px; padding: 12px; text-align: center; cursor: pointer; background: rgba(16, 185, 129, 0.05); min-height: 60px; display: flex; flex-direction: column; justify-content: center;">
                                 <div id="heightPreview"></div>
                                 <div id="heightPlaceholder">
                                     <div style="font-size: 16px; margin-bottom: 3px;">📁</div>
@@ -7340,25 +7340,30 @@
         }
 
         function loadCustomersForWallpaper() {
-            fetch('/api/customers')
-                .then(response => response.json())
-                .then(data => {
-                    const select = document.getElementById('wallpaperCustomerSelect');
-                    select.innerHTML = '<option value="">Select a customer...</option>';
-                    
-                    if (data.success && data.customers) {
-                        data.customers.forEach(customer => {
-                            const option = document.createElement('option');
-                            option.value = customer.id;
-                            option.textContent = customer.name;
-                            select.appendChild(option);
-                        });
-                    }
-                })
-                .catch(error => {
-                    console.error('Error loading customers:', error);
-                    showNotification('Failed to load customers', 'error');
-                });
+            try {
+                const select = document.getElementById('wallpaperCustomerSelect');
+                select.innerHTML = '<option value="">Select Customer</option>';
+                
+                // Use existing customer manager directly
+                const customers = customerManager.getAllCustomers();
+                if (customers && customers.length > 0) {
+                    customers.forEach(customer => {
+                        const option = document.createElement('option');
+                        option.value = `${customer.id}:${customer.name}`;
+                        option.textContent = customer.name;
+                        select.appendChild(option);
+                    });
+                } else {
+                    // Fallback NAPO option
+                    const napoOption = document.createElement('option');
+                    napoOption.value = 'napo:NAPO';
+                    napoOption.textContent = 'NAPO';
+                    select.appendChild(napoOption);
+                }
+            } catch (error) {
+                console.error('Error loading customers for wallpaper:', error);
+                showNotification('Failed to load customers', 'error');
+            }
         }
 
         function handleWallpaperTextureUpload(textureType, inputElement) {
@@ -7399,14 +7404,15 @@
         function removeWallpaperTexture(textureType) {
             delete wallpaperTextures[textureType];
             document.getElementById(`${textureType}Preview`).innerHTML = '';
-            document.getElementById(`${textureType}Input`).value = '';
+            const input = document.getElementById(`wallpaper${textureType.charAt(0).toUpperCase() + textureType.slice(1)}Input`);
+            if (input) input.value = '';
             updateWallpaperUploadButton();
         }
 
         function clearAllWallpaperPreviews() {
             ['albedo', 'normal', 'roughness', 'height'].forEach(type => {
                 document.getElementById(`${type}Preview`).innerHTML = '';
-                const input = document.getElementById(`${type}Input`);
+                const input = document.getElementById(`wallpaper${type.charAt(0).toUpperCase() + type.slice(1)}Input`);
                 if (input) input.value = '';
             });
         }
@@ -7428,13 +7434,14 @@
         }
 
         async function uploadWallpaper() {
-            const customerId = document.getElementById('wallpaperCustomerSelect').value;
+            const customerValue = document.getElementById('wallpaperCustomerSelect').value;
+            const [customerId, customerName] = customerValue.split(':');
             const title = document.getElementById('wallpaperTitle').value;
             const width = parseFloat(document.getElementById('wallWidth').value) || 2.44;
             const height = parseFloat(document.getElementById('wallHeight').value) || 2.44;
             const tileRepeat = parseFloat(document.getElementById('tileRepeat').value) || 4;
 
-            if (!customerId) {
+            if (!customerValue || !customerId) {
                 showNotification('Please select a customer', 'error');
                 return;
             }

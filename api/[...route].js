@@ -657,6 +657,11 @@ async function handleModelInfo(req, res, modelId) {
       customer_id: model.customer_id, // Include for logo loading
       customer_name: model.customer_name, // Include for logo loading
       metadata: model.metadata,
+      // Include dimension data for AR scaling
+      width_meters: model.width_meters,
+      height_meters: model.height_meters,
+      depth_meters: model.depth_meters,
+      dimension_unit: model.dimension_unit,
       variants: (variants || []).map(variant => ({
         id: variant.id,
         variant_name: variant.variant_name,
