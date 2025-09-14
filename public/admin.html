@@ -381,11 +381,7 @@
             letter-spacing: 0.5px;
         }
         
-        .model-actions {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+        /* Legacy styles removed - using card-actions-consolidated instead */
         
         .action-button {
             padding: 6px 10px;
@@ -429,6 +425,190 @@
         .action-button.variant-btn:hover {
             background: rgba(255, 165, 0, 0.2);
             border-color: rgba(255, 165, 0, 0.5);
+        }
+        
+        /* Consolidated Button Layout */
+        .card-actions-consolidated {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 8px;
+            margin-top: 15px;
+        }
+        
+        .action-button.primary {
+            background: rgba(88, 166, 255, 0.15);
+            border-color: rgba(88, 166, 255, 0.3);
+            color: #58a6ff;
+        }
+        
+        .action-button.primary:hover {
+            background: rgba(88, 166, 255, 0.25);
+            border-color: rgba(88, 166, 255, 0.5);
+        }
+        
+        .action-button.settings {
+            background: rgba(163, 113, 247, 0.15);
+            border-color: rgba(163, 113, 247, 0.3);
+            color: #a371f7;
+        }
+        
+        .action-button.settings:hover {
+            background: rgba(163, 113, 247, 0.25);
+            border-color: rgba(163, 113, 247, 0.5);
+        }
+        
+        /* Settings Modal */
+        .settings-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .settings-modal-content {
+            background: linear-gradient(135deg, rgba(22, 27, 34, 0.95) 0%, rgba(30, 35, 42, 0.9) 100%);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 16px;
+            padding: 0;
+            max-width: 500px;
+            width: 100%;
+            max-height: 85vh;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+        
+        .settings-modal-header {
+            padding: 20px 24px 16px;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
+            background: rgba(88, 166, 255, 0.05);
+        }
+        
+        .settings-modal-title {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: #e6edf3;
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .settings-modal-body {
+            padding: 20px 24px;
+            max-height: 60vh;
+            overflow-y: auto;
+        }
+        
+        .settings-section {
+            margin-bottom: 24px;
+        }
+        
+        .settings-section:last-child {
+            margin-bottom: 0;
+        }
+        
+        .settings-section-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #7d8590;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .settings-action {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 16px;
+            background: rgba(240, 246, 252, 0.05);
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            transition: all 0.2s ease;
+        }
+        
+        .settings-action:hover {
+            background: rgba(240, 246, 252, 0.08);
+            border-color: rgba(240, 246, 252, 0.2);
+        }
+        
+        .settings-action-info {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+        
+        .settings-action-label {
+            color: #e6edf3;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        
+        .settings-action-desc {
+            color: #7d8590;
+            font-size: 0.85rem;
+        }
+        
+        .settings-action-button {
+            padding: 6px 12px;
+            font-size: 0.85rem;
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 6px;
+            background: rgba(240, 246, 252, 0.05);
+            color: #e6edf3;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .settings-action-button:hover {
+            background: rgba(240, 246, 252, 0.1);
+            border-color: rgba(240, 246, 252, 0.3);
+        }
+        
+        .settings-action-button.danger {
+            background: rgba(248, 81, 73, 0.1);
+            border-color: rgba(248, 81, 73, 0.3);
+            color: #f85149;
+        }
+        
+        .settings-action-button.danger:hover {
+            background: rgba(248, 81, 73, 0.2);
+            border-color: rgba(248, 81, 73, 0.5);
+        }
+        
+        .settings-modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid rgba(240, 246, 252, 0.1);
+            display: flex;
+            justify-content: flex-end;
+        }
+        
+        .settings-close-button {
+            padding: 8px 16px;
+            background: rgba(240, 246, 252, 0.1);
+            border: 1px solid rgba(240, 246, 252, 0.2);
+            border-radius: 6px;
+            color: #7d8590;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .settings-close-button:hover {
+            background: rgba(240, 246, 252, 0.15);
+            border-color: rgba(240, 246, 252, 0.3);
+            color: #e6edf3;
         }
 
         .loading-spinner {
@@ -2407,6 +2587,61 @@
             font-size: 0.8rem;
             border-radius: 6px;
         }
+        
+        /* Mobile Responsiveness for Settings Modal */
+        @media (max-width: 768px) {
+            .settings-modal {
+                padding: 10px;
+            }
+            
+            .settings-modal-content {
+                max-width: 100%;
+                margin: 0;
+            }
+            
+            .settings-modal-header {
+                padding: 16px 20px 12px;
+            }
+            
+            .settings-modal-title {
+                font-size: 1.1rem;
+            }
+            
+            .settings-modal-body {
+                padding: 16px 20px;
+                max-height: 70vh;
+            }
+            
+            .settings-section-title {
+                font-size: 0.85rem;
+            }
+            
+            .settings-action {
+                padding: 10px 14px;
+            }
+            
+            .settings-action-label {
+                font-size: 0.9rem;
+            }
+            
+            .settings-action-desc {
+                font-size: 0.8rem;
+            }
+            
+            .settings-action-button {
+                padding: 5px 10px;
+                font-size: 0.8rem;
+            }
+            
+            .card-actions-consolidated {
+                gap: 6px;
+            }
+            
+            .action-button {
+                font-size: 0.7rem;
+                padding: 5px 8px;
+            }
+        }
     </style>
 </head>
 <body style="display: none;">
@@ -3322,6 +3557,105 @@
         </div>
     </div>
     
+    <!-- Furniture Settings Modal -->
+    <div class="settings-modal" id="furnitureSettingsModal">
+        <div class="settings-modal-content">
+            <div class="settings-modal-header">
+                <h3 class="settings-modal-title" id="settingsModalTitle">
+                    ⚙️ Furniture Settings - Loading...
+                </h3>
+            </div>
+            
+            <div class="settings-modal-body">
+                <!-- Sharing & Links Section -->
+                <div class="settings-section">
+                    <div class="settings-section-title">📋 Sharing & Links</div>
+                    
+                    <div class="settings-action">
+                        <div class="settings-action-info">
+                            <div class="settings-action-label">Product URL</div>
+                            <div class="settings-action-desc" id="productUrlDesc">Add or edit the product page URL</div>
+                        </div>
+                        <button class="settings-action-button" id="editUrlButton" onclick="handleEditUrl()">
+                            Edit
+                        </button>
+                    </div>
+                    
+                    <div class="settings-action">
+                        <div class="settings-action-info">
+                            <div class="settings-action-label">Copy AR Link</div>
+                            <div class="settings-action-desc">Copy the shareable AR viewing link</div>
+                        </div>
+                        <button class="settings-action-button" id="copyLinkButton" onclick="handleCopyLink()">
+                            Copy
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Customer Management Section -->
+                <div class="settings-section">
+                    <div class="settings-section-title">👥 Customer Management</div>
+                    
+                    <div class="settings-action">
+                        <div class="settings-action-info">
+                            <div class="settings-action-label">Assign to Customer</div>
+                            <div class="settings-action-desc" id="assignmentDesc">Not assigned to any customer</div>
+                        </div>
+                        <button class="settings-action-button" id="assignButton" onclick="handleAssignCustomer()">
+                            Assign
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Customization Section -->
+                <div class="settings-section">
+                    <div class="settings-section-title">🎨 Customization</div>
+                    
+                    <div class="settings-action">
+                        <div class="settings-action-info">
+                            <div class="settings-action-label">Add Variant</div>
+                            <div class="settings-action-desc">Add color or texture variants</div>
+                        </div>
+                        <button class="settings-action-button" id="addVariantButton" onclick="handleAddVariant()">
+                            Add
+                        </button>
+                    </div>
+                    
+                    <div class="settings-action" id="manageVariantsAction" style="display: none;">
+                        <div class="settings-action-info">
+                            <div class="settings-action-label">Manage Variants</div>
+                            <div class="settings-action-desc" id="variantCountDesc">No variants available</div>
+                        </div>
+                        <button class="settings-action-button" onclick="handleManageVariants()">
+                            Manage
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Danger Zone Section -->
+                <div class="settings-section">
+                    <div class="settings-section-title">⚠️ Danger Zone</div>
+                    
+                    <div class="settings-action">
+                        <div class="settings-action-info">
+                            <div class="settings-action-label">Delete Furniture</div>
+                            <div class="settings-action-desc">Permanently remove this furniture and all variants</div>
+                        </div>
+                        <button class="settings-action-button danger" id="deleteButton" onclick="handleDeleteFurniture()">
+                            Delete
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="settings-modal-footer">
+                <button class="settings-close-button" onclick="closeFurnitureSettingsModal()">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <script>
         let deleteTarget = null;
         
@@ -3413,6 +3747,9 @@
         
         async function loadModels() {
             try {
+                // Save current collapse states before refreshing
+                saveCurrentCollapseStates();
+
                 const response = await fetch('/api/models');
                 if (!response.ok) throw new Error('Failed to load models');
                 
@@ -3564,7 +3901,7 @@
             
             sortedCustomers.forEach(customer => {
                 html += `
-                    <div class="customer-group" data-customer="${customer.id}">
+                    <div class="customer-group collapsed" data-customer="${customer.id}">
                         <div class="customer-header" onclick="toggleCustomerGroup('${customer.id}')">
                             <div class="customer-name">
                                 ${customer.name}
@@ -3586,6 +3923,23 @@
             
             html += '</div>';
             document.getElementById('modelsContainer').innerHTML = html;
+
+            // Restore saved collapse states from localStorage
+            const collapsedGroups = JSON.parse(localStorage.getItem('collapsedCustomerGroups') || '{}');
+            document.querySelectorAll('[data-customer]').forEach(group => {
+                const customerId = group.getAttribute('data-customer');
+                // If we have a saved state for this customer
+                if (collapsedGroups.hasOwnProperty(customerId)) {
+                    if (collapsedGroups[customerId] === false) {
+                        // User wants this group expanded
+                        group.classList.remove('collapsed');
+                    } else {
+                        // User wants this group collapsed (or it's the default)
+                        group.classList.add('collapsed');
+                    }
+                }
+                // If no saved state, keep default collapsed state
+            });
         }
         
         function generateModelCard(model) {
@@ -3672,29 +4026,15 @@
                             </div>
                         ` : ''}
                         
-                        <div class="model-actions">
-                            <a href="/view?id=${model.id}" target="_blank" class="action-button">
-                                👁️ View AR
+                        <div class="card-actions-consolidated">
+                            <a href="/view?id=${model.id}" target="_blank" class="action-button primary">
+                                👁️ View
                             </a>
-                            <button class="action-button" onclick="copyToClipboard('${viewUrl}', this)">
+                            <button class="action-button primary" onclick="copyToClipboard('${viewUrl}', this)">
                                 📋 Copy Link
                             </button>
-                            <button class="action-button product-url-action" data-model-id="${model.id}" onclick="startEditProductUrl(this)" ${!model.product_url ? 'data-empty="true"' : ''}>
-                                ${model.product_url ? '🔗 Edit URL' : '➕ Add URL'}
-                            </button>
-                            <div class="assign-dropdown">
-                                <button class="action-button assign-button" onclick="toggleAssignDropdown(this, '${model.id}', '${model.customer_id}', '${model.customer_name}')">
-                                    🏷️ Assign
-                                </button>
-                                <div class="assign-dropdown-content">
-                                    <!-- Populated dynamically -->
-                                </div>
-                            </div>
-                            <button class="action-button variant-btn" onclick="openVariantModal('${model.id}', '${model.title}')">
-                                🎨 Add Variant
-                            </button>
-                            <button class="action-button delete" onclick="deleteModel('${model.id}', '${model.cloudinary_public_id}')">
-                                🗑️ Remove
+                            <button class="action-button settings" onclick="openFurnitureSettingsModal(${JSON.stringify(model).replace(/"/g, '&quot;')})">
+                                ⚙️ Settings
                             </button>
                         </div>
                     </div>
@@ -3702,9 +4042,23 @@
             `;
         }
         
+        function saveCurrentCollapseStates() {
+            const collapsedGroups = JSON.parse(localStorage.getItem('collapsedCustomerGroups') || '{}');
+            document.querySelectorAll('[data-customer]').forEach(group => {
+                const customerId = group.getAttribute('data-customer');
+                collapsedGroups[customerId] = group.classList.contains('collapsed');
+            });
+            localStorage.setItem('collapsedCustomerGroups', JSON.stringify(collapsedGroups));
+        }
+
         function toggleCustomerGroup(customerId) {
             const group = document.querySelector(`[data-customer="${customerId}"]`);
             group.classList.toggle('collapsed');
+
+            // Save state to localStorage
+            const collapsedGroups = JSON.parse(localStorage.getItem('collapsedCustomerGroups') || '{}');
+            collapsedGroups[customerId] = group.classList.contains('collapsed');
+            localStorage.setItem('collapsedCustomerGroups', JSON.stringify(collapsedGroups));
         }
         
         function deleteModel(id, cloudinaryPublicId) {
@@ -4577,7 +4931,7 @@
                 // Create new customer group
                 const groupsContainer = document.querySelector('.customer-groups');
                 targetGroup = document.createElement('div');
-                targetGroup.className = 'customer-group';
+                targetGroup.className = 'customer-group collapsed';
                 targetGroup.setAttribute('data-customer', customerId);
                 targetGroup.innerHTML = `
                     <div class="customer-header" onclick="toggleCustomerGroup('${customerId}')">
@@ -6016,6 +6370,147 @@
             uploadArea.style.borderColor = 'rgba(88, 166, 255, 0.3)';
             uploadArea.style.background = 'rgba(13, 17, 23, 0.5)';
         }
+        
+        // Furniture Settings Modal Functions
+        let currentSettingsModel = null;
+        
+        function openFurnitureSettingsModal(model) {
+            currentSettingsModel = model;
+            
+            // Update modal title
+            document.getElementById('settingsModalTitle').textContent = 
+                `⚙️ Furniture Settings - ${model.title}`;
+            
+            // Update Product URL section
+            const editUrlButton = document.getElementById('editUrlButton');
+            const productUrlDesc = document.getElementById('productUrlDesc');
+            if (model.product_url) {
+                productUrlDesc.textContent = `Current URL: ${model.product_url}`;
+                editUrlButton.textContent = 'Edit';
+            } else {
+                productUrlDesc.textContent = 'Add a product page URL';
+                editUrlButton.textContent = 'Add';
+            }
+            
+            // Update Assignment section
+            const assignmentDesc = document.getElementById('assignmentDesc');
+            const assignButton = document.getElementById('assignButton');
+            if (model.customer_name) {
+                assignmentDesc.textContent = `Assigned to ${model.customer_name}`;
+                assignButton.textContent = 'Change';
+            } else {
+                assignmentDesc.textContent = 'Not assigned to any customer';
+                assignButton.textContent = 'Assign';
+            }
+            
+            // Update Variants section
+            const manageVariantsAction = document.getElementById('manageVariantsAction');
+            const variantCountDesc = document.getElementById('variantCountDesc');
+            if (model.variants && model.variants.length > 0) {
+                const variantCount = model.variants.length;
+                variantCountDesc.textContent = `${variantCount} variant${variantCount === 1 ? '' : 's'} available`;
+                manageVariantsAction.style.display = 'block';
+            } else {
+                manageVariantsAction.style.display = 'none';
+            }
+            
+            // Show modal
+            document.getElementById('furnitureSettingsModal').style.display = 'flex';
+        }
+        
+        function closeFurnitureSettingsModal() {
+            document.getElementById('furnitureSettingsModal').style.display = 'none';
+            currentSettingsModel = null;
+        }
+        
+        // Settings Modal Action Handlers
+        function handleEditUrl() {
+            if (!currentSettingsModel) return;
+            closeFurnitureSettingsModal();
+            
+            // Find the button element and trigger existing edit functionality
+            const modelCard = Array.from(document.querySelectorAll('.model-card')).find(card => 
+                card.querySelector('.model-id').textContent === currentSettingsModel.id
+            );
+            
+            if (modelCard) {
+                const editUrlBtn = modelCard.querySelector('.product-url-action, [data-model-id="' + currentSettingsModel.id + '"]');
+                if (editUrlBtn && editUrlBtn.onclick) {
+                    editUrlBtn.onclick.call(editUrlBtn);
+                } else {
+                    // Fallback to calling the function directly
+                    startEditProductUrl({
+                        getAttribute: (attr) => attr === 'data-model-id' ? currentSettingsModel.id : (currentSettingsModel.product_url ? '' : 'true'),
+                        dataset: { modelId: currentSettingsModel.id, empty: !currentSettingsModel.product_url }
+                    });
+                }
+            }
+        }
+        
+        function handleCopyLink() {
+            if (!currentSettingsModel) return;
+            const viewUrl = `${window.location.origin}/view?id=${currentSettingsModel.id}`;
+            copyToClipboard(viewUrl, document.getElementById('copyLinkButton'));
+        }
+        
+        function handleAssignCustomer() {
+            if (!currentSettingsModel) return;
+            closeFurnitureSettingsModal();
+            
+            // Create a temporary assign dropdown to reuse existing functionality
+            const tempContainer = document.createElement('div');
+            tempContainer.className = 'assign-dropdown';
+            tempContainer.innerHTML = `
+                <button class="action-button assign-button"></button>
+                <div class="assign-dropdown-content"></div>
+            `;
+            
+            // Temporarily add to DOM
+            document.body.appendChild(tempContainer);
+            
+            // Trigger the existing assign functionality
+            toggleAssignDropdown(
+                tempContainer.querySelector('.assign-button'), 
+                currentSettingsModel.id, 
+                currentSettingsModel.customer_id, 
+                currentSettingsModel.customer_name
+            );
+            
+            // Clean up after dropdown is closed
+            setTimeout(() => {
+                if (tempContainer.parentNode) {
+                    tempContainer.remove();
+                }
+            }, 100);
+        }
+        
+        function handleAddVariant() {
+            if (!currentSettingsModel) return;
+            closeFurnitureSettingsModal();
+            openVariantModal(currentSettingsModel.id, currentSettingsModel.title);
+        }
+        
+        function handleManageVariants() {
+            if (!currentSettingsModel) return;
+            // For now, close modal and let user interact with variants directly on the card
+            // This could be enhanced with a dedicated variant management modal in the future
+            closeFurnitureSettingsModal();
+            alert('You can manage variants by clicking on the variant chips on the furniture card, or add new variants using the "Add Variant" option.');
+        }
+        
+        function handleDeleteFurniture() {
+            if (!currentSettingsModel) return;
+            closeFurnitureSettingsModal();
+            deleteModel(currentSettingsModel.id, currentSettingsModel.cloudinary_public_id);
+        }
+        
+        // Close modal when clicking outside
+        document.addEventListener('click', function(event) {
+            const settingsModal = document.getElementById('furnitureSettingsModal');
+            if (event.target === settingsModal) {
+                closeFurnitureSettingsModal();
+            }
+        });
         
         async function updateImageFileName() {
             const fileInput = document.getElementById('imageFile');
