@@ -301,9 +301,13 @@ async function handleUpload(req, res) {
   }
 
   try {
-    // Parse multipart form data
-    const form = new multiparty.Form();
-    
+    // Parse multipart form data with increased limits
+    const form = new multiparty.Form({
+      maxFilesSize: 100 * 1024 * 1024, // 100MB
+      maxFields: 20,
+      maxFieldsSize: 2 * 1024 * 1024  // 2MB for form fields
+    });
+
     const { fields, files } = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
@@ -1008,9 +1012,13 @@ async function handleImageUpload(req, res) {
   }
 
   try {
-    // Parse multipart form data
-    const form = new multiparty.Form();
-    
+    // Parse multipart form data with increased limits
+    const form = new multiparty.Form({
+      maxFilesSize: 100 * 1024 * 1024, // 100MB
+      maxFields: 20,
+      maxFieldsSize: 2 * 1024 * 1024  // 2MB for form fields
+    });
+
     const { fields, files } = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
         if (err) reject(err);
