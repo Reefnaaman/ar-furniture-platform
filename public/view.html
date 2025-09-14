@@ -539,11 +539,6 @@
             showError('No model ID provided');
         } else {
             console.log('✅ Loading model with ID:', modelId);
-            console.log('🔍 User agent:', navigator.userAgent);
-            console.log('🔍 Is mobile:', /Android|iPhone|iPad/i.test(navigator.userAgent));
-            console.log('🔍 Document referrer:', document.referrer);
-            console.log('🔍 Window location:', window.location.href);
-
             loadModel(modelId, variantId);
         }
         
@@ -605,62 +600,7 @@
                 console.error('❌ Error applying dimension scaling:', error);
             }
         }
-
-        function launchWallpaperAR(modelInfo) {
-            console.log('🧱 Launching wallpaper AR:', modelInfo);
-
-            if (!modelInfo.metadata || !modelInfo.metadata.albedoUrl) {
-                showError('Wallpaper texture not available');
-                return;
-            }
-
-            // For wallpapers, we need to create a simple textured plane in AR
-            // Since model-viewer doesn't directly support this, we'll show instructions
-            // and fallback to the texture image
-
-            document.body.style.cssText = 'margin: 0; padding: 20px; background: linear-gradient(135deg, #0d1117, #161b22); color: white; font-family: Inter, sans-serif; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center;';
-
-            const dimensions = modelInfo.metadata.dimensions || { width: 2.44, height: 2.44 };
-
-            document.body.innerHTML = `
-                <div style="text-align: center; max-width: 400px;">
-                    <div style="margin-bottom: 30px;">
-                        <h1 style="font-size: 24px; margin-bottom: 16px;">🧱 ${modelInfo.title}</h1>
-                        <p style="color: #7d8590; font-size: 16px;">Wallpaper Preview - ${dimensions.width}m × ${dimensions.height}m</p>
-                    </div>
-
-                    <div style="margin-bottom: 30px;">
-                        <img src="${modelInfo.metadata.albedoUrl}"
-                             style="width: 300px; height: 300px; object-fit: cover; border-radius: 12px; border: 1px solid rgba(240, 246, 252, 0.1);"
-                             alt="Wallpaper texture" />
-                    </div>
-
-                    <div style="background: rgba(240, 246, 252, 0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(240, 246, 252, 0.1); margin-bottom: 20px;">
-                        <p style="color: #e6edf3; font-size: 14px; line-height: 1.6;">
-                            <strong>AR Wallpaper Instructions:</strong><br>
-                            This wallpaper texture will cover ${dimensions.width}m × ${dimensions.height}m when applied to a wall.
-                            Open this link on a device with AR support for full experience.
-                        </p>
-                    </div>
-
-                    <div style="display: flex; flex-direction: column; gap: 12px; width: 100%;">
-                        <button onclick="copyLink()" style="background: rgba(88, 166, 255, 0.2); color: #58a6ff; border: 1px solid rgba(88, 166, 255, 0.3); padding: 14px 20px; border-radius: 8px; font-size: 16px; cursor: pointer;">
-                            📋 Copy Link
-                        </button>
-                        <button onclick="window.history.back()" style="background: rgba(240, 246, 252, 0.1); color: #7d8590; border: 1px solid rgba(240, 246, 252, 0.2); padding: 14px 20px; border-radius: 8px; font-size: 16px; cursor: pointer;">
-                            ← Back
-                        </button>
-                    </div>
-                </div>
-            `;
-        }
-
-        function copyLink() {
-            navigator.clipboard.writeText(window.location.href).then(() => {
-                alert('Link copied to clipboard!');
-            });
-        }
-
+        
         async function loadModel(id, variantId = null) {
             try {
                 // Fetch model info first (needed for both desktop and mobile)
@@ -678,43 +618,11 @@
                 fetch(`/api/model/${id}/view${viewVariantParam}`, { method: 'POST' }).catch(() => {});
                 console.log(`📊 View tracked for model ${id}, variant: ${variantId || 'original'}`);
                 
-                // Check if this is a wallpaper with safe metadata parsing
-                let isWallpaper = false;
-                let metadata = null;
-                try {
-                    metadata = modelInfo.metadata;
-                    // Parse metadata if it's a string
-                    if (typeof metadata === 'string') {
-                        metadata = JSON.parse(metadata);
-                    }
-                    isWallpaper = metadata && metadata.type === 'wallpaper';
-                    console.log('🔍 Wallpaper check:', {
-                        originalMetadata: modelInfo.metadata,
-                        parsedMetadata: metadata,
-                        isWallpaper: isWallpaper
-                    });
-                } catch (error) {
-                    console.warn('⚠️ Error parsing metadata:', error);
-                    isWallpaper = false;
-                    metadata = null;
-                }
-
                 // For mobile - go straight to AR with variant support
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                    console.log('📱 Mobile device detected - preparing AR launch');
-                    console.log('📱 Is wallpaper:', isWallpaper);
-
-                    if (isWallpaper) {
-                        // Handle wallpaper AR differently
-                        console.log('🧱 Launching wallpaper AR');
-                        launchWallpaperAR(modelInfo);
-                        return;
-                    }
-
-                    console.log('📱 Setting up mobile AR for furniture');
                     document.body.style.visibility = 'hidden';
                     document.body.style.background = '#000';
-
+                    
                     let modelUrl = `/api/model/${id}`;
                     let selectedVariant = null;
                     
@@ -730,9 +638,7 @@
                         }
                     }
                     
-                    console.log('📱 About to call launchDirectAR with:', { id, modelUrl, modelInfo: !!modelInfo, selectedVariant: !!selectedVariant });
                     launchDirectAR(id, modelUrl, modelInfo, selectedVariant);
-                    console.log('📱 launchDirectAR call completed');
                     return;
                 }
                 
@@ -824,23 +730,16 @@
                                         <h2 class="gradient-text" style="margin: 0 0 8px 0; font-size: 32px;">${modelInfo.title}</h2>
                                     </div>
                                 </div>
-                                ${isWallpaper && metadata && metadata.albedoUrl ? `
-                                    <div class="wallpaper-desktop-preview" style="width: 500px; height: 450px; background: url('${metadata.albedoUrl}') center/cover; border-radius: 12px; border: 1px solid rgba(240, 246, 252, 0.08); position: relative; display: flex; align-items: center; justify-content: center;">
-                                        <div style="position: absolute; top: 16px; left: 16px; background: rgba(0,0,0,0.7); color: white; padding: 8px 12px; border-radius: 8px; font-size: 14px;">🧱 AR Wallpaper</div>
-                                        <div style="background: rgba(0,0,0,0.5); color: white; padding: 12px 20px; border-radius: 12px; font-size: 16px; backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.1);">Tap to View in AR</div>
-                                    </div>
-                                ` : `
-                                    <model-viewer
-                                        id="desktopModelViewer"
-                                        src="${desktopModelUrl}"
-                                        ios-src="/api/model/${id}/usdz"
-                                        alt="${modelInfo.title}"
-                                        ar-scale="fixed"
-                                        camera-controls
-                                        auto-rotate
-                                        style="width: 500px; height: 450px; background: ${backgroundColorParam ? generateBackgroundGradient(backgroundColorParam) : 'linear-gradient(135deg, #0d1117, #161b22)'}; border-radius: 12px; padding: 20px; border: 1px solid rgba(240, 246, 252, 0.08);">
-                                    </model-viewer>
-                                `}
+                                <model-viewer
+                                    id="desktopModelViewer"
+                                    src="${desktopModelUrl}"
+                                    ios-src="/api/model/${id}/usdz"
+                                    alt="${modelInfo.title}"
+                                    ar-scale="fixed"
+                                    camera-controls
+                                    auto-rotate
+                                    style="width: 500px; height: 450px; background: ${backgroundColorParam ? generateBackgroundGradient(backgroundColorParam) : 'linear-gradient(135deg, #0d1117, #161b22)'}; border-radius: 12px; padding: 20px; border: 1px solid rgba(240, 246, 252, 0.08);">
+                                </model-viewer>
                                 
                                 <!-- Variant Colors Section -->
                                 ${modelInfo.variants && modelInfo.variants.length > 0 ? `
@@ -1313,14 +1212,11 @@
 
         // Direct AR launch with variant support
         function launchDirectAR(modelId, modelUrl, modelInfo = null, selectedVariant = null) {
-            console.log('🚀 launchDirectAR started with:', { modelId, modelUrl, modelInfo: !!modelInfo, selectedVariant: !!selectedVariant });
-
             // Keep body completely black and hidden
             document.body.style.cssText = 'visibility: hidden; background: #000 !important; margin: 0; padding: 0;';
-
+            
             // Clear any existing content
             document.body.innerHTML = '';
-            console.log('📱 Body cleared and hidden for AR');
             
             // Create invisible model-viewer
             const modelViewer = document.createElement('model-viewer');
@@ -1335,11 +1231,6 @@
             modelViewer.setAttribute('ar-scale', 'fixed'); // Use fixed scaling for accurate real-world dimensions
             modelViewer.setAttribute('environment-image', 'neutral'); // Use neutral lighting
             modelViewer.setAttribute('exposure', '1'); // Optimize exposure for AR
-
-            // Optimize loading performance
-            modelViewer.setAttribute('loading', 'eager'); // Start loading immediately
-            modelViewer.setAttribute('reveal', 'manual'); // Don't auto-reveal while loading
-            modelViewer.setAttribute('preload', ''); // Preload the model
             
             // Apply dimension scaling if available
             if (modelInfo.width_meters || modelInfo.height_meters || modelInfo.depth_meters) {
@@ -1363,109 +1254,23 @@
 
             // Wait for model to load, then activate AR
             let arActivated = false;
-
+            
             modelViewer.addEventListener('load', () => {
-                console.log('📱 Model load event fired');
-                console.log('📱 canActivateAR:', modelViewer.canActivateAR);
-                console.log('📱 arActivated flag:', arActivated);
-
                 if (!arActivated && modelViewer.canActivateAR) {
                     arActivated = true;
                     console.log('🚀 Model loaded, activating AR...');
-                    try {
-                        modelViewer.activateAR();
-                        console.log('✅ AR activation called successfully');
-                    } catch (error) {
-                        console.error('❌ AR activation failed:', error);
-                    }
-                } else {
-                    console.warn('⚠️ Cannot activate AR - canActivateAR:', modelViewer.canActivateAR, 'arActivated:', arActivated);
+                    modelViewer.activateAR();
                 }
             });
-
-            modelViewer.addEventListener('error', (event) => {
-                console.error('❌ Model viewer error:', event);
-                console.error('❌ Error details:', event.detail);
-                console.error('❌ Model URL that failed:', modelViewer.src);
-
-                // Try to recover with fallback
-                setTimeout(() => {
-                    console.log('🔄 Attempting model reload...');
-                    const originalSrc = modelViewer.src;
-                    modelViewer.src = ''; // Clear source
-                    setTimeout(() => {
-                        modelViewer.src = originalSrc; // Reload
-                    }, 1000);
-                }, 2000);
-            });
-
-            // Add progress tracking
-            modelViewer.addEventListener('progress', (event) => {
-                const progress = event.detail.totalProgress;
-                console.log('📱 Model loading progress:', Math.round(progress * 100) + '%');
-            });
-
-            // Add AR status tracking
-            modelViewer.addEventListener('ar-status', (event) => {
-                console.log('📱 AR Status changed:', event.detail.status);
-                if (event.detail.status === 'failed') {
-                    console.error('❌ AR failed to start');
-                }
-            });
-
+            
             // Backup: Try AR after a delay if load event doesn't fire
             setTimeout(() => {
-                console.log('⏰ Timeout check - arActivated:', arActivated);
-                console.log('⏰ canActivateAR:', modelViewer.canActivateAR);
-
                 if (!arActivated && modelViewer.activateAR) {
                     arActivated = true;
                     console.log('🚀 Activating AR via timeout...');
-                    try {
-                        modelViewer.activateAR();
-                        console.log('✅ Timeout AR activation called successfully');
-                    } catch (error) {
-                        console.error('❌ Timeout AR activation failed:', error);
-                    }
-                } else {
-                    console.log('⏰ Timeout check - not activating AR');
+                    modelViewer.activateAR();
                 }
-            }, 5000); // Increased from 2s to 5s for better loading
-
-            // Emergency fallback - force AR activation after 8 seconds if still not activated
-            setTimeout(() => {
-                if (!arActivated) {
-                    console.log('🚨 Emergency AR activation - forcing activation after 8s timeout');
-                    try {
-                        arActivated = true;
-                        modelViewer.activateAR();
-                        console.log('✅ Emergency AR activation attempted');
-                    } catch (error) {
-                        console.error('❌ Emergency AR activation failed:', error);
-                        console.log('🔄 Redirecting to customer page due to AR failure...');
-
-                        // If AR completely fails, show error and return
-                        const returnUrl = getReturnUrl(modelInfo);
-                        if (returnUrl && returnUrl !== 'javascript:history.back()') {
-                            window.location.href = returnUrl;
-                        } else {
-                            history.back();
-                        }
-                    }
-                }
-            }, 8000);
-
-            // Additional safety net - check if AR session exits unexpectedly
-            modelViewer.addEventListener('ar-status', (event) => {
-                console.log('📱 AR Status:', event.detail.status);
-                if (event.detail.status === 'session-started') {
-                    console.log('✅ AR session started successfully');
-                } else if (event.detail.status === 'failed') {
-                    console.error('❌ AR session failed:', event.detail);
-                } else if (event.detail.status === 'not-presenting') {
-                    console.log('📱 AR session ended/not presenting');
-                }
-            });
+            }, 2000);
 
             // View already tracked once per page load
         }
@@ -1755,9 +1560,6 @@
         
         // Get return URL using hybrid approach: variant product_url > model product_url > returnUrl parameter > referrer > history back
         function getReturnUrl(modelInfo = null) {
-            console.log('🔍 getReturnUrl called with modelInfo:', modelInfo);
-            console.log('🔍 currentVariantData:', window.currentVariantData);
-
             // Priority 1a: Variant-specific product URL (highest priority)
             if (window.currentVariantData && window.currentVariantData.product_url) {
                 console.log('🎨 Using variant product URL from database:', window.currentVariantData.product_url);
