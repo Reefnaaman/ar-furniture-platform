@@ -30,6 +30,11 @@
     <!-- Model Viewer -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     
+    <!-- Temporary redirect to admin until homepage is finalized -->
+    <script>
+        window.location.href = '/admin';
+    </script>
+    
     <style>
         * {
             margin: 0;
@@ -204,6 +209,27 @@
             background-clip: text;
         }
         
+        .hero-title .highlight-yours {
+            font-weight: 600;
+            background: linear-gradient(135deg, #58A6FF 0%, #7877C6 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(88, 166, 255, 0.3);
+        }
+        
+        .hero-title .highlight-theirs {
+            font-weight: 600;
+            background: linear-gradient(135deg, #FF6B6B 0%, #FFE66D 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 0 20px rgba(255, 107, 107, 0.3);
+            text-decoration: underline;
+            text-decoration-color: rgba(255, 107, 107, 0.4);
+            text-underline-offset: 8px;
+        }
+        
         .hero-subtitle {
             font-size: 20px;
             font-weight: 300;
@@ -296,58 +322,44 @@
             font-weight: 600;
             background: linear-gradient(135deg, 
                 #ffffff 0%,
-                #e8f4fd 15%,
-                rgba(88, 166, 255, 0.8) 35%,
-                rgba(120, 119, 198, 0.9) 50%,
-                rgba(88, 166, 255, 0.7) 65%,
-                #e8f4fd 85%,
+                #e8f4fd 20%,
+                rgba(88, 166, 255, 0.9) 40%,
+                rgba(120, 119, 198, 0.95) 60%,
+                #e8f4fd 80%,
                 #ffffff 100%);
-            background-size: 200% 100%;
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
             letter-spacing: -0.8px;
             line-height: 1;
             font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Inter', sans-serif;
-            transition: all 0.4s cubic-bezier(0.23, 1, 0.32, 1);
-            filter: drop-shadow(0 2px 8px rgba(88, 166, 255, 0.25));
-            animation: shimmer 3s ease-in-out infinite;
-            position: relative;
-        }
-        
-        @keyframes shimmer {
-            0%, 100% {
-                background-position: 0% 50%;
-            }
-            50% {
-                background-position: 100% 50%;
-            }
+            transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
+            filter: drop-shadow(0 2px 8px rgba(88, 166, 255, 0.3));
         }
         
         .hero-stat-label {
-            font-size: 11px;
-            color: rgba(255, 255, 255, 0.6);
-            font-weight: 400;
+            font-size: 13px;
+            color: rgba(255, 255, 255, 0.85);
+            font-weight: 500;
             text-align: center;
-            letter-spacing: 0.5px;
-            line-height: 1.2;
-            margin-bottom: 2px;
-            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            line-height: 1.3;
+            margin-bottom: 4px;
         }
         
         .hero-stat-source {
-            font-size: 9px;
-            color: rgba(255, 255, 255, 0.4);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.7);
             text-decoration: none;
-            font-weight: 400;
+            font-weight: 500;
             letter-spacing: 0.3px;
             transition: all 0.3s cubic-bezier(0.23, 1, 0.32, 1);
-            border-bottom: 0.5px solid transparent;
+            border-bottom: 1px solid transparent;
         }
         
         .hero-stat-source:hover {
-            color: rgba(255, 255, 255, 0.7);
-            border-bottom-color: rgba(255, 255, 255, 0.3);
+            color: rgba(88, 166, 255, 0.9);
+            border-bottom-color: rgba(88, 166, 255, 0.5);
         }
         
         .hero-stat-divider {
@@ -372,8 +384,8 @@
         
         .carousel-container {
             position: relative;
-            width: 100%;
-            height: 500px;
+            width: 600px;
+            height: 600px;
             /* Hardware acceleration for smooth transitions */
             transform: translateZ(0);
             backface-visibility: hidden;
@@ -382,7 +394,7 @@
         
         .hero-model {
             width: 100%;
-            height: 500px;
+            height: 600px;
             border-radius: 24px;
             background: var(--glass);
             border: 1px solid var(--border);
@@ -408,14 +420,14 @@
         .carousel-item.active {
             opacity: 1;
             visibility: visible;
-            transform: scale(1);
+            transform: scale(1) translateZ(0);
             z-index: 2;
         }
         
         .carousel-item.fade-out {
             opacity: 0;
             visibility: visible;
-            transform: scale(1.05);
+            transform: scale(1.05) translateZ(0);
             z-index: 1;
             transition: all 1.2s cubic-bezier(0.55, 0.06, 0.68, 0.19);
         }
@@ -493,26 +505,39 @@
             display: flex;
             align-items: center;
             gap: var(--spacing-xlarge);
-            animation: scroll-rtl 60s linear infinite;
             filter: grayscale(1);
-            opacity: 0.6;
+            opacity: 0.8;
             transition: filter 0.3s ease, opacity 0.3s ease;
             white-space: nowrap;
-            width: max-content;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap;
         }
         
         .trust-carousel:hover {
             filter: grayscale(0.3);
-            opacity: 0.9;
-            animation-play-state: paused;
+            opacity: 1;
+        }
+        
+        .trust-logo {
+            font-weight: 700;
+            font-size: 18px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            transition: color 0.3s ease;
+        }
+        
+        .trust-logo:hover {
+            color: var(--text-primary);
         }
         
         @keyframes scroll-rtl {
             0% {
-                transform: translateX(100vw);
+                transform: translateX(0);
             }
             100% {
-                transform: translateX(-100%);
+                transform: translateX(-50%);
             }
         }
         
@@ -656,7 +681,7 @@
         
         /* Pricing Section */
         .pricing {
-            padding: var(--spacing-section) var(--spacing-medium);
+            padding: var(--spacing-large) var(--spacing-medium);
             position: relative;
             z-index: 2;
         }
@@ -671,7 +696,7 @@
             background: linear-gradient(135deg, var(--glass) 0%, rgba(240, 246, 252, 0.03) 100%);
             border: 1px solid var(--border);
             border-radius: 24px;
-            padding: var(--spacing-xlarge);
+            padding: var(--spacing-large);
             margin-top: var(--spacing-large);
             position: relative;
             overflow: hidden;
@@ -852,11 +877,11 @@
             }
             
             .hero-content {
-                order: 2;
+                order: 1;
             }
             
             .hero-visual {
-                order: 1;
+                order: 2;
             }
             
             .hero-buttons {
@@ -879,11 +904,11 @@
             }
             
             .hero-stat-label {
-                font-size: 10px;
+                font-size: 12px;
             }
             
             .hero-stat-source {
-                font-size: 8px;
+                font-size: 10px;
             }
             
             .hero-title {
@@ -942,7 +967,8 @@
             
             .hero-model,
             .carousel-container {
-                height: 300px;
+                width: 350px;
+                height: 350px;
             }
             
             .carousel-dots {
@@ -1011,10 +1037,9 @@
     <section class="hero">
         <div class="hero-container">
             <div class="hero-content">
-                <h1 class="hero-title">רהיטים שמתעוררים לחיים</h1>
+                <h1 class="hero-title">המוצר <span class="highlight-yours">שלכם</span><br>בחדר <span class="highlight-theirs">שלהם</span></h1>
                 <p class="hero-subtitle">
-                    אפשרו ללקוחות שלכם להמחיש רהיטים בחלל שלהם באופן מיידי.
-                    הפכו גלישה לרכישה עם מציאות רבודה.
+                    יותר מכירות, פחות החזרות. פשוט.
                 </p>
                 
                 <!-- Conversion Stats -->
@@ -1051,7 +1076,9 @@
                         disable-zoom
                         interaction-prompt="none"
                         ar
-                        ar-modes="webxr scene-viewer quick-look">
+                        ar-modes="webxr scene-viewer quick-look"
+                        camera-orbit="0deg 75deg 4m"
+                        field-of-view="20deg">
                     </model-viewer>
                     
                     <model-viewer 
@@ -1066,7 +1093,9 @@
                         disable-zoom
                         interaction-prompt="none"
                         ar
-                        ar-modes="webxr scene-viewer quick-look">
+                        ar-modes="webxr scene-viewer quick-look"
+                        camera-orbit="0deg 75deg 4m"
+                        field-of-view="20deg">
                     </model-viewer>
                     
                     <model-viewer 
@@ -1081,7 +1110,9 @@
                         disable-zoom
                         interaction-prompt="none"
                         ar
-                        ar-modes="webxr scene-viewer quick-look">
+                        ar-modes="webxr scene-viewer quick-look"
+                        camera-orbit="0deg 75deg 4m"
+                        field-of-view="20deg">
                     </model-viewer>
                     
                     <div class="carousel-dots">
@@ -1274,7 +1305,7 @@
             </p>
             
             <div class="free-model-card">
-                <div class="feature-icon" style="width: 80px; height: 80px; margin: 0 auto var(--spacing-medium);">
+                <div class="feature-icon" style="width: 60px; height: 60px; margin: 0 auto var(--spacing-small);">
                     <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
                         <polyline points="3.27 6.96 12 12.01 20.73 6.96"></polyline>
