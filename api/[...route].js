@@ -2036,8 +2036,16 @@ async function handleCloudinaryConfig(req, res) {
       timestamp: timestamp
     };
 
-    // Generate signature
-    const signature = cloudinary.utils.api_sign_request(uploadParams, process.env.CLOUDINARY_API_SECRET);
+    // Generate signature manually (Cloudinary library might be buggy)
+    const crypto = await import('crypto');
+    const sortedParams = Object.keys(uploadParams)
+      .sort()
+      .map(key => `${key}=${uploadParams[key]}`)
+      .join('&');
+
+    const signature = crypto.createHash('sha1')
+      .update(sortedParams + process.env.CLOUDINARY_API_SECRET)
+      .digest('hex');
 
     return res.status(200).json({
       cloudName: process.env.CLOUDINARY_CLOUD_NAME,
