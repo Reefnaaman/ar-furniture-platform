@@ -1225,9 +1225,8 @@
             // Add iOS-specific USDZ file with proper scaling for Quick Look
             modelViewer.setAttribute('ios-src', `/api/model/${modelId}/usdz`);
             modelViewer.setAttribute('ar', '');
-            // Prioritize Scene Viewer (more reliable) over WebXR for mobile
-            // WebXR can be unstable on some devices, Scene Viewer is more reliable
-            modelViewer.setAttribute('ar-modes', 'scene-viewer webxr quick-look');
+            // ARCore Scene Viewer for Android, Quick Look for iOS
+            modelViewer.setAttribute('ar-modes', 'scene-viewer quick-look');
             modelViewer.setAttribute('ar-scale', 'fixed'); // Use fixed scaling for accurate real-world dimensions
             modelViewer.setAttribute('environment-image', 'neutral'); // Use neutral lighting
             modelViewer.setAttribute('exposure', '1'); // Optimize exposure for AR
