@@ -1317,6 +1317,11 @@
             modelViewer.setAttribute('ar-scale', 'fixed'); // Use fixed scaling for accurate real-world dimensions
             modelViewer.setAttribute('environment-image', 'neutral'); // Use neutral lighting
             modelViewer.setAttribute('exposure', '1'); // Optimize exposure for AR
+
+            // Optimize loading performance
+            modelViewer.setAttribute('loading', 'eager'); // Start loading immediately
+            modelViewer.setAttribute('reveal', 'manual'); // Don't auto-reveal while loading
+            modelViewer.setAttribute('preload', ''); // Preload the model
             
             // Apply dimension scaling if available
             if (modelInfo.width_meters || modelInfo.height_meters || modelInfo.depth_meters) {
@@ -1360,8 +1365,26 @@
                 }
             });
 
-            modelViewer.addEventListener('error', (error) => {
-                console.error('❌ Model viewer error:', error);
+            modelViewer.addEventListener('error', (event) => {
+                console.error('❌ Model viewer error:', event);
+                console.error('❌ Error details:', event.detail);
+                console.error('❌ Model URL that failed:', modelViewer.src);
+
+                // Try to recover with fallback
+                setTimeout(() => {
+                    console.log('🔄 Attempting model reload...');
+                    const originalSrc = modelViewer.src;
+                    modelViewer.src = ''; // Clear source
+                    setTimeout(() => {
+                        modelViewer.src = originalSrc; // Reload
+                    }, 1000);
+                }, 2000);
+            });
+
+            // Add progress tracking
+            modelViewer.addEventListener('progress', (event) => {
+                const progress = event.detail.totalProgress;
+                console.log('📱 Model loading progress:', Math.round(progress * 100) + '%');
             });
 
             // Add AR status tracking
@@ -1389,7 +1412,42 @@
                 } else {
                     console.log('⏰ Timeout check - not activating AR');
                 }
-            }, 2000);
+            }, 5000); // Increased from 2s to 5s for better loading
+
+            // Emergency fallback - force AR activation after 8 seconds if still not activated
+            setTimeout(() => {
+                if (!arActivated) {
+                    console.log('🚨 Emergency AR activation - forcing activation after 8s timeout');
+                    try {
+                        arActivated = true;
+                        modelViewer.activateAR();
+                        console.log('✅ Emergency AR activation attempted');
+                    } catch (error) {
+                        console.error('❌ Emergency AR activation failed:', error);
+                        console.log('🔄 Redirecting to customer page due to AR failure...');
+
+                        // If AR completely fails, show error and return
+                        const returnUrl = getReturnUrl(modelInfo);
+                        if (returnUrl && returnUrl !== 'javascript:history.back()') {
+                            window.location.href = returnUrl;
+                        } else {
+                            history.back();
+                        }
+                    }
+                }
+            }, 8000);
+
+            // Additional safety net - check if AR session exits unexpectedly
+            modelViewer.addEventListener('ar-status', (event) => {
+                console.log('📱 AR Status:', event.detail.status);
+                if (event.detail.status === 'session-started') {
+                    console.log('✅ AR session started successfully');
+                } else if (event.detail.status === 'failed') {
+                    console.error('❌ AR session failed:', event.detail);
+                } else if (event.detail.status === 'not-presenting') {
+                    console.log('📱 AR session ended/not presenting');
+                }
+            });
 
             // View already tracked once per page load
         }
