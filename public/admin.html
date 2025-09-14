@@ -4397,53 +4397,20 @@
                 const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
                 console.log(`📦 Starting direct upload: ${fileSizeMB}MB`);
 
-                // Step 1: Get Cloudinary upload configuration
-                document.getElementById('uploadStatus').textContent = 'Getting upload configuration...';
-                document.getElementById('progressBar').style.width = '10%';
-                document.getElementById('progressPercentage').textContent = '10%';
-
-                const configResponse = await fetch('/api/cloudinary-config');
-                if (!configResponse.ok) {
-                    throw new Error('Failed to get upload configuration');
-                }
-                const config = await configResponse.json();
-
-                // DEBUG: Log the config to see what we're getting
-                console.log('🔧 Cloudinary config received:', {
-                    cloudName: config.cloudName,
-                    apiKey: config.apiKey,
-                    timestamp: config.timestamp,
-                    signature: config.signature?.substring(0, 10) + '...',
-                    uploadParams: config.uploadParams
-                });
-
-                // Step 2: Upload directly to Cloudinary
+                // Direct unsigned upload to Cloudinary (simpler approach)
                 document.getElementById('uploadStatus').textContent = `Uploading ${fileSizeMB}MB directly to Cloudinary...`;
                 document.getElementById('progressBar').style.width = '30%';
                 document.getElementById('progressPercentage').textContent = '30%';
 
                 const cloudinaryFormData = new FormData();
                 cloudinaryFormData.append('file', selectedFile);
-                cloudinaryFormData.append('timestamp', config.timestamp);
-                cloudinaryFormData.append('signature', config.signature);
-                cloudinaryFormData.append('api_key', config.apiKey);
+                cloudinaryFormData.append('upload_preset', 'ml_default'); // Use default unsigned preset
                 cloudinaryFormData.append('folder', 'furniture-models');
-                cloudinaryFormData.append('resource_type', 'raw');
-                cloudinaryFormData.append('upload_preset', 'furniture_models');
 
-                // DEBUG: Log what we're sending to Cloudinary
-                console.log('📤 Sending to Cloudinary:', {
-                    url: `https://api.cloudinary.com/v1_1/${config.cloudName}/raw/upload`,
-                    timestamp: config.timestamp,
-                    signature: config.signature?.substring(0, 10) + '...',
-                    api_key: config.apiKey,
-                    folder: 'furniture-models',
-                    resource_type: 'raw',
-                    fileSize: selectedFile.size
-                });
+                console.log('📤 Using unsigned upload to Cloudinary');
 
                 const cloudinaryUpload = await fetch(
-                    `https://api.cloudinary.com/v1_1/${config.cloudName}/raw/upload`,
+                    `https://api.cloudinary.com/v1_1/djjixqxzy/raw/upload`,
                     {
                         method: 'POST',
                         body: cloudinaryFormData

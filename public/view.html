@@ -1225,9 +1225,9 @@
             // Add iOS-specific USDZ file with proper scaling for Quick Look
             modelViewer.setAttribute('ios-src', `/api/model/${modelId}/usdz`);
             modelViewer.setAttribute('ar', '');
-            // Prioritize WebXR and Scene Viewer for better scaling support
-            // Quick Look doesn't respect ar-scale="fixed" so we put it last
-            modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
+            // Prioritize Scene Viewer (more reliable) over WebXR for mobile
+            // WebXR can be unstable on some devices, Scene Viewer is more reliable
+            modelViewer.setAttribute('ar-modes', 'scene-viewer webxr quick-look');
             modelViewer.setAttribute('ar-scale', 'fixed'); // Use fixed scaling for accurate real-world dimensions
             modelViewer.setAttribute('environment-image', 'neutral'); // Use neutral lighting
             modelViewer.setAttribute('exposure', '1'); // Optimize exposure for AR
@@ -1256,21 +1256,51 @@
             let arActivated = false;
             
             modelViewer.addEventListener('load', () => {
+                console.log('📱 Model load event fired');
+                console.log('📱 canActivateAR:', modelViewer.canActivateAR);
                 if (!arActivated && modelViewer.canActivateAR) {
                     arActivated = true;
                     console.log('🚀 Model loaded, activating AR...');
-                    modelViewer.activateAR();
+                    try {
+                        modelViewer.activateAR();
+                        console.log('✅ AR activation call successful');
+                    } catch (error) {
+                        console.error('❌ AR activation failed:', error);
+                    }
+                } else {
+                    console.warn('⚠️ Cannot activate AR on load - canActivateAR:', modelViewer.canActivateAR, 'arActivated:', arActivated);
                 }
+            });
+
+            // Add AR session status monitoring
+            modelViewer.addEventListener('ar-status', (event) => {
+                console.log('📱 AR Status:', event.detail.status);
+                if (event.detail.status === 'session-started') {
+                    console.log('✅ AR session started successfully');
+                } else if (event.detail.status === 'failed') {
+                    console.error('❌ AR session failed');
+                } else if (event.detail.status === 'not-presenting') {
+                    console.log('⚠️ AR not presenting - session ended or failed to start');
+                }
+            });
+
+            // Add error monitoring
+            modelViewer.addEventListener('error', (event) => {
+                console.error('❌ Model viewer error:', event);
             });
             
             // Backup: Try AR after a delay if load event doesn't fire
             setTimeout(() => {
-                if (!arActivated && modelViewer.activateAR) {
+                if (!arActivated && modelViewer.canActivateAR) {
                     arActivated = true;
                     console.log('🚀 Activating AR via timeout...');
                     modelViewer.activateAR();
+                } else if (!arActivated) {
+                    console.warn('⚠️ AR not activated: canActivateAR =', modelViewer.canActivateAR);
+                    console.log('🔍 AR modes available:', modelViewer.getAttribute('ar-modes'));
+                    console.log('🔍 Model src:', modelViewer.src);
                 }
-            }, 2000);
+            }, 3000); // Increased to 3 seconds for slower networks
 
             // View already tracked once per page load
         }
