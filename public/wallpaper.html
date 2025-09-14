@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Wallpaper AR Upload - newfurniture.live</title>
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    
+    <!-- Meta Tags -->
+    <meta name="description" content="Upload wallpaper texture maps and see them in AR">
+    <meta name="keywords" content="wallpaper AR, texture maps, PBR materials, mosaic AR">
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --primary-color: #667eea;
+            --secondary-color: #764ba2;
+            --success-color: #10b981;
+            --warning-color: #f59e0b;
+            --error-color: #ef4444;
+            --bg-primary: #0d1117;
+            --bg-secondary: rgba(22, 27, 34, 0.95);
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --border: rgba(240, 246, 252, 0.1);
+            --glass: rgba(240, 246, 252, 0.05);
+        }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, var(--bg-primary) 0%, #161b22 100%);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        
+        .title {
+            font-size: 32px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #ffffff 0%, #a8a8a8 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            font-size: 16px;
+        }
+        
+        .upload-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .upload-zone {
+            border: 2px dashed var(--border);
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .upload-zone.drag-over {
+            border-color: var(--primary-color);
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .upload-zone.uploading {
+            pointer-events: none;
+            opacity: 0.7;
+        }
+        
+        .upload-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            opacity: 0.5;
+        }
+        
+        .upload-text {
+            font-size: 18px;
+            margin-bottom: 10px;
+        }
+        
+        .upload-subtitle {
+            color: var(--text-secondary);
+            font-size: 14px;
+        }
+        
+        .file-input {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+        
+        .texture-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 30px;
+        }
+        
+        .texture-slot {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .texture-slot.filled {
+            border-color: var(--success-color);
+            background: rgba(16, 185, 129, 0.1);
+        }
+        
+        .texture-slot.required {
+            border-color: var(--warning-color);
+        }
+        
+        .texture-icon {
+            width: 40px;
+            height: 40px;
+            margin: 0 auto 10px;
+            opacity: 0.6;
+        }
+        
+        .texture-name {
+            font-weight: 500;
+            margin-bottom: 5px;
+        }
+        
+        .texture-description {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+        
+        .texture-preview {
+            width: 60px;
+            height: 60px;
+            border-radius: 8px;
+            object-fit: cover;
+            margin: 10px auto;
+            display: block;
+        }
+        
+        .remove-texture {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--error-color);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            cursor: pointer;
+            font-size: 12px;
+        }
+        
+        .options-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 30px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+        
+        .option-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .option-label {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .option-input {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 10px;
+            color: var(--text-primary);
+            font-size: 14px;
+        }
+        
+        .option-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 4px;
+            background: var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        
+        .generate-button {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: block;
+            margin: 30px auto 0;
+            min-width: 200px;
+        }
+        
+        .generate-button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        }
+        
+        .generate-button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status-message {
+            padding: 15px;
+            border-radius: 8px;
+            margin: 20px 0;
+            display: none;
+        }
+        
+        .status-message.success {
+            background: rgba(16, 185, 129, 0.1);
+            border: 1px solid var(--success-color);
+            color: var(--success-color);
+        }
+        
+        .status-message.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--error-color);
+            color: var(--error-color);
+        }
+        
+        .status-message.warning {
+            background: rgba(245, 158, 11, 0.1);
+            border: 1px solid var(--warning-color);
+            color: var(--warning-color);
+        }
+        
+        .validation-list {
+            margin-top: 15px;
+        }
+        
+        .validation-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .validation-icon {
+            width: 16px;
+            height: 16px;
+            flex-shrink: 0;
+        }
+        
+        .test-button {
+            background: transparent;
+            color: var(--primary-color);
+            border: 1px solid var(--primary-color);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 5px 0 0;
+            transition: all 0.3s ease;
+        }
+        
+        .test-button:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+        
+        .result-card {
+            background: var(--glass);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            display: none;
+        }
+        
+        .result-title {
+            font-size: 24px;
+            margin-bottom: 15px;
+        }
+        
+        .result-info {
+            color: var(--text-secondary);
+            margin-bottom: 20px;
+        }
+        
+        .result-actions {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .action-button {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .action-button.primary {
+            background: linear-gradient(135deg, var(--primary-color) 0%, var(--secondary-color) 100%);
+            color: white;
+            border: none;
+        }
+        
+        .action-button.secondary {
+            background: transparent;
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+        
+        .loading-spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--primary-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 8px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .texture-info {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+            font-size: 14px;
+        }
+        
+        .info-item {
+            text-align: center;
+            padding: 10px;
+            background: var(--bg-secondary);
+            border-radius: 8px;
+        }
+        
+        .info-value {
+            font-weight: 600;
+            color: var(--primary-color);
+        }
+        
+        .info-label {
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+        
+        @media (max-width: 768px) {
+            .container {
+                padding: 0 10px;
+            }
+            
+            .upload-card,
+            .options-card {
+                padding: 20px;
+            }
+            
+            .texture-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+            
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .result-actions {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1 class="title">Wallpaper AR Generator</h1>
+            <p class="subtitle">Upload texture maps to create realistic AR wallpaper experiences</p>
+        </div>
+
+        <!-- Upload Section -->
+        <div class="upload-card">
+            <h2>Upload Texture Maps</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 20px;">
+                Drop multiple texture files or click to select. Include albedo (required), normal, roughness, height, and AO maps.
+            </p>
+
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" class="file-input" multiple accept="image/*">
+                <div class="upload-icon">📁</div>
+                <div class="upload-text">Drag & drop texture files here</div>
+                <div class="upload-subtitle">or click to browse files</div>
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <!-- Texture Grid -->
+            <div class="texture-grid" id="textureGrid">
+                <div class="texture-slot required" data-type="albedo">
+                    <div class="texture-icon">🎨</div>
+                    <div class="texture-name">Albedo</div>
+                    <div class="texture-description">Base color/diffuse map (Required)</div>
+                </div>
+                <div class="texture-slot" data-type="normal">
+                    <div class="texture-icon">🌊</div>
+                    <div class="texture-name">Normal</div>
+                    <div class="texture-description">Surface bumps and details</div>
+                </div>
+                <div class="texture-slot" data-type="roughness">
+                    <div class="texture-icon">✨</div>
+                    <div class="texture-name">Roughness</div>
+                    <div class="texture-description">Surface shine/reflection</div>
+                </div>
+                <div class="texture-slot" data-type="height">
+                    <div class="texture-icon">⛰️</div>
+                    <div class="texture-name">Height</div>
+                    <div class="texture-description">Displacement/depth map</div>
+                </div>
+                <div class="texture-slot" data-type="ao">
+                    <div class="texture-icon">🌑</div>
+                    <div class="texture-name">AO</div>
+                    <div class="texture-description">Ambient occlusion/shadows</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Options Section -->
+        <div class="options-card">
+            <h3>Wallpaper Options</h3>
+            <div class="options-grid">
+                <div class="option-group">
+                    <label class="option-label">Width (meters)</label>
+                    <input type="number" class="option-input" id="widthInput" value="2" min="0.5" max="5" step="0.1">
+                </div>
+                <div class="option-group">
+                    <label class="option-label">Height (meters)</label>
+                    <input type="number" class="option-input" id="heightInput" value="2.5" min="0.5" max="4" step="0.1">
+                </div>
+                <div class="option-group">
+                    <label class="option-label">Horizontal Tiles</label>
+                    <input type="number" class="option-input" id="tileXInput" value="1" min="0.1" max="10" step="0.1">
+                </div>
+                <div class="option-group">
+                    <label class="option-label">Vertical Tiles</label>
+                    <input type="number" class="option-input" id="tileYInput" value="1" min="0.1" max="10" step="0.1">
+                </div>
+            </div>
+            
+            <div style="margin-top: 20px; text-align: center;">
+                <button class="test-button" onclick="generateTestMosaic()">Generate Test Mosaic</button>
+                <button class="test-button" onclick="clearAllTextures()">Clear All</button>
+            </div>
+        </div>
+
+        <!-- Status Messages -->
+        <div class="status-message" id="statusMessage"></div>
+
+        <!-- Generate Button -->
+        <button class="generate-button" id="generateButton" disabled onclick="generateWallpaper()">
+            Generate AR Wallpaper
+        </button>
+
+        <!-- Result Section -->
+        <div class="result-card" id="resultCard">
+            <h3 class="result-title">🎉 Wallpaper Generated Successfully!</h3>
+            <div class="result-info" id="resultInfo"></div>
+            <div class="texture-info" id="textureInfo"></div>
+            <div class="result-actions">
+                <a href="#" class="action-button primary" id="viewArButton">View in AR</a>
+                <button class="action-button secondary" onclick="downloadGLB()">Download GLB</button>
+                <button class="action-button secondary" onclick="resetUpload()">Create Another</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Load Three.js and GLTFExporter from CDN first
+        const loadScript = (src) => {
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = src;
+                script.onload = resolve;
+                script.onerror = reject;
+                document.head.appendChild(script);
+            });
+        };
+
+        // Simple wallpaper generator without modules
+
+        let uploadedFiles = {};
+        let generatedGLB = null;
+        let generatedInfo = null;
+
+        // Initialize drag and drop
+        const uploadZone = document.getElementById('uploadZone');
+        const fileInput = document.getElementById('fileInput');
+        const generateButton = document.getElementById('generateButton');
+        const statusMessage = document.getElementById('statusMessage');
+
+        // Drag and drop handlers
+        uploadZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadZone.classList.add('drag-over');
+        });
+
+        uploadZone.addEventListener('dragleave', () => {
+            uploadZone.classList.remove('drag-over');
+        });
+
+        uploadZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadZone.classList.remove('drag-over');
+            handleFiles(e.dataTransfer.files);
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            handleFiles(e.target.files);
+        });
+
+        function handleFiles(files) {
+            const validation = validateTextureFiles(files);
+            showStatus(validation);
+
+            if (validation.isValid || validation.hasAlbedo) {
+                processFiles(files);
+            }
+        }
+
+        function processFiles(files) {
+            Array.from(files).forEach(file => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    // Detect texture type
+                    const fileName = file.name.toLowerCase();
+                    let textureType = 'unknown';
+                    
+                    const patterns = {
+                        'albedo': /albedo|diffuse|color|base|_d\./i,
+                        'normal': /normal|norm|nrm|_n\./i,
+                        'roughness': /roughness|rough|_r\.|smoothness/i,
+                        'height': /height|displacement|disp|bump|_h\./i,
+                        'ao': /ao|ambient|occlusion|_ao\./i
+                    };
+
+                    for (const [type, pattern] of Object.entries(patterns)) {
+                        if (pattern.test(fileName)) {
+                            textureType = type;
+                            break;
+                        }
+                    }
+
+                    if (textureType !== 'unknown') {
+                        uploadedFiles[textureType] = {
+                            file: file,
+                            url: e.target.result
+                        };
+                        updateTextureSlot(textureType, e.target.result, file.name);
+                    }
+                };
+                reader.readAsDataURL(file);
+            });
+
+            setTimeout(updateGenerateButton, 100);
+        }
+
+        function updateTextureSlot(type, imageUrl, fileName) {
+            const slot = document.querySelector(`[data-type="${type}"]`);
+            if (!slot) return;
+
+            slot.classList.add('filled');
+            
+            // Remove existing preview
+            const existingPreview = slot.querySelector('.texture-preview');
+            const existingButton = slot.querySelector('.remove-texture');
+            if (existingPreview) existingPreview.remove();
+            if (existingButton) existingButton.remove();
+
+            // Add preview image
+            const img = document.createElement('img');
+            img.src = imageUrl;
+            img.className = 'texture-preview';
+            img.title = fileName;
+            slot.appendChild(img);
+
+            // Add remove button
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'remove-texture';
+            removeBtn.innerHTML = '×';
+            removeBtn.onclick = () => removeTexture(type);
+            slot.appendChild(removeBtn);
+        }
+
+        function removeTexture(type) {
+            delete uploadedFiles[type];
+            const slot = document.querySelector(`[data-type="${type}"]`);
+            slot.classList.remove('filled');
+            
+            const preview = slot.querySelector('.texture-preview');
+            const button = slot.querySelector('.remove-texture');
+            if (preview) preview.remove();
+            if (button) button.remove();
+            
+            updateGenerateButton();
+        }
+
+        function updateGenerateButton() {
+            const hasAlbedo = uploadedFiles.albedo;
+            generateButton.disabled = !hasAlbedo;
+            
+            if (hasAlbedo) {
+                generateButton.textContent = `Generate AR Wallpaper (${Object.keys(uploadedFiles).length} textures)`;
+            } else {
+                generateButton.textContent = 'Albedo texture required';
+            }
+        }
+
+        async function generateWallpaper() {
+            if (!uploadedFiles.albedo) {
+                showStatus({ errors: ['Albedo texture is required'] });
+                return;
+            }
+
+            generateButton.disabled = true;
+            generateButton.innerHTML = '<span class="loading-spinner"></span>Generating GLB...';
+            
+            try {
+                const options = {
+                    width: parseFloat(document.getElementById('widthInput').value),
+                    height: parseFloat(document.getElementById('heightInput').value),
+                    tileX: parseFloat(document.getElementById('tileXInput').value),
+                    tileY: parseFloat(document.getElementById('tileYInput').value),
+                    displacementScale: 0.05
+                };
+
+                const files = Object.values(uploadedFiles).map(item => item.file);
+                const result = await createWallpaperFromFiles(files, options);
+                
+                generatedGLB = result.blob;
+                generatedInfo = result.info;
+                
+                showResult(result);
+                
+            } catch (error) {
+                console.error('Generation failed:', error);
+                showStatus({ errors: [error.message] });
+                generateButton.disabled = false;
+                generateButton.textContent = 'Generate AR Wallpaper';
+            }
+        }
+
+        function showResult(result) {
+            document.getElementById('resultCard').style.display = 'block';
+            document.getElementById('resultInfo').innerHTML = `
+                Generated ${result.info.size} GLB file with ${result.info.detectedTypes.length} texture maps
+            `;
+            
+            const textureInfo = document.getElementById('textureInfo');
+            textureInfo.innerHTML = `
+                <div class="info-item">
+                    <div class="info-value">${result.info.dimensions}</div>
+                    <div class="info-label">Dimensions</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-value">${result.info.tiling}</div>
+                    <div class="info-label">Tiling</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-value">${result.info.size}</div>
+                    <div class="info-label">File Size</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-value">${result.info.detectedTypes.length}</div>
+                    <div class="info-label">Textures</div>
+                </div>
+            `;
+
+            // Create blob URL for AR viewing
+            const blobUrl = URL.createObjectURL(generatedGLB);
+            const viewButton = document.getElementById('viewArButton');
+            viewButton.href = `/wallpaper-view.html?glb=${encodeURIComponent(blobUrl)}`;
+            
+            generateButton.style.display = 'none';
+            showStatus({ success: ['Wallpaper generated successfully! Ready for AR viewing.'] });
+        }
+
+        async function generateTestMosaic() {
+            generateButton.disabled = true;
+            generateButton.innerHTML = '<span class="loading-spinner"></span>Generating Test...';
+            
+            try {
+                const generator = new WallpaperGenerator();
+                const options = {
+                    width: parseFloat(document.getElementById('widthInput').value),
+                    height: parseFloat(document.getElementById('heightInput').value),
+                    tileX: parseFloat(document.getElementById('tileXInput').value),
+                    tileY: parseFloat(document.getElementById('tileYInput').value)
+                };
+
+                generatedGLB = await generator.createTestMosaic(options);
+                generatedInfo = {
+                    detectedTypes: [{ type: 'albedo' }, { type: 'normal' }],
+                    dimensions: `${options.width}m x ${options.height}m`,
+                    tiling: `${options.tileX} x ${options.tileY}`,
+                    size: `${(generatedGLB.size / 1024 / 1024).toFixed(2)}MB`
+                };
+                
+                showResult({ info: generatedInfo });
+                
+            } catch (error) {
+                console.error('Test generation failed:', error);
+                showStatus({ errors: [error.message] });
+            } finally {
+                generateButton.disabled = false;
+                generateButton.textContent = 'Generate AR Wallpaper';
+            }
+        }
+
+        function clearAllTextures() {
+            uploadedFiles = {};
+            document.querySelectorAll('.texture-slot').forEach(slot => {
+                slot.classList.remove('filled');
+                const preview = slot.querySelector('.texture-preview');
+                const button = slot.querySelector('.remove-texture');
+                if (preview) preview.remove();
+                if (button) button.remove();
+            });
+            updateGenerateButton();
+            document.getElementById('statusMessage').style.display = 'none';
+        }
+
+        function downloadGLB() {
+            if (!generatedGLB) return;
+            
+            const url = URL.createObjectURL(generatedGLB);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'wallpaper.glb';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function resetUpload() {
+            clearAllTextures();
+            document.getElementById('resultCard').style.display = 'none';
+            generateButton.style.display = 'block';
+            generatedGLB = null;
+            generatedInfo = null;
+        }
+
+        function showStatus(validation) {
+            const statusDiv = statusMessage;
+            statusDiv.innerHTML = '';
+            statusDiv.style.display = 'none';
+
+            if (validation.errors && validation.errors.length > 0) {
+                statusDiv.className = 'status-message error';
+                statusDiv.innerHTML = `
+                    <strong>Errors:</strong>
+                    <div class="validation-list">
+                        ${validation.errors.map(error => `
+                            <div class="validation-item">
+                                <span class="validation-icon">❌</span>
+                                ${error}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                statusDiv.style.display = 'block';
+            } else if (validation.warnings && validation.warnings.length > 0) {
+                statusDiv.className = 'status-message warning';
+                statusDiv.innerHTML = `
+                    <strong>Warnings:</strong>
+                    <div class="validation-list">
+                        ${validation.warnings.map(warning => `
+                            <div class="validation-item">
+                                <span class="validation-icon">⚠️</span>
+                                ${warning}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                statusDiv.style.display = 'block';
+            } else if (validation.success) {
+                statusDiv.className = 'status-message success';
+                statusDiv.innerHTML = `
+                    <div class="validation-list">
+                        ${validation.success.map(msg => `
+                            <div class="validation-item">
+                                <span class="validation-icon">✅</span>
+                                ${msg}
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                statusDiv.style.display = 'block';
+            }
+        }
+
+        // Make functions globally available
+        window.generateTestMosaic = generateTestMosaic;
+        window.clearAllTextures = clearAllTextures;
+        window.generateWallpaper = generateWallpaper;
+        window.downloadGLB = downloadGLB;
+        window.resetUpload = resetUpload;
+    </script>
+</body>
+</html>

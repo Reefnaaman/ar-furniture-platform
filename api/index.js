@@ -116,6 +116,11 @@ export default async function handler(req, res) {
       return await handleUpload(req, res);
     }
     
+    // Route: /api/upload-wallpaper
+    if (routePath === 'upload-wallpaper') {
+      return await handleWallpaperUpload(req, res);
+    }
+    
     // Route: /api/models
     if (routePath === 'models') {
       return await handleModels(req, res);
@@ -2457,6 +2462,202 @@ async function handleRequests(req, res) {
   else {
     return res.status(405).json({ error: 'Method not allowed' });
   }
+}
+
+/**
+ * Handle wallpaper upload with PBR texture generation
+ */
+async function handleWallpaperUpload(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    // Parse multipart form data
+    const form = new multiparty.Form();
+    
+    const { fields, files } = await new Promise((resolve, reject) => {
+      form.parse(req, (err, fields, files) => {
+        if (err) reject(err);
+        else resolve({ fields, files });
+      });
+    });
+
+    // Get form data
+    const customerId = fields.customerId?.[0];
+    const title = fields.title?.[0];
+    const width = parseFloat(fields.width?.[0]) || 2.44;
+    const height = parseFloat(fields.height?.[0]) || 2.44;
+    const tileRepeat = parseFloat(fields.tileRepeat?.[0]) || 4;
+
+    if (!customerId || !title) {
+      return res.status(400).json({ error: 'Customer ID and title are required' });
+    }
+
+    // Collect texture files
+    const textureTypes = ['albedo', 'normal', 'roughness', 'height'];
+    const textures = {};
+    let hasAlbedo = false;
+
+    for (const textureType of textureTypes) {
+      const textureFile = files[`${textureType}Texture`]?.[0];
+      if (textureFile) {
+        // Validate file type
+        if (!textureFile.originalFilename?.match(/\.(jpg|jpeg|png|webp)$/i)) {
+          return res.status(400).json({ 
+            error: `Invalid ${textureType} texture format. Only JPG, PNG, and WebP are allowed.` 
+          });
+        }
+
+        // Check file size (10MB per texture)
+        if (textureFile.size > 10 * 1024 * 1024) {
+          return res.status(400).json({ 
+            error: `${textureType} texture too large. Maximum size is 10MB per texture.` 
+          });
+        }
+
+        textures[textureType] = textureFile;
+        if (textureType === 'albedo') {
+          hasAlbedo = true;
+        }
+      }
+    }
+
+    if (!hasAlbedo) {
+      return res.status(400).json({ error: 'Albedo texture is required for wallpaper generation' });
+    }
+
+    logger.debug('Starting wallpaper generation', { 
+      customerId, 
+      title, 
+      textureCount: Object.keys(textures).length,
+      dimensions: { width, height, tileRepeat }
+    });
+
+    // Generate GLB file with PBR materials
+    const glbBuffer = await generateWallpaperGLB(textures, {
+      width,
+      height,
+      tileRepeat,
+      title
+    });
+
+    // Upload GLB to Cloudinary
+    const filename = `${title.replace(/[^a-zA-Z0-9]/g, '_')}_wallpaper.glb`;
+    const cloudinaryResult = await uploadModel(glbBuffer, filename);
+
+    // Get customer name for database
+    let customerName = 'Unknown Customer';
+    try {
+      const customers = await getCustomers();
+      const customer = customers.find(c => c.id === customerId);
+      if (customer) customerName = customer.name;
+    } catch (e) {
+      console.warn('Could not fetch customer name:', e);
+    }
+
+    // Save wallpaper model to database
+    const dbResult = await saveModel({
+      title: `${title} (Wallpaper)`,
+      description: `AR Wallpaper with ${Object.keys(textures).length} PBR textures - ${width}m × ${height}m`,
+      filename: filename,
+      cloudinaryUrl: cloudinaryResult.url,
+      cloudinaryPublicId: cloudinaryResult.publicId,
+      fileSize: cloudinaryResult.size,
+      customerId: customerId,
+      customerName: customerName,
+      dominantColor: '#8B4513', // Default brown/mosaic color
+      metadata: {
+        type: 'wallpaper',
+        dimensions: { width, height },
+        tileRepeat,
+        textureTypes: Object.keys(textures),
+        generatedAt: new Date().toISOString()
+      }
+    });
+
+    if (!dbResult.success) {
+      logger.error('Database save failed for wallpaper', dbResult.error);
+      return res.status(500).json({ 
+        error: 'Failed to save wallpaper. Please try again.',
+        details: dbResult.error
+      });
+    }
+
+    // Clean up temporary files
+    Object.values(textures).forEach(file => {
+      try {
+        const fs = require('fs');
+        fs.unlinkSync(file.path);
+      } catch (e) {
+        console.warn('Could not clean up temp file:', file.path);
+      }
+    });
+
+    const domain = process.env.DOMAIN || 'newfurniture.live';
+    const modelId = dbResult.id;
+
+    logger.debug('Wallpaper upload completed', { modelId, cloudinaryUrl: cloudinaryResult.url });
+
+    return res.status(200).json({
+      success: true,
+      id: modelId,
+      viewUrl: `https://${domain}/view?id=${modelId}`,
+      directUrl: cloudinaryResult.url,
+      shareUrl: `https://${domain}/view?id=${modelId}`,
+      title: `${title} (Wallpaper)`,
+      fileSize: cloudinaryResult.size,
+      message: '🧱 Wallpaper generated successfully!',
+      textureCount: Object.keys(textures).length,
+      dimensions: { width, height, tileRepeat }
+    });
+
+  } catch (error) {
+    logger.error('Wallpaper upload error', error);
+    
+    // Clean up any temp files on error
+    try {
+      if (files) {
+        Object.values(files).flat().forEach(file => {
+          const fs = require('fs');
+          if (file.path) fs.unlinkSync(file.path);
+        });
+      }
+    } catch (cleanupError) {
+      console.warn('Cleanup error:', cleanupError);
+    }
+
+    const { statusCode, response } = createErrorResponse(500, 'Wallpaper generation failed', error);
+    return res.status(statusCode).json(response);
+  }
+}
+
+/**
+ * Generate GLB file with PBR materials from texture maps
+ */
+async function generateWallpaperGLB(textures, options) {
+  const { width, height, tileRepeat, title } = options;
+
+  // Dynamic import of the server-side wallpaper generator
+  const { createWallpaperPlane } = await import('../lib/wallpaper-generator-server.js');
+
+  // Read texture files into buffers
+  const fs = require('fs');
+  const textureBuffers = {};
+  
+  for (const [type, file] of Object.entries(textures)) {
+    textureBuffers[type] = fs.readFileSync(file.path);
+  }
+
+  // Generate GLB with textures
+  const glbBuffer = await createWallpaperPlane(textureBuffers, {
+    width,
+    height,
+    tileRepeat,
+    title
+  });
+
+  return glbBuffer;
 }
 
 /**
