@@ -4299,35 +4299,67 @@
             document.getElementById('uploadStatus').textContent = 'Uploading furniture...';
 
             try {
-                // Create form data for API upload
-                const formData = new FormData();
-                formData.append('file', selectedFile);
-                formData.append('title', titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''));
-                formData.append('description', descriptionInput.value || '');
-                formData.append('customerId', customerId);
-                formData.append('customerName', customerName);
+                // Step 1: Upload directly to Cloudinary (bypasses Vercel's 4.5MB limit)
+                document.getElementById('uploadStatus').textContent = 'Uploading to cloud storage...';
+                document.getElementById('progressBar').style.width = '30%';
+                document.getElementById('progressPercentage').textContent = '30%';
 
-                // Update progress
-                document.getElementById('progressBar').style.width = '50%';
-                document.getElementById('progressPercentage').textContent = '50%';
+                const cloudinaryFormData = new FormData();
+                cloudinaryFormData.append('file', selectedFile);
+                cloudinaryFormData.append('upload_preset', 'furniture_unsigned');
+                cloudinaryFormData.append('folder', 'furniture-models');
 
-                // Upload via API
-                const response = await fetch('/api/upload-simple', {
-                    method: 'POST',
-                    body: formData
-                });
+                const cloudinaryUpload = await fetch(
+                    'https://api.cloudinary.com/v1_1/djjixqxzy/raw/upload',
+                    {
+                        method: 'POST',
+                        body: cloudinaryFormData
+                    }
+                );
 
-                if (!response.ok) {
-                    const errorText = await response.text();
-                    throw new Error(`Upload failed: ${errorText}`);
+                if (!cloudinaryUpload.ok) {
+                    const errorText = await cloudinaryUpload.text();
+                    throw new Error(`Cloud upload failed: ${errorText}`);
                 }
 
-                const result = await response.json();
+                const cloudinaryResult = await cloudinaryUpload.json();
+                console.log('✅ Cloudinary upload successful:', cloudinaryResult.secure_url);
 
-                // Complete the upload
+                // Step 2: Save metadata to database
+                document.getElementById('uploadStatus').textContent = 'Saving to database...';
+                document.getElementById('progressBar').style.width = '80%';
+                document.getElementById('progressPercentage').textContent = '80%';
+
+                const saveResponse = await fetch('/api/cloudinary-save', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        cloudinaryUrl: cloudinaryResult.secure_url,
+                        cloudinaryPublicId: cloudinaryResult.public_id,
+                        fileSize: cloudinaryResult.bytes,
+                        title: titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''),
+                        description: descriptionInput.value || '',
+                        customerId: customerId,
+                        customerName: customerName,
+                        isVariant: false
+                    })
+                });
+
+                if (!saveResponse.ok) {
+                    const errorText = await saveResponse.text();
+                    throw new Error(`Database save failed: ${errorText}`);
+                }
+
+                const result = await saveResponse.json();
+
+                // Step 3: Complete
                 document.getElementById('progressBar').style.width = '100%';
                 document.getElementById('progressPercentage').textContent = '100%';
                 document.getElementById('uploadStatus').textContent = '✅ Upload successful!';
+
+                console.log('✅ Model uploaded successfully:', result);
 
                 // Close modal and refresh models after 2 seconds
                 setTimeout(() => {
