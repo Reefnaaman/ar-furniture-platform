@@ -656,7 +656,7 @@
                 document.title = `${modelInfo.title} - 3D View`;
                 
                 // Determine which model/variant to load for desktop
-                let desktopModelUrl = `/api/model/${id}`;
+                let desktopModelUrl = modelInfo.cloudinary_url; // Use direct Cloudinary URL
                 let selectedVariant = null;
                 
                 // If variant specified, find the variant and use its URL  
