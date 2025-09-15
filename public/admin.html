@@ -4357,29 +4357,66 @@
             // Parse customer selection
             const [customerId, customerName] = customerSelect.value.split(':');
 
-            // RADICAL TEST: Let's try the old API method first to isolate the issue
-            console.log('🧪 RADICAL TEST: Trying original API upload first (no dimensions)');
+            // Prepare dimension data if provided
+            let dimensions = null;
+            if (widthInput.value || heightInput.value || depthInput.value) {
+                const unit = unitSelect.value || 'cm';
 
-            const testFormData = new FormData();
-            testFormData.append('file', selectedFile);
-            testFormData.append('title', titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''));
-            testFormData.append('description', descriptionInput.value || '');
-            testFormData.append('customerId', customerId);
-            testFormData.append('customerName', customerName);
+                // Convert all dimensions to meters for consistent storage
+                const convertToMeters = (value, unit) => {
+                    if (!value || isNaN(value)) return null;
+                    const num = parseFloat(value);
+                    switch(unit) {
+                        case 'm': return num;
+                        case 'cm': return num / 100;
+                        case 'in': return num * 0.0254;
+                        case 'ft': return num * 0.3048;
+                        default: return num / 100; // Default to cm
+                    }
+                };
 
-            console.log('📦 Testing with original API (file size: ' + (selectedFile.size / (1024 * 1024)).toFixed(2) + 'MB)');
+                dimensions = {
+                    width: convertToMeters(widthInput.value, unit),
+                    height: convertToMeters(heightInput.value, unit),
+                    depth: convertToMeters(depthInput.value, unit),
+                    unit: unit,
+                    original_width: widthInput.value,
+                    original_height: heightInput.value,
+                    original_depth: depthInput.value
+                };
+
+                console.log('📏 Prepared dimensions:', dimensions);
+            }
+
+            // Use signed Cloudinary upload via API (supports up to 10MB, no redirects)
+            console.log('📤 Using signed Cloudinary upload for reliability and 10MB support');
+
+            const uploadFormData = new FormData();
+            uploadFormData.append('file', selectedFile);
+            uploadFormData.append('title', titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''));
+            uploadFormData.append('description', descriptionInput.value || '');
+            uploadFormData.append('customerId', customerId);
+            uploadFormData.append('customerName', customerName);
+
+            // Add dimensions if provided
+            if (dimensions) {
+                uploadFormData.append('dimensions', JSON.stringify(dimensions));
+            }
+
+            const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
+            console.log(`📦 Uploading via signed API: ${fileSizeMB}MB`);
 
             try {
-                document.getElementById('uploadStatus').textContent = 'Testing original API...';
+                document.getElementById('uploadStatus').textContent = 'Uploading via signed Cloudinary...';
 
-                const testResponse = await fetch('/api/upload-simple', {
+                const response = await fetch('/api/upload', {
                     method: 'POST',
-                    body: testFormData
+                    body: uploadFormData
                 });
 
-                if (testResponse.ok) {
-                    console.log('✅ ORIGINAL API WORKS! The issue is not Vercel limits.');
-                    const result = await testResponse.json();
+                if (response.ok) {
+                    console.log('✅ SIGNED CLOUDINARY UPLOAD SUCCESS!');
+                    const result = await response.json();
 
                     document.getElementById('progressBar').style.width = '100%';
                     document.getElementById('progressPercentage').textContent = '100%';
@@ -4390,27 +4427,24 @@
                         loadModels();
                     }, 2000);
 
-                    return; // Exit early - it worked!
+                    return; // Success!
                 } else {
-                    const errorText = await testResponse.text();
-                    console.error('❌ ORIGINAL API STILL FAILING:', {
-                        status: testResponse.status,
-                        statusText: testResponse.statusText,
+                    const errorText = await response.text();
+                    console.error('❌ Signed Cloudinary upload failed:', {
+                        status: response.status,
+                        statusText: response.statusText,
                         body: errorText,
                         fileSize: selectedFile.size,
-                        fileSizeMB: (selectedFile.size / (1024 * 1024)).toFixed(2)
+                        fileSizeMB: fileSizeMB
                     });
-                    console.log('🔄 Falling back to Cloudinary direct upload...');
+                    throw new Error(`Upload failed: ${response.statusText}`);
                 }
             } catch (error) {
-                console.log('❌ Original API error:', error);
-                console.log('🔄 Falling back to Cloudinary direct upload...');
+                console.error('❌ Upload error:', error);
+                document.getElementById('uploadStatus').textContent = `❌ Upload failed: ${error.message}`;
+                document.getElementById('uploadButton').disabled = false;
+                return;
             }
-
-            // Prepare dimension data if provided
-            let dimensions = null;
-            if (widthInput.value || heightInput.value || depthInput.value) {
-                const unit = unitSelect.value || 'cm';
 
                 // Convert all dimensions to meters for consistent storage
                 const convertToMeters = (value, unit) => {

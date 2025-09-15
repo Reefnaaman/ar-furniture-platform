@@ -622,10 +622,11 @@
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
                     document.body.style.visibility = 'hidden';
                     document.body.style.background = '#000';
-                    
-                    let modelUrl = `/api/model/${id}`;
+
+                    // Use direct Cloudinary URL for AR compatibility (no redirects)
+                    let modelUrl = modelInfo.cloudinary_url;
                     let selectedVariant = null;
-                    
+
                     // If variant specified, find the variant and use its URL
                     if (variantId && modelInfo.variants) {
                         selectedVariant = modelInfo.variants.find(v => v.id === variantId);
@@ -637,7 +638,7 @@
                             console.log('🔄 Set initial variant data:', selectedVariant);
                         }
                     }
-                    
+
                     launchDirectAR(id, modelUrl, modelInfo, selectedVariant);
                     return;
                 }

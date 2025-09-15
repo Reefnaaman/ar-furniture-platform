@@ -882,20 +882,25 @@ async function handleModels(req, res) {
 }
 
 /**
- * Handle model file serving
+ * Handle model file serving - Return JSON with direct URL for AR compatibility
  */
 async function handleModelFile(req, res, modelId) {
   try {
     // Get model from database
     const model = await getModel(modelId);
-    
+
     if (!model) {
       return res.status(404).json({ error: 'Furniture item not found' });
     }
-    
-    // Redirect to Cloudinary URL for the actual file
-    res.redirect(302, model.cloudinary_url);
-    
+
+    // Return JSON with direct Cloudinary URL (AR-compatible, no redirects)
+    res.json({
+      id: model.id,
+      title: model.title,
+      cloudinary_url: model.cloudinary_url,
+      variants: model.variants || []
+    });
+
   } catch (error) {
     console.error('Error fetching model:', error);
     res.status(500).json({ error: 'Unable to load the requested furniture model. Please check the link and try again.' });
