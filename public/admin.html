@@ -3887,7 +3887,12 @@
         
         function generateModelCard(model) {
             const viewUrl = `https://newfurniture.live/view?id=${model.id}`;
-            const modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
+            // Temporary fix: use working Cloudinary URL for the broken couch model
+            let modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
+            if (model.cloudinary_url && model.cloudinary_url.includes('1756571179025-couch.glb')) {
+                modelUrl = 'https://res.cloudinary.com/djjixqxzy/raw/upload/v1757948384/furniture-models/couch_green_pyupsh.glb';
+                console.log(`🔧 Using working URL for couch model: ${modelUrl}`);
+            }
             console.log(`🎨 Model preview URL for ${model.title}:`, modelUrl);
             console.log(`🎨 Stored cloudinary_url for ${model.title}:`, model.cloudinary_url);
 

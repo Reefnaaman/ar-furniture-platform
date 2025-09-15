@@ -581,6 +581,11 @@
 
                     // Use direct Cloudinary URL for AR compatibility (no redirects)
                     let modelUrl = modelInfo.cloudinary_url;
+                    // Temporary fix: use working URL for broken couch model
+                    if (modelUrl && modelUrl.includes('1756571179025-couch.glb')) {
+                        modelUrl = 'https://res.cloudinary.com/djjixqxzy/raw/upload/v1757948384/furniture-models/couch_green_pyupsh.glb';
+                        console.log(`🔧 Using working URL for couch in mobile AR: ${modelUrl}`);
+                    }
                     console.log('📱 Mobile AR: Using model URL:', modelUrl);
                     console.log('📱 Mobile AR: Model info cloudinary_url:', modelInfo.cloudinary_url);
                     let selectedVariant = null;
@@ -1122,6 +1127,11 @@
                 if (!variantId) {
                     // Original variant - use the direct cloudinary URL
                     newModelUrl = globalModelInfo.cloudinary_url;
+                    // Temporary fix: use working URL for broken couch model
+                    if (newModelUrl && newModelUrl.includes('1756571179025-couch.glb')) {
+                        newModelUrl = 'https://res.cloudinary.com/djjixqxzy/raw/upload/v1757948384/furniture-models/couch_green_pyupsh.glb';
+                        console.log(`🔧 Using working URL for couch in QR view: ${newModelUrl}`);
+                    }
                 } else {
                     // Find the variant and use its cloudinary URL
                     const variant = globalModelInfo.variants.find(v => v.id === variantId);
