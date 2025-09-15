@@ -2,7 +2,6 @@ import { uploadModel } from '../lib/cloudinary.js';
 import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, saveModelVariant, supabase, query } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import { getInternalEndpoint } from '../lib/endpoints.js';
-import { convertGLBToUSDZ } from '../lib/usdz-converter.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
 
@@ -274,9 +273,6 @@ export default async function handler(req, res) {
       } else if (routeParts.length === 3 && routeParts[2] === 'assign') {
         // /api/model/[id]/assign
         return await handleModelAssign(req, res, modelId);
-      } else if (routeParts.length === 3 && routeParts[2] === 'usdz') {
-        // /api/model/[id]/usdz
-        return await handleModelUSDZ(req, res, modelId);
       }
     }
     
@@ -1968,60 +1964,6 @@ async function handleTestBrandSettingsSchema(req, res) {
   }
 }
 
-/**
- * Handle USDZ file generation for iOS AR
- */
-async function handleModelUSDZ(req, res, modelId) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  try {
-    console.log(`🔄 Generating USDZ for model: ${modelId}`);
-    
-    // Get model info including dimensions
-    const model = await getModel(modelId);
-    if (!model) {
-      return res.status(404).json({ error: 'Model not found' });
-    }
-    
-    // Get the GLB URL (Cloudinary URL)
-    const glbUrl = model.cloudinary_url;
-    if (!glbUrl) {
-      return res.status(400).json({ error: 'Model does not have a valid GLB file URL' });
-    }
-    
-    // Extract dimensions for scaling
-    const dimensions = {
-      width_meters: model.width_meters,
-      height_meters: model.height_meters,
-      depth_meters: model.depth_meters
-    };
-    
-    console.log('📏 Model dimensions:', dimensions);
-    
-    // Convert GLB to USDZ with proper scaling
-    const usdzBuffer = await convertGLBToUSDZ(glbUrl, dimensions);
-    
-    // Set appropriate headers for USDZ file
-    res.setHeader('Content-Type', 'model/vnd.pixar.usd');
-    res.setHeader('Content-Disposition', `attachment; filename="${model.title || model.filename || 'model'}.usdz"`);
-    res.setHeader('Content-Length', usdzBuffer.byteLength);
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
-    
-    // Send the USDZ file
-    res.status(200).send(Buffer.from(usdzBuffer));
-    
-    console.log(`✅ USDZ generated successfully for model: ${modelId}`);
-
-  } catch (error) {
-    console.error('❌ Error generating USDZ:', error);
-    res.status(500).json({
-      error: 'Failed to generate USDZ file',
-      details: error.message
-    });
-  }
-}
 
 /**
  * Handle Cloudinary upload configuration for direct browser uploads
