@@ -620,6 +620,11 @@
                 
                 // Determine which model/variant to load for desktop
                 let desktopModelUrl = modelInfo.cloudinary_url; // Use direct Cloudinary URL
+                // Temporary fix: use working URL for broken couch model
+                if (desktopModelUrl && desktopModelUrl.includes('1756571179025-couch.glb')) {
+                    desktopModelUrl = 'https://res.cloudinary.com/djjixqxzy/raw/upload/v1757948384/furniture-models/couch_green_pyupsh.glb';
+                    console.log(`🔧 Using working URL for couch in desktop view: ${desktopModelUrl}`);
+                }
                 let selectedVariant = null;
                 
                 // If variant specified, find the variant and use its URL  
