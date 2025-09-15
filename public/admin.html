@@ -3889,6 +3889,7 @@
             const viewUrl = `https://newfurniture.live/view?id=${model.id}`;
             const modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
             console.log(`🎨 Model preview URL for ${model.title}:`, modelUrl);
+            console.log(`🎨 Stored cloudinary_url for ${model.title}:`, model.cloudinary_url);
 
             // Check if this is a wallpaper
             const isWallpaper = model.metadata && model.metadata.type === 'wallpaper';
