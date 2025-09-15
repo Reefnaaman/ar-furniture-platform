@@ -548,13 +548,24 @@ async function handleUpload(req, res) {
   }
 
   try {
+    console.log('🔧 UPLOAD DEBUG: Starting upload process');
+
     // Parse multipart form data
+    console.log('🔧 UPLOAD DEBUG: Creating multiparty form');
     const form = new multiparty.Form();
-    
+
+    console.log('🔧 UPLOAD DEBUG: Parsing form data');
     const { fields, files } = await new Promise((resolve, reject) => {
       form.parse(req, (err, fields, files) => {
-        if (err) reject(err);
-        else resolve({ fields, files });
+        if (err) {
+          console.error('🚨 FORM PARSING ERROR:', err);
+          reject(err);
+        } else {
+          console.log('🔧 UPLOAD DEBUG: Form parsing completed');
+          console.log('🔧 Fields:', Object.keys(fields || {}));
+          console.log('🔧 Files:', Object.keys(files || {}));
+          resolve({ fields, files });
+        }
       });
     });
 
@@ -599,8 +610,10 @@ async function handleUpload(req, res) {
     }
 
     // Upload to Cloudinary
+    console.log('🔧 UPLOAD DEBUG: Starting Cloudinary upload');
     logger.debug('Starting file upload');
     const cloudinaryResult = await uploadModel(fileBuffer, uploadedFile.originalFilename);
+    console.log('🔧 UPLOAD DEBUG: Cloudinary upload completed', { url: cloudinaryResult.url });
 
     // Save to database - VARIANT OR MODEL
     let dbResult;
@@ -699,9 +712,19 @@ async function handleUpload(req, res) {
     }
 
   } catch (error) {
+    console.error('🚨 UPLOAD CRASH - Full error details:');
+    console.error('Error name:', error.name);
+    console.error('Error message:', error.message);
+    console.error('Error stack:', error.stack);
+    console.error('Error object:', JSON.stringify(error, null, 2));
+
     logger.error('Upload error', error);
     const { statusCode, response } = createErrorResponse(500, 'Upload failed', error);
-    return res.status(statusCode).json(response);
+    return res.status(statusCode).json({
+      error: 'Upload failed',
+      details: error.message,
+      stage: 'server_upload'
+    });
   }
 }
 
