@@ -6472,8 +6472,11 @@
         
         function handleAddVariant() {
             if (!currentSettingsModel) return;
+            // Store model data before closing modal (which sets currentSettingsModel to null)
+            const modelId = currentSettingsModel.id;
+            const modelTitle = currentSettingsModel.title;
             closeFurnitureSettingsModal();
-            openVariantModal(currentSettingsModel.id, currentSettingsModel.title);
+            openVariantModal(modelId, modelTitle);
         }
         
         function handleManageVariants() {
