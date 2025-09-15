@@ -6033,25 +6033,31 @@
                 // Get variant product URL from form
                 const variantProductUrl = document.getElementById('variantProductUrl').value.trim();
 
+                const requestData = {
+                    cloudinaryUrl: cloudinaryResult.secure_url,
+                    cloudinaryPublicId: cloudinaryResult.public_id,
+                    fileSize: cloudinaryResult.bytes,
+                    parentModelId: modelId,
+                    variantName: variantName,
+                    hexColor: hexColor,
+                    isVariant: true,
+                    variantProductUrl: variantProductUrl || null
+                };
+
+                console.log('🔧 Sending variant save request:', requestData);
+
                 const saveResponse = await fetch('/api/cloudinary-save', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({
-                        cloudinaryUrl: cloudinaryResult.secure_url,
-                        cloudinaryPublicId: cloudinaryResult.public_id,
-                        fileSize: cloudinaryResult.bytes,
-                        parentModelId: modelId,
-                        variantName: variantName,
-                        hexColor: hexColor,
-                        isVariant: true,
-                        variantProductUrl: variantProductUrl || null
-                    })
+                    body: JSON.stringify(requestData)
                 });
 
                 if (!saveResponse.ok) {
-                    throw new Error('Failed to save variant metadata');
+                    const errorText = await saveResponse.text();
+                    console.error('❌ Save variant error response:', errorText);
+                    throw new Error(`Failed to save variant metadata: ${errorText}`);
                 }
 
                 const result = await saveResponse.json();
