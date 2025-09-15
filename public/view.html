@@ -581,6 +581,8 @@
 
                     // Use direct Cloudinary URL for AR compatibility (no redirects)
                     let modelUrl = modelInfo.cloudinary_url;
+                    console.log('📱 Mobile AR: Using model URL:', modelUrl);
+                    console.log('📱 Mobile AR: Model info cloudinary_url:', modelInfo.cloudinary_url);
                     let selectedVariant = null;
 
                     // If variant specified, find the variant and use its URL
