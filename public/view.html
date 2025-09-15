@@ -1118,8 +1118,8 @@
                 let newModelUrl;
                 
                 if (!variantId) {
-                    // Original variant - use the base model URL
-                    newModelUrl = `/api/model/${modelId}`;
+                    // Original variant - use the direct cloudinary URL
+                    newModelUrl = globalModelInfo.cloudinary_url;
                 } else {
                     // Find the variant and use its cloudinary URL
                     const variant = globalModelInfo.variants.find(v => v.id === variantId);

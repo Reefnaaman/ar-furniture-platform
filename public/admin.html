@@ -3042,64 +3042,6 @@
                     <small class="field-hint">Example: https://yourstore.com/products/sofa-123</small>
                 </div>
                 
-                <!-- Dimensions Section -->
-                <div class="dimensions-section" style="margin-top: 10px; padding: 12px; background: rgba(88, 166, 255, 0.05); border-radius: 8px; border: 1px solid rgba(88, 166, 255, 0.1);">
-                    <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 8px;">
-                        <h4 style="color: #58a6ff; margin: 0; font-size: 13px; font-weight: 500;">
-                            📏 Dimensions
-                        </h4>
-                        <span style="color: #7d8590; font-size: 10px;">(for accurate AR scaling)</span>
-                    </div>
-                    
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 8px;">
-                        <div class="input-group">
-                            <input type="number" 
-                                   id="widthInput" 
-                                   placeholder="Width" 
-                                   class="futuristic-input" 
-                                   style="font-size: 13px; padding: 6px 10px;"
-                                   step="0.01" 
-                                   min="0">
-                            <div class="input-line"></div>
-                        </div>
-                        
-                        <div class="input-group">
-                            <input type="number" 
-                                   id="furnitureHeightInput" 
-                                   placeholder="Height" 
-                                   class="futuristic-input" 
-                                   style="font-size: 13px; padding: 6px 10px;"
-                                   step="0.01" 
-                                   min="0">
-                            <div class="input-line"></div>
-                        </div>
-                        
-                        <div class="input-group">
-                            <input type="number" 
-                                   id="depthInput" 
-                                   placeholder="Depth" 
-                                   class="futuristic-input" 
-                                   style="font-size: 13px; padding: 6px 10px;"
-                                   step="0.01" 
-                                   min="0">
-                            <div class="input-line"></div>
-                        </div>
-                        
-                        <div class="input-group">
-                            <select id="unitSelect" class="futuristic-input" style="font-size: 13px; padding: 8px 12px;">
-                                <option value="cm" selected>cm</option>
-                                <option value="m">m</option>
-                                <option value="in">in</option>
-                                <option value="ft">ft</option>
-                            </select>
-                            <div class="input-line"></div>
-                        </div>
-                    </div>
-                    
-                    <p style="color: #7d8590; font-size: 10px; margin: 0;">
-                        💡 Width=left to right, Height=floor to top, Depth=front to back
-                    </p>
-                </div>
                 
                 <div class="modal-buttons">
                     <button type="button" class="modal-button secondary" onclick="closeUploadModal()">Cancel</button>
@@ -3945,7 +3887,7 @@
         
         function generateModelCard(model) {
             const viewUrl = `https://newfurniture.live/view?id=${model.id}`;
-            const modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
+            const modelUrl = model.cloudinary_url;
 
             // Check if this is a wallpaper
             const isWallpaper = model.metadata && model.metadata.type === 'wallpaper';
@@ -4348,196 +4290,44 @@
             const productUrlInput = document.getElementById('productUrlInput');
             const customerSelect = document.getElementById('customerSelect');
 
-            // Get dimension inputs
-            const widthInput = document.getElementById('widthInput');
-            const heightInput = document.getElementById('furnitureHeightInput');
-            const depthInput = document.getElementById('depthInput');
-            const unitSelect = document.getElementById('unitSelect');
-
             // Parse customer selection
             const [customerId, customerName] = customerSelect.value.split(':');
-
-            // RADICAL TEST: Let's try the old API method first to isolate the issue
-            console.log('🧪 RADICAL TEST: Trying original API upload first (no dimensions)');
-
-            const testFormData = new FormData();
-            testFormData.append('file', selectedFile);
-            testFormData.append('title', titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''));
-            testFormData.append('description', descriptionInput.value || '');
-            testFormData.append('customerId', customerId);
-            testFormData.append('customerName', customerName);
-
-            console.log('📦 Testing with original API (file size: ' + (selectedFile.size / (1024 * 1024)).toFixed(2) + 'MB)');
-
-            try {
-                document.getElementById('uploadStatus').textContent = 'Testing original API...';
-
-                const testResponse = await fetch('/api/upload-simple', {
-                    method: 'POST',
-                    body: testFormData
-                });
-
-                if (testResponse.ok) {
-                    console.log('✅ ORIGINAL API WORKS! The issue is not Vercel limits.');
-                    const result = await testResponse.json();
-
-                    document.getElementById('progressBar').style.width = '100%';
-                    document.getElementById('progressPercentage').textContent = '100%';
-                    document.getElementById('uploadStatus').textContent = '✅ Upload successful!';
-
-                    setTimeout(() => {
-                        closeUploadModal();
-                        loadModels();
-                    }, 2000);
-
-                    return; // Exit early - it worked!
-                } else {
-                    const errorText = await testResponse.text();
-                    console.error('❌ ORIGINAL API STILL FAILING:', {
-                        status: testResponse.status,
-                        statusText: testResponse.statusText,
-                        body: errorText,
-                        fileSize: selectedFile.size,
-                        fileSizeMB: (selectedFile.size / (1024 * 1024)).toFixed(2)
-                    });
-                    console.log('🔄 Falling back to Cloudinary direct upload...');
-                }
-            } catch (error) {
-                console.log('❌ Original API error:', error);
-                console.log('🔄 Falling back to Cloudinary direct upload...');
-            }
-
-            // Prepare dimension data if provided
-            let dimensions = null;
-            if (widthInput.value || heightInput.value || depthInput.value) {
-                const unit = unitSelect.value || 'cm';
-
-                // Convert all dimensions to meters for consistent storage
-                const convertToMeters = (value, unit) => {
-                    if (!value || isNaN(value)) return null;
-                    const num = parseFloat(value);
-                    switch(unit) {
-                        case 'm': return num;
-                        case 'cm': return num / 100;
-                        case 'in': return num * 0.0254;
-                        case 'ft': return num * 0.3048;
-                        default: return num / 100; // Default to cm
-                    }
-                };
-
-                dimensions = {
-                    width: convertToMeters(widthInput.value, unit),
-                    height: convertToMeters(heightInput.value, unit),
-                    depth: convertToMeters(depthInput.value, unit),
-                    unit: unit,
-                    original_width: widthInput.value,
-                    original_height: heightInput.value,
-                    original_depth: depthInput.value
-                };
-
-                console.log('📏 Prepared dimensions:', dimensions);
-            }
 
             // Show progress
             document.getElementById('uploadProgress').style.display = 'block';
             document.getElementById('uploadButton').disabled = true;
-            document.getElementById('uploadStatus').textContent = 'Getting upload configuration...';
+            document.getElementById('uploadStatus').textContent = 'Uploading furniture...';
 
             try {
-                const fileSizeMB = (selectedFile.size / (1024 * 1024)).toFixed(2);
-                console.log(`📦 Starting direct upload: ${fileSizeMB}MB`);
+                // Create form data for API upload
+                const formData = new FormData();
+                formData.append('file', selectedFile);
+                formData.append('title', titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''));
+                formData.append('description', descriptionInput.value || '');
+                formData.append('customerId', customerId);
+                formData.append('customerName', customerName);
 
-                // Direct unsigned upload to Cloudinary (simpler approach)
-                document.getElementById('uploadStatus').textContent = `Uploading ${fileSizeMB}MB directly to Cloudinary...`;
-                document.getElementById('progressBar').style.width = '30%';
-                document.getElementById('progressPercentage').textContent = '30%';
+                // Update progress
+                document.getElementById('progressBar').style.width = '50%';
+                document.getElementById('progressPercentage').textContent = '50%';
 
-                const cloudinaryFormData = new FormData();
-                cloudinaryFormData.append('file', selectedFile);
-                cloudinaryFormData.append('upload_preset', 'furniture_unsigned'); // Create this in Cloudinary dashboard
-                cloudinaryFormData.append('folder', 'furniture-models');
-
-                console.log('📤 Testing basic Cloudinary connectivity first...');
-
-                // RADICAL DEBUG: Test if we can even reach Cloudinary
-                try {
-                    const testResponse = await fetch('https://api.cloudinary.com/v1_1/djjixqxzy/image/upload', {
-                        method: 'POST',
-                        body: new FormData() // Empty request just to test connectivity
-                    });
-                    console.log('🌐 Cloudinary connectivity test - Status:', testResponse.status);
-                } catch (error) {
-                    console.error('🌐 CANNOT REACH CLOUDINARY AT ALL:', error);
-                    throw new Error('Cannot reach Cloudinary - network/firewall issue?');
-                }
-
-                console.log('📤 Now attempting actual upload...');
-
-                const cloudinaryUpload = await fetch(
-                    `https://api.cloudinary.com/v1_1/djjixqxzy/raw/upload`,
-                    {
-                        method: 'POST',
-                        body: cloudinaryFormData
-                    }
-                );
-
-                if (!cloudinaryUpload.ok) {
-                    // RADICAL DEBUG: Get the exact error from Cloudinary
-                    const errorText = await cloudinaryUpload.text();
-                    console.error('🚨 CLOUDINARY REJECTED REQUEST:', {
-                        status: cloudinaryUpload.status,
-                        statusText: cloudinaryUpload.statusText,
-                        headers: Object.fromEntries(cloudinaryUpload.headers.entries()),
-                        body: errorText
-                    });
-                    throw new Error(`Cloudinary error ${cloudinaryUpload.status}: ${errorText}`);
-                }
-
-                const cloudinaryResult = await cloudinaryUpload.json();
-                console.log('☁️ Cloudinary upload successful:', cloudinaryResult);
-
-                // Step 3: Save metadata to database
-                document.getElementById('uploadStatus').textContent = 'Saving to database...';
-                document.getElementById('progressBar').style.width = '80%';
-                document.getElementById('progressPercentage').textContent = '80%';
-
-                const saveResponse = await fetch('/api/cloudinary-save', {
+                // Upload via API
+                const response = await fetch('/api/upload-simple', {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        cloudinaryUrl: cloudinaryResult.secure_url,
-                        cloudinaryPublicId: cloudinaryResult.public_id,
-                        fileSize: cloudinaryResult.bytes,
-                        title: titleInput.value || selectedFile.name.replace(/\.(glb|gltf)$/i, ''),
-                        description: descriptionInput.value || '',
-                        customerId: customerId,
-                        customerName: customerName,
-                        dimensions: dimensions,
-                        isVariant: false
-                    })
+                    body: formData
                 });
 
-                if (!saveResponse.ok) {
-                    throw new Error('Failed to save model metadata');
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    throw new Error(`Upload failed: ${errorText}`);
                 }
 
-                const result = await saveResponse.json();
+                const result = await response.json();
 
                 // Complete the upload
                 document.getElementById('progressBar').style.width = '100%';
                 document.getElementById('progressPercentage').textContent = '100%';
                 document.getElementById('uploadStatus').textContent = '✅ Upload successful!';
-
-                console.log('✅ Model uploaded successfully via direct Cloudinary upload:', result);
-
-                // Extract and save dominant color after successful upload
-                if (result.success && result.id) {
-                    setTimeout(async () => {
-                        await extractAndSaveModelColor(result.id);
-                    }, 3000); // Wait for model to be processed
-                }
 
                 // Close modal and refresh models after 2 seconds
                 setTimeout(() => {
@@ -4546,7 +4336,7 @@
                 }, 2000);
 
             } catch (error) {
-                console.error('❌ Direct upload failed:', error);
+                console.error('Upload failed:', error);
                 document.getElementById('uploadStatus').textContent = '❌ Upload failed: ' + error.message;
                 document.getElementById('uploadButton').disabled = false;
                 document.getElementById('progressBar').style.width = '0%';
