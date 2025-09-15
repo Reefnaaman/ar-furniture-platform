@@ -3887,7 +3887,8 @@
         
         function generateModelCard(model) {
             const viewUrl = `https://newfurniture.live/view?id=${model.id}`;
-            const modelUrl = model.cloudinary_url;
+            const modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
+            console.log(`🎨 Model preview URL for ${model.title}:`, modelUrl);
 
             // Check if this is a wallpaper
             const isWallpaper = model.metadata && model.metadata.type === 'wallpaper';
@@ -3915,9 +3916,15 @@
                                 loading="eager"
                                 poster=""
                                 environment-image="neutral"
-                                exposure="1">
+                                exposure="1"
+                                onloading="console.log('🔄 Loading model:', this.src)"
+                                onload="console.log('✅ Model loaded successfully:', this.src)"
+                                onerror="console.error('❌ Model failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div slot="progress-bar" style="display: none;"></div>
                             </model-viewer>
+                            <div style="display: none; align-items: center; justify-content: center; height: 200px; background: #1c2128; color: #7d8590; font-size: 14px;">
+                                ⚠️ Preview not available
+                            </div>
                         `}
                     </div>
                     
