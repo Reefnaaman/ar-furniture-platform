@@ -1162,15 +1162,26 @@
             // Clear any existing content
             document.body.innerHTML = '';
             
-            // Create invisible model-viewer
+            // Create model-viewer (full size but black background hides it)
             const modelViewer = document.createElement('model-viewer');
             modelViewer.setAttribute('id', 'modelViewer');
             modelViewer.setAttribute('src', modelUrl);
+
+            // iOS needs USDZ format for Quick Look AR
+            if (/iPhone|iPad/i.test(navigator.userAgent)) {
+                // For iOS, try to use USDZ if available, otherwise iOS will convert GLB
+                modelViewer.setAttribute('ios-src', modelUrl);
+            }
+
             modelViewer.setAttribute('ar', '');
-            modelViewer.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
-            modelViewer.setAttribute('auto-rotate', '');
+            modelViewer.setAttribute('ar-modes', 'scene-viewer quick-look');
             modelViewer.setAttribute('camera-controls', '');
-            modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
+            modelViewer.setAttribute('auto-rotate', '');
+            modelViewer.setAttribute('shadow-intensity', '1');
+            modelViewer.setAttribute('environment-image', 'neutral');
+            modelViewer.setAttribute('exposure', '1');
+            // Full size for proper rendering, black screen hides it
+            modelViewer.style.cssText = 'width: 100%; height: 100vh; position: fixed; top: 0; left: 0; background: transparent;';
             document.body.appendChild(modelViewer);
 
             // Create floating controls (variants if they exist, or back button if no variants)
@@ -1183,7 +1194,9 @@
 
             // Wait for model to load, then activate AR
             let arActivated = false;
-            
+            let arSessionStarted = false;
+            let controlsShown = false;
+
             modelViewer.addEventListener('load', () => {
                 if (!arActivated && modelViewer.canActivateAR) {
                     arActivated = true;
@@ -1191,10 +1204,38 @@
                     modelViewer.activateAR();
                 }
             });
-            
-            // Backup: Try AR after a delay if load event doesn't fire
+
+            // Monitor AR session status to know when to show controls
+            modelViewer.addEventListener('ar-status', (event) => {
+                console.log('📱 AR Status:', event.detail.status);
+
+                if (event.detail.status === 'session-started') {
+                    console.log('✅ AR session started - user tapped "Open"');
+                    arSessionStarted = true;
+                    // Hide any controls that might be visible
+                    hideARControls();
+
+                } else if (event.detail.status === 'not-presenting') {
+                    console.log('⚠️ AR not presenting - user cancelled or exited');
+                    // Only show controls if AR was never started (user cancelled dialog)
+                    // or if AR was running and user exited (session ended)
+                    if (!controlsShown) {
+                        controlsShown = true;
+                        setTimeout(() => showARControls(), 500);
+                    }
+
+                } else if (event.detail.status === 'failed') {
+                    console.error('❌ AR failed to start');
+                    if (!controlsShown) {
+                        controlsShown = true;
+                        showARControls();
+                    }
+                }
+            });
+
+            // Backup: Only try AR after delay if not already activated
             setTimeout(() => {
-                if (!arActivated && modelViewer.activateAR) {
+                if (!arActivated && modelViewer.canActivateAR) {
                     arActivated = true;
                     console.log('🚀 Activating AR via timeout...');
                     modelViewer.activateAR();
@@ -1203,7 +1244,32 @@
 
             // View already tracked once per page load
         }
-        
+
+        // Show AR controls when user cancels or exits AR
+        function showARControls() {
+            console.log('👁️ Showing AR controls');
+            const elements = ['arVariantTitle', 'arVariantControls', 'arBackButton', 'arHelpMessage', 'arDimensionsDisplay'];
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.visibility = 'visible';
+                    el.style.animation = 'fadeIn 0.5s ease-in-out';
+                }
+            });
+        }
+
+        // Hide AR controls when AR is active
+        function hideARControls() {
+            console.log('🙈 Hiding AR controls');
+            const elements = ['arVariantTitle', 'arVariantControls', 'arBackButton', 'arHelpMessage', 'arDimensionsDisplay'];
+            elements.forEach(id => {
+                const el = document.getElementById(id);
+                if (el) {
+                    el.style.visibility = 'hidden';
+                }
+            });
+        }
+
         function createARVariantControls(modelId, modelInfo, selectedVariant, modelViewer) {
             // 1. Create title (separate element, much higher up)
             const instructionText = document.createElement('div');
@@ -1343,31 +1409,13 @@
             };
             
             document.body.appendChild(backButton);
-            
-            // Show all controls after AR is activated (with delay for AR to fully load)
-            setTimeout(() => {
-                // Show title
-                if (instructionText) {
-                    instructionText.style.visibility = 'visible';
-                    instructionText.style.animation = 'fadeIn 0.5s ease-in-out';
-                }
-                // Show variant circles
-                if (variantControls) {
-                    variantControls.style.visibility = 'visible';
-                    variantControls.style.animation = 'fadeIn 0.5s ease-in-out';
-                }
-                // Show back button or help message
-                const backButton = document.getElementById('arBackButton');
-                const helpMessage = document.getElementById('arHelpMessage');
-                if (backButton) {
-                    backButton.style.visibility = 'visible';
-                    backButton.style.animation = 'fadeIn 0.5s ease-in-out';
-                }
-                if (helpMessage) {
-                    helpMessage.style.visibility = 'visible';
-                    helpMessage.style.animation = 'fadeIn 0.5s ease-in-out';
-                }
-            }, 3000);
+
+            // Controls will be shown by AR status events, not automatically
+            // They appear when:
+            // 1. User cancels iOS permission dialog
+            // 2. User exits AR camera
+            // 3. AR fails to start
+            console.log('🎮 AR variant controls created (hidden until needed)');
         }
         
         function switchARVariant(modelViewer, newUrl, variantName, clickedCircle, variantData) {
@@ -1511,12 +1559,13 @@
             
             backButtonContainer.appendChild(backButton);
             document.body.appendChild(backButtonContainer);
-            
-            // Show back button after a delay (when user likely finished with AR)
-            setTimeout(() => {
-                backButtonContainer.style.visibility = 'visible';
-                backButtonContainer.style.animation = 'fadeIn 0.5s ease-in-out';
-            }, 3000);
+
+            // Back button will be shown by AR status events, not automatically
+            // It appears when:
+            // 1. User cancels iOS permission dialog
+            // 2. User exits AR camera
+            // 3. AR fails to start
+            console.log('🏠 Back button created (hidden until needed)');
         }
         
         function showError(message) {
