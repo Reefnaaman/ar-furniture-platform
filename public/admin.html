@@ -4372,7 +4372,7 @@
             try {
                 document.getElementById('uploadStatus').textContent = 'Testing original API...';
 
-                const testResponse = await fetch('/api/upload', {
+                const testResponse = await fetch('/api/upload-simple', {
                     method: 'POST',
                     body: testFormData
                 });
