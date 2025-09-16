@@ -828,6 +828,205 @@
             padding-top: 16px;
             border-top: 1px solid rgba(240, 246, 252, 0.1);
         }
+
+        /* Integration Codes Page Styling */
+        .integration-customer-selector {
+            margin-bottom: 2rem;
+        }
+
+        .integration-customer-selector label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #e6edf3;
+            font-size: 1.1rem;
+        }
+
+        .integration-model-card {
+            background: rgba(13, 17, 23, 0.8);
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: all 0.3s ease;
+        }
+
+        .integration-model-card:hover {
+            border-color: rgba(88, 166, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(88, 166, 255, 0.1);
+        }
+
+        .integration-model-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(240, 246, 252, 0.1);
+        }
+
+        .integration-model-icon {
+            background: linear-gradient(135deg, #58a6ff, #79c0ff);
+            border-radius: 12px;
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+
+        .integration-model-info h3 {
+            color: #e6edf3;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+
+        .integration-model-info p {
+            color: #7d8590;
+            font-size: 1rem;
+        }
+
+        .integration-codes-grid {
+            display: grid;
+            grid-template-columns: auto 1fr;
+            gap: 2rem;
+            align-items: start;
+        }
+
+        .integration-qr-section {
+            text-align: center;
+            min-width: 300px;
+        }
+
+        .integration-qr-preview {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 1rem;
+            display: inline-block;
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .integration-qr-controls {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .integration-codes-section h4 {
+            color: #58a6ff;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .integration-code-block {
+            background: rgba(45, 55, 72, 0.8);
+            border: 1px solid rgba(240, 246, 252, 0.1);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .integration-code-block pre {
+            color: #a0aec0;
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            margin: 0;
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .integration-code-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .integration-code-header span {
+            color: #7d8590;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .integration-copy-btn {
+            background: linear-gradient(135deg, #238636, #2ea043);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .integration-copy-btn:hover {
+            background: linear-gradient(135deg, #2ea043, #238636);
+            transform: translateY(-1px);
+        }
+
+        .integration-download-btn {
+            background: linear-gradient(135deg, #6f42c1, #8b5cf6);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .integration-download-btn:hover {
+            background: linear-gradient(135deg, #8b5cf6, #6f42c1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+        }
+
+        .integration-variant-section {
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid rgba(240, 246, 252, 0.1);
+        }
+
+        .integration-variant-header {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .integration-variant-color {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            border: 3px solid rgba(240, 246, 252, 0.3);
+            display: inline-block;
+        }
+
+        .integration-variant-info h5 {
+            color: #e6edf3;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .integration-variant-info span {
+            color: #7d8590;
+            font-size: 0.9rem;
+        }
         
         .copy-button {
             cursor: pointer;
@@ -2796,6 +2995,10 @@
                         <span class="nav-icon">📋</span>
                         <span class="nav-label">Export Kits</span>
                     </button>
+                    <button class="sidebar-nav-link" data-page="integration" onclick="navigateToPage('integration')" title="Developer Integration Codes">
+                        <span class="nav-icon">🔗</span>
+                        <span class="nav-label">Integration Codes</span>
+                    </button>
                 </div>
             </div>
             
@@ -3062,10 +3265,43 @@
                     </div>
                 </div>
             </div>
+
+            <!-- Integration Codes Page -->
+            <div class="page" id="integrationPage" style="display: none;">
+                <div class="header">
+                    <div class="header-content">
+                        <h1>🔗 Integration Codes</h1>
+                        <p>Developer handoff - QR codes and embed codes for customer integration</p>
+                    </div>
+                    <div class="header-actions">
+                        <button onclick="loadIntegrationCodes()" class="action-button primary">
+                            🔄 Refresh
+                        </button>
+                    </div>
+                </div>
+
+                <div class="dashboard-content">
+                    <!-- Customer Selection -->
+                    <div class="integration-customer-selector">
+                        <label for="integrationCustomerSelect">Select Customer:</label>
+                        <select id="integrationCustomerSelect" class="form-control" onchange="loadCustomerIntegrationCodes()">
+                            <option value="">Choose a customer...</option>
+                        </select>
+                    </div>
+
+                    <!-- Integration Codes Container -->
+                    <div id="integrationCodesContainer">
+                        <div class="empty-state">
+                            <h3>👆 Select a Customer</h3>
+                            <p>Choose a customer to view their integration codes</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
-    
-    
+
+
     <div class="password-modal" id="uploadModal">
         <div class="modal-content futuristic-upload">
             <div class="upload-header">
@@ -8596,6 +8832,253 @@
                 setTimeout(() => {
                     exportStatus.style.display = 'none';
                 }, 3000);
+            }
+        });
+
+        // Integration Codes Page Functions
+        async function loadIntegrationCodes() {
+            const customerSelect = document.getElementById('integrationCustomerSelect');
+
+            // Clear existing options
+            customerSelect.innerHTML = '<option value="">Choose a customer...</option>';
+
+            try {
+                await customerManager.loadFromAPI();
+                const customers = customerManager.getAllCustomers();
+
+                customers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = customer.name;
+                    customerSelect.appendChild(option);
+                });
+
+                showNotification('Customers loaded for integration codes', 'success');
+            } catch (error) {
+                console.error('Error loading customers for integration:', error);
+                showNotification('Failed to load customers', 'error');
+            }
+        }
+
+        async function loadCustomerIntegrationCodes() {
+            const customerId = document.getElementById('integrationCustomerSelect').value;
+            const container = document.getElementById('integrationCodesContainer');
+
+            if (!customerId) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>👆 Select a Customer</h3>
+                        <p>Choose a customer to view their integration codes</p>
+                    </div>
+                `;
+                return;
+            }
+
+            try {
+                container.innerHTML = '<div class="loading">Loading integration codes...</div>';
+
+                // Use the same export endpoint to get the data
+                const response = await fetch(`/api/customer/${customerId}/export-kit?format=json&qr_size=256&qr_error_level=M`);
+
+                if (!response.ok) {
+                    throw new Error(`Failed to load integration codes: ${response.status}`);
+                }
+
+                const data = await response.json();
+                renderIntegrationCodes(data);
+
+            } catch (error) {
+                console.error('Error loading customer integration codes:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>❌ Error Loading Codes</h3>
+                        <p>${error.message}</p>
+                        <button onclick="loadCustomerIntegrationCodes()" class="action-button primary">Try Again</button>
+                    </div>
+                `;
+                showNotification('Failed to load integration codes', 'error');
+            }
+        }
+
+        function renderIntegrationCodes(data) {
+            const container = document.getElementById('integrationCodesContainer');
+
+            if (!data.models || data.models.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <h3>📭 No Models Found</h3>
+                        <p>This customer doesn't have any furniture models yet.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            let html = `
+                <div class="integration-header" style="margin-bottom: 2rem;">
+                    <h2 style="color: #e6edf3; margin-bottom: 0.5rem;">🏠 ${data.export_info.customer_name}</h2>
+                    <p style="color: #7d8590; font-size: 1.1rem;">${data.models.length} models available for integration</p>
+                </div>
+            `;
+
+            data.models.forEach(model => {
+                html += renderModelIntegrationCard(model, data.export_info);
+            });
+
+            container.innerHTML = html;
+        }
+
+        function renderModelIntegrationCard(model, exportInfo) {
+            let html = `
+                <div class="integration-model-card">
+                    <div class="integration-model-header">
+                        <div class="integration-model-icon">🏠</div>
+                        <div class="integration-model-info">
+                            <h3>${model.title}</h3>
+                            <p>${model.description}</p>
+                        </div>
+                    </div>
+
+                    <div class="integration-codes-grid">
+                        <div class="integration-qr-section">
+                            <h4 style="color: #58a6ff; margin-bottom: 1rem;">📱 QR Code</h4>
+                            <div class="integration-qr-preview">
+                                ${model.qr_code || '<div style="padding: 40px; color: #999;">No QR Code</div>'}
+                            </div>
+                            <div class="integration-qr-controls">
+                                <button class="integration-download-btn" onclick="downloadQRCode('${model.model_id}', '${model.title.replace(/'/g, "\\'")}', \`${model.qr_code ? model.qr_code.replace(/`/g, '\\`') : ''}\`)">
+                                    📥 Download SVG
+                                </button>
+                                <button class="integration-copy-btn" onclick="copyQRCode(\`${model.qr_code ? model.qr_code.replace(/`/g, '\\`') : ''}\`)">
+                                    📋 Copy SVG
+                                </button>
+                            </div>
+                        </div>
+
+                        <div class="integration-codes-section">
+                            <h4>🌐 Direct Link</h4>
+                            <div class="integration-code-block">
+                                <div class="integration-code-header">
+                                    <span>HTML Link Code</span>
+                                    <button class="integration-copy-btn" onclick="copyToClipboard(\`${model.embed_codes.direct_link.html.replace(/`/g, '\\`')}\`)">Copy</button>
+                                </div>
+                                <pre>${model.embed_codes.direct_link.html}</pre>
+                            </div>
+
+                            <h4>🎯 Styled Button</h4>
+                            <div class="integration-code-block">
+                                <div class="integration-code-header">
+                                    <span>Button HTML Code</span>
+                                    <button class="integration-copy-btn" onclick="copyToClipboard(\`${model.embed_codes.styled_button.html.replace(/`/g, '\\`')}\`)">Copy</button>
+                                </div>
+                                <pre>${model.embed_codes.styled_button.html}</pre>
+                            </div>
+
+                            <h4>📺 iFrame Embed</h4>
+                            <div class="integration-code-block">
+                                <div class="integration-code-header">
+                                    <span>iFrame HTML Code</span>
+                                    <button class="integration-copy-btn" onclick="copyToClipboard(\`${model.embed_codes.iframe.html.replace(/`/g, '\\`')}\`)">Copy</button>
+                                </div>
+                                <pre>${model.embed_codes.iframe.html}</pre>
+                            </div>
+                        </div>
+                    </div>
+            `;
+
+            // Add variants section if they exist
+            if (model.variants && model.variants.length > 0) {
+                html += `<div class="integration-variant-section">`;
+                html += `<h4 style="color: #f85149; margin-bottom: 1.5rem;">🎨 Variants (${model.variants.length})</h4>`;
+
+                model.variants.forEach(variant => {
+                    html += `
+                        <div class="integration-variant-section" style="margin-top: 1rem; padding-top: 1rem;">
+                            <div class="integration-variant-header">
+                                <div class="integration-variant-color" style="background-color: ${variant.hex_color || '#ccc'};"></div>
+                                <div class="integration-variant-info">
+                                    <h5>${variant.name || 'Unnamed Variant'}</h5>
+                                    <span>${variant.hex_color || 'No color'}</span>
+                                </div>
+                            </div>
+
+                            <div class="integration-codes-grid">
+                                <div class="integration-qr-section">
+                                    <div class="integration-qr-preview">
+                                        ${variant.qr_code || '<div style="padding: 20px; color: #999; font-size: 0.9rem;">No QR Code</div>'}
+                                    </div>
+                                    <div class="integration-qr-controls">
+                                        <button class="integration-download-btn" onclick="downloadQRCode('${variant.variant_id || model.model_id}', '${(model.title + '_' + (variant.name || 'variant')).replace(/'/g, "\\'")}', \`${variant.qr_code ? variant.qr_code.replace(/`/g, '\\`') : ''}\`)">
+                                            📥 Download SVG
+                                        </button>
+                                        <button class="integration-copy-btn" onclick="copyQRCode(\`${variant.qr_code ? variant.qr_code.replace(/`/g, '\\`') : ''}\`)">
+                                            📋 Copy SVG
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <div class="integration-codes-section">
+                                    <h4>🔗 Variant Link</h4>
+                                    <div class="integration-code-block">
+                                        <div class="integration-code-header">
+                                            <span>Direct AR Link</span>
+                                            <button class="integration-copy-btn" onclick="copyToClipboard('${variant.ar_url || model.ar_url}')">Copy</button>
+                                        </div>
+                                        <pre>${variant.ar_url || model.ar_url}</pre>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+            return html;
+        }
+
+        function downloadQRCode(modelId, modelTitle, svgContent) {
+            if (!svgContent || svgContent === 'undefined') {
+                showNotification('No QR code available for download', 'error');
+                return;
+            }
+
+            try {
+                const blob = new Blob([svgContent], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${modelTitle.replace(/[^a-zA-Z0-9]/g, '_')}_QR_Code.svg`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+
+                showNotification(`📥 QR code downloaded: ${modelTitle}`, 'success');
+            } catch (error) {
+                console.error('Download failed:', error);
+                showNotification('Failed to download QR code', 'error');
+            }
+        }
+
+        function copyQRCode(svgContent) {
+            if (!svgContent || svgContent === 'undefined') {
+                showNotification('No QR code available to copy', 'error');
+                return;
+            }
+
+            copyToClipboard(svgContent);
+        }
+
+        // Initialize integration codes when page loads
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load customers for integration page when it becomes active
+            const integrationPage = document.getElementById('integrationPage');
+            if (integrationPage) {
+                // Load customers immediately if integration page exists
+                setTimeout(() => {
+                    loadIntegrationCodes();
+                }, 1000);
             }
         });
     </script>
