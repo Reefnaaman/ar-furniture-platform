@@ -1688,166 +1688,95 @@
             overflow-y: auto;
             flex: 1;
             min-height: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 8px;
-            align-content: flex-start;
         }
 
         .customer-item {
             position: relative;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid transparent;
-            border-radius: 50%;
+            border: 2px solid rgba(88, 166, 255, 0.3);
+            border-radius: 20px;
             display: flex;
             align-items: center;
-            justify-content: center;
-            min-width: 48px;
-            min-height: 48px;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin-bottom: 6px;
             background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(88, 166, 255, 0.05));
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            min-height: 36px;
         }
 
-        /* Dynamic sizing based on count */
-        .customer-item[data-count="0"] { width: 40px; height: 40px; }
-        .customer-item[data-count="1"], .customer-item[data-count="2"] { width: 48px; height: 48px; }
-        .customer-item[data-count="3"], .customer-item[data-count="4"], .customer-item[data-count="5"] { width: 56px; height: 56px; }
-        .customer-item[data-count^="6"], .customer-item[data-count^="7"], .customer-item[data-count^="8"], .customer-item[data-count^="9"] { width: 64px; height: 64px; }
-        .customer-item[data-count^="1"]:not([data-count="1"]) { width: 72px; height: 72px; } /* 10+ items */
-        .customer-item[data-count^="2"]:not([data-count="2"]), .customer-item[data-count^="3"]:not([data-count="3"]) { width: 80px; height: 80px; } /* 20+ items */
-
         .customer-item:hover {
-            transform: scale(1.1);
-            border-color: rgba(88, 166, 255, 0.4);
+            transform: translateY(-2px);
+            border-color: rgba(88, 166, 255, 0.6);
             background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(88, 166, 255, 0.1));
-            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.3);
-            z-index: 10;
+            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .customer-item.active {
             border-color: rgba(88, 166, 255, 0.8);
             background: linear-gradient(135deg, rgba(88, 166, 255, 0.3), rgba(88, 166, 255, 0.2));
-            box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2), 0 4px 16px rgba(88, 166, 255, 0.4);
-            transform: scale(1.05);
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3), 0 4px 16px rgba(88, 166, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .customer-item.active:hover {
-            transform: scale(1.15);
+            transform: translateY(-2px);
         }
 
         /* Special styling for All and Unassigned */
         .customer-item[data-customer-id="all"] {
             background: linear-gradient(135deg, rgba(34, 197, 94, 0.2), rgba(34, 197, 94, 0.1));
-            border-color: rgba(34, 197, 94, 0.3);
+            border-color: rgba(34, 197, 94, 0.4);
         }
 
         .customer-item[data-customer-id="all"]:hover {
             background: linear-gradient(135deg, rgba(34, 197, 94, 0.3), rgba(34, 197, 94, 0.2));
             border-color: rgba(34, 197, 94, 0.6);
-            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3);
+            box-shadow: 0 4px 16px rgba(34, 197, 94, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .customer-item[data-customer-id="unassigned"] {
             background: linear-gradient(135deg, rgba(249, 115, 22, 0.2), rgba(249, 115, 22, 0.1));
-            border-color: rgba(249, 115, 22, 0.3);
+            border-color: rgba(249, 115, 22, 0.4);
         }
 
         .customer-item[data-customer-id="unassigned"]:hover {
             background: linear-gradient(135deg, rgba(249, 115, 22, 0.3), rgba(249, 115, 22, 0.2));
             border-color: rgba(249, 115, 22, 0.6);
-            box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3);
+            box-shadow: 0 4px 16px rgba(249, 115, 22, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
-        .customer-bubble-content {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            width: 100%;
-            height: 100%;
-            position: relative;
-            padding: 4px;
-        }
-
-        .customer-initials {
+        .customer-name {
             color: #e6edf3;
-            font-weight: 700;
-            font-size: 0.75rem;
-            line-height: 1;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-weight: 500;
+            font-size: 0.85rem;
+            flex: 1;
+            text-align: left;
         }
 
         .customer-count {
-            position: absolute;
-            top: -6px;
-            right: -6px;
-            background: linear-gradient(135deg, #dc2626, #ef4444);
-            color: white;
-            border-radius: 50%;
-            min-width: 18px;
-            height: 18px;
-            font-size: 0.65rem;
-            font-weight: 700;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 2px 6px rgba(220, 38, 38, 0.4);
-            border: 2px solid #0d1117;
-            line-height: 1;
+            background: rgba(88, 166, 255, 0.2);
+            color: #58a6ff;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            min-width: 20px;
+            text-align: center;
         }
 
         /* Count badge colors */
         .customer-item[data-customer-id="all"] .customer-count {
-            background: linear-gradient(135deg, #22c55e, #16a34a);
-            box-shadow: 0 2px 6px rgba(34, 197, 94, 0.4);
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
         }
 
         .customer-item[data-customer-id="unassigned"] .customer-count {
-            background: linear-gradient(135deg, #f97316, #ea580c);
-            box-shadow: 0 2px 6px rgba(249, 115, 22, 0.4);
+            background: rgba(249, 115, 22, 0.2);
+            color: #f97316;
         }
 
-        /* Tooltip for bubble names */
-        .customer-item::before {
-            content: attr(data-tooltip);
-            position: absolute;
-            bottom: calc(100% + 8px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: rgba(0, 0, 0, 0.9);
-            color: white;
-            padding: 6px 10px;
-            border-radius: 6px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            white-space: nowrap;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
-            z-index: 1000;
-        }
-
-        .customer-item::after {
-            content: '';
-            position: absolute;
-            bottom: calc(100% + 2px);
-            left: 50%;
-            transform: translateX(-50%);
-            border: 4px solid transparent;
-            border-top-color: rgba(0, 0, 0, 0.9);
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.2s ease;
-        }
-
-        .customer-item:hover::before,
-        .customer-item:hover::after {
-            opacity: 1;
-        }
         
         .main-content {
             margin-left: 321px;
@@ -5084,13 +5013,9 @@
             const allItem = document.createElement('li');
             allItem.className = `customer-item ${currentCustomerFilter === null ? 'active' : ''}`;
             allItem.setAttribute('data-customer-id', 'all');
-            allItem.setAttribute('data-count', totalCount.toString());
-            allItem.setAttribute('data-tooltip', `All Furniture (${totalCount} items)`);
             allItem.innerHTML = `
-                <div class="customer-bubble-content">
-                    <span class="customer-initials">ALL</span>
-                    <span class="customer-count">${totalCount}</span>
-                </div>
+                <span class="customer-name">All Furniture</span>
+                <span class="customer-count">${totalCount}</span>
             `;
             allItem.onclick = () => filterByCustomer(null);
             customerList.appendChild(allItem);
@@ -5104,13 +5029,9 @@
                 const unassignedItem = document.createElement('li');
                 unassignedItem.className = `customer-item ${currentCustomerFilter === 'unassigned' ? 'active' : ''}`;
                 unassignedItem.setAttribute('data-customer-id', 'unassigned');
-                unassignedItem.setAttribute('data-count', unassignedCount.toString());
-                unassignedItem.setAttribute('data-tooltip', `Unassigned Items (${unassignedCount} items)`);
                 unassignedItem.innerHTML = `
-                    <div class="customer-bubble-content">
-                        <span class="customer-initials">?</span>
-                        <span class="customer-count">${unassignedCount}</span>
-                    </div>
+                    <span class="customer-name">Unassigned</span>
+                    <span class="customer-count">${unassignedCount}</span>
                 `;
                 unassignedItem.onclick = () => filterByCustomer('unassigned', 'Unassigned');
                 customerList.appendChild(unassignedItem);
@@ -5125,25 +5046,12 @@
             
             // Add customer items (excluding unassigned which we show separately)
             customers.filter(customer => customer.id !== 'unassigned').forEach(customer => {
-                // Generate initials from customer name
-                const words = customer.name.split(' ');
-                let initials = '';
-                if (words.length === 1) {
-                    initials = words[0].substring(0, 2).toUpperCase();
-                } else {
-                    initials = words.slice(0, 2).map(word => word.charAt(0).toUpperCase()).join('');
-                }
-
                 const item = document.createElement('li');
                 item.className = `customer-item ${currentCustomerFilter === customer.id ? 'active' : ''}`;
                 item.setAttribute('data-customer-id', customer.id);
-                item.setAttribute('data-count', customer.count.toString());
-                item.setAttribute('data-tooltip', `${customer.name} (${customer.count} items)`);
                 item.innerHTML = `
-                    <div class="customer-bubble-content">
-                        <span class="customer-initials">${initials}</span>
-                        <span class="customer-count">${customer.count}</span>
-                    </div>
+                    <span class="customer-name">${customer.name}</span>
+                    <span class="customer-count">${customer.count}</span>
                 `;
                 item.onclick = () => filterByCustomer(customer.id, customer.name);
                 customerList.appendChild(item);
@@ -9019,6 +8927,7 @@
                 }
 
                 const data = await response.json();
+                console.log('Integration data received:', data);
                 renderIntegrationCodes(data);
 
             } catch (error) {
@@ -9037,7 +8946,12 @@
         function renderIntegrationCodes(data) {
             const container = document.getElementById('integrationCodesContainer');
 
-            if (!data.models || data.models.length === 0) {
+            // Handle both possible data structures
+            const models = data.models || data.data?.models || [];
+            const exportInfo = data.export_info || data.data?.export_info || {};
+            const customerName = exportInfo.customer_name || exportInfo.customer || 'Unknown Customer';
+
+            if (!models || models.length === 0) {
                 container.innerHTML = `
                     <div class="empty-state">
                         <h3>📭 No Models Found</h3>
@@ -9049,13 +8963,13 @@
 
             let html = `
                 <div class="integration-header" style="margin-bottom: 2rem;">
-                    <h2 style="color: #e6edf3; margin-bottom: 0.5rem;">🏠 ${data.export_info.customer_name}</h2>
-                    <p style="color: #7d8590; font-size: 1.1rem;">${data.models.length} models available for integration</p>
+                    <h2 style="color: #e6edf3; margin-bottom: 0.5rem;">🏠 ${customerName}</h2>
+                    <p style="color: #7d8590; font-size: 1.1rem;">${models.length} models available for integration</p>
                 </div>
             `;
 
-            data.models.forEach(model => {
-                html += renderModelIntegrationCard(model, data.export_info);
+            models.forEach(model => {
+                html += renderModelIntegrationCard(model, exportInfo);
             });
 
             container.innerHTML = html;
