@@ -4418,7 +4418,6 @@
             });
             
             sortedCustomers.forEach(customer => {
-                console.log('Creating customer group:', customer.id, customer.name);
                 html += `
                     <div class="customer-group collapsed" data-customer="${customer.id}">
                         <div class="customer-header" onclick="toggleCustomerGroup('${customer.id.replace(/'/g, "\\'")}')">
@@ -4595,7 +4594,6 @@
         }
 
         function toggleCustomerGroup(customerId) {
-            console.log('Toggling customer group:', customerId);
             // Find the group by iterating through all customer groups to avoid CSS selector escaping issues
             const groups = document.querySelectorAll('[data-customer]');
             let group = null;
@@ -4608,7 +4606,6 @@
             console.log('Found group element:', group);
             if (!group) {
                 console.error('Could not find group with ID:', customerId);
-                console.log('Available groups:', document.querySelectorAll('[data-customer]'));
                 return;
             }
             group.classList.toggle('collapsed');
@@ -5142,7 +5139,6 @@
         function filterByCustomer(customerId, customerName = null) {
             // Always navigate to Dashboard first (if not already there)
             if (currentPage !== 'dashboard') {
-                console.log(`🔄 Switching from ${currentPage} to Dashboard to show customer: ${customerName || customerId}`);
                 navigateToPage('dashboard');
             }
             
@@ -6453,7 +6449,6 @@
                             name: userData.customerName,
                             count: 0
                         });
-                        console.log('✅ Customer added to universal system:', userData.customerName);
                     }
                     
                     // Refresh all customer-related UI
@@ -7863,7 +7858,6 @@
                     allImages = images;
                     filteredImages = [...allImages];
                     
-                    console.log('🔄 Populating customer filter...');
                     populateCustomerFilter();
                     
                     console.log('🎨 Displaying images grid...');
@@ -7897,7 +7891,6 @@
             
             // Get customers from universal customer manager
             const allCustomers = customerManager.getAllCustomers();
-            console.log('🏢 Populating customer filter with:', allCustomers.length, 'customers');
             
             // Add customer options from universal system
             allCustomers.forEach(customer => {
@@ -7926,7 +7919,6 @@
                 }
             });
             
-            console.log('✅ Customer filter populated with', customerFilter.options.length - 1, 'customers');
         }
         
         function filterImages() {
@@ -8141,7 +8133,6 @@
         function hideVariantDeletesForCustomers() {
             const currentUser = document.getElementById('loggedInUsername')?.textContent;
             if (currentUser && currentUser !== 'admin') {
-                console.log('👤 Customer user detected, hiding variant delete buttons');
                 const deleteButtons = document.querySelectorAll('.variant-delete');
                 deleteButtons.forEach(btn => {
                     btn.style.display = 'none';
