@@ -1688,10 +1688,6 @@
             overflow-y: auto;
             flex: 1;
             min-height: 0;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            align-content: flex-start;
         }
 
         .customer-item {
@@ -1703,14 +1699,13 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 4px 8px;
+            padding: 6px 12px;
+            margin-bottom: 6px;
             background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(88, 166, 255, 0.05));
             backdrop-filter: blur(10px);
             box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
-            min-height: 24px;
-            flex: 1;
-            min-width: 0;
-            max-width: calc(50% - 3px);
+            min-height: 32px;
+            width: 100%;
         }
 
         .customer-item:hover {
@@ -1756,11 +1751,8 @@
         .customer-name {
             color: #e6edf3;
             font-weight: 500;
-            font-size: 0.7rem;
+            font-size: 0.85rem;
             text-align: center;
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
             width: 100%;
         }
 
@@ -8978,16 +8970,116 @@
                 return;
             }
 
+            // Simple table layout as requested
             let html = `
-                <div class="integration-header" style="margin-bottom: 2rem;">
+                <div style="margin-bottom: 2rem;">
                     <h2 style="color: #e6edf3; margin-bottom: 0.5rem;">🏠 ${customerName}</h2>
-                    <p style="color: #7d8590; font-size: 1.1rem;">${models.length} models available for integration</p>
+                    <p style="color: #7d8590; margin-bottom: 1.5rem;">${models.length} models available for integration</p>
                 </div>
+
+                <div class="integration-table-container">
+                    <table class="integration-table">
+                        <thead>
+                            <tr>
+                                <th>Model</th>
+                                <th>QR Preview</th>
+                                <th>Download</th>
+                                <th>Direct Link</th>
+                                <th>Button Code</th>
+                                <th>iFrame Code</th>
+                                <th>Variants</th>
+                            </tr>
+                        </thead>
+                        <tbody>
             `;
 
             models.forEach(model => {
-                html += renderModelIntegrationCard(model, exportInfo);
+                html += `
+                    <tr>
+                        <td>
+                            <div class="model-info">
+                                <div class="model-name">${model.title}</div>
+                                <div class="model-desc">${model.description || ''}</div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="qr-preview-tiny">
+                                ${model.qr_code || '<div class="no-qr">No QR</div>'}
+                            </div>
+                        </td>
+                        <td>
+                            <button class="table-btn download" onclick="downloadQRCode('${model.model_id}', '${model.title.replace(/'/g, "\\'")}', \`${model.qr_code ? model.qr_code.replace(/`/g, '\\`') : ''}\`)">
+                                📥 SVG
+                            </button>
+                        </td>
+                        <td>
+                            <div class="code-cell">
+                                <code>${model.embed_codes.direct_link.html}</code>
+                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.direct_link.html.replace(/`/g, '\\`')}\`)">Copy</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="code-cell">
+                                <code>${model.embed_codes.styled_button.html}</code>
+                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.styled_button.html.replace(/`/g, '\\`')}\`)">Copy</button>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="code-cell">
+                                <code>${model.embed_codes.iframe.html}</code>
+                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.iframe.html.replace(/`/g, '\\`')}\`)">Copy</button>
+                            </div>
+                        </td>
+                        <td>
+                            ${model.variants && model.variants.length > 0 ?
+                                `<div class="variants-count">${model.variants.length} variants</div>` :
+                                '<span class="no-variants">None</span>'
+                            }
+                        </td>
+                    </tr>
+                `;
+
+                // Add variant rows if they exist
+                if (model.variants && model.variants.length > 0) {
+                    model.variants.forEach(variant => {
+                        html += `
+                            <tr class="variant-row">
+                                <td>
+                                    <div class="variant-info">
+                                        <div class="variant-color" style="background-color: ${variant.hex_color || '#ccc'};"></div>
+                                        <span>${variant.name || 'Unnamed'}</span>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="qr-preview-tiny">
+                                        ${variant.qr_code || '<div class="no-qr">No QR</div>'}
+                                    </div>
+                                </td>
+                                <td>
+                                    <button class="table-btn download" onclick="downloadQRCode('${variant.variant_id || model.model_id}', '${(model.title + '_' + (variant.name || 'variant')).replace(/'/g, "\\'")}', \`${variant.qr_code ? variant.qr_code.replace(/`/g, '\\`') : ''}\`)">
+                                        📥 SVG
+                                    </button>
+                                </td>
+                                <td colspan="3">
+                                    <div class="variant-link">
+                                        <code>${variant.ar_url || model.ar_url}</code>
+                                        <button class="table-btn copy" onclick="copyToClipboard('${variant.ar_url || model.ar_url}')">Copy</button>
+                                    </div>
+                                </td>
+                                <td>
+                                    <span class="variant-marker">↳ Variant</span>
+                                </td>
+                            </tr>
+                        `;
+                    });
+                }
             });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
 
             container.innerHTML = html;
         }
