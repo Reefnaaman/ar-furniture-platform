@@ -9146,7 +9146,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <button class="table-btn download" onclick="downloadQRCode('${variant.variant_id || variant.id || model.model_id || model.id}', '${(model.title + '_' + (variant.name || variant.variant_name || 'variant')).replace(/'/g, "\\\\'")'}', '${variant.qr_code ? variant.qr_code.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"') : ''}')">
+                                    <button class="table-btn download" onclick="downloadQRCode('${variant.variant_id || variant.id || model.model_id || model.id}', '${(model.title + '_' + (variant.name || variant.variant_name || 'variant')).replace(/'/g, "\\\\'")}', '${variant.qr_code ? variant.qr_code.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"') : ''}')">
                                         📥 SVG
                                     </button>
                                 </td>
