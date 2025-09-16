@@ -732,6 +732,115 @@
             border-color: rgba(240, 246, 252, 0.3);
         }
 
+        /* Integration Table Styles */
+        .integration-table-container {
+            padding: 20px;
+            overflow-x: auto;
+            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            border-radius: 12px;
+            margin: 20px 0;
+            border: 1px solid #dee2e6;
+        }
+
+        .integration-table {
+            width: 100%;
+            border-collapse: collapse;
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            overflow: hidden;
+            font-size: 12px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .integration-table th {
+            background: #f8f9fa;
+            padding: 12px 8px;
+            text-align: left;
+            font-weight: 600;
+            color: #495057;
+            border-bottom: 2px solid #dee2e6;
+            font-size: 13px;
+        }
+
+        .integration-table td {
+            padding: 8px;
+            border-bottom: 1px solid #eee;
+            vertical-align: top;
+        }
+
+        .integration-table tr:hover {
+            background: #f8f9fa;
+        }
+
+        .integration-table .variant-row {
+            background: #f1f3f4;
+        }
+
+        .integration-table .variant-row td:first-child {
+            padding-left: 20px;
+            font-style: italic;
+            color: #666;
+        }
+
+        .qr-preview-tiny {
+            width: 40px;
+            height: 40px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
+            padding: 2px;
+        }
+
+        .table-btn {
+            background: #007bff;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            margin: 2px;
+        }
+
+        .table-btn:hover {
+            background: #0056b3;
+        }
+
+        .table-btn.copy-btn {
+            background: #28a745;
+        }
+
+        .table-btn.copy-btn:hover {
+            background: #218838;
+        }
+
+        .table-btn.download-btn {
+            background: #6c757d;
+        }
+
+        .table-btn.download-btn:hover {
+            background: #5a6268;
+        }
+
+        .code-cell {
+            max-width: 200px;
+            font-family: 'Courier New', monospace;
+            font-size: 10px;
+            word-break: break-all;
+            position: relative;
+        }
+
+        .code-preview {
+            max-height: 60px;
+            overflow: hidden;
+            line-height: 1.2;
+            margin-bottom: 4px;
+        }
+
+        .variants-cell {
+            min-width: 80px;
+        }
+
         /* Export Modal Styles */
         .form-group {
             margin-bottom: 24px;
@@ -4358,10 +4467,8 @@
             let modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
             if (model.cloudinary_url && model.cloudinary_url.includes('1756571179025-couch.glb')) {
                 modelUrl = 'https://res.cloudinary.com/djjixqxzy/raw/upload/v1757948384/furniture-models/couch_green_pyupsh.glb';
-                console.log(`🔧 Using working URL for couch model: ${modelUrl}`);
+                // Using fallback URL for couch model
             }
-            console.log(`🎨 Model preview URL for ${model.title}:`, modelUrl);
-            console.log(`🎨 Stored cloudinary_url for ${model.title}:`, model.cloudinary_url);
 
             // Check if this is a wallpaper
             const isWallpaper = model.metadata && model.metadata.type === 'wallpaper';
@@ -4390,8 +4497,8 @@
                                 poster=""
                                 environment-image="neutral"
                                 exposure="1"
-                                onloading="console.log('🔄 Loading model:', this.src)"
-                                onload="console.log('✅ Model loaded successfully:', this.src)"
+                                onloading=""
+                                onload=""
                                 onerror="console.error('❌ Model failed to load:', this.src); this.style.display='none'; this.nextElementSibling.style.display='flex';">
                                 <div slot="progress-bar" style="display: none;"></div>
                             </model-viewer>
@@ -4662,6 +4769,10 @@
             document.getElementById('progressPercentage').textContent = '0%';
             selectedFile = null;
             hideFilePreview();
+            // Refresh models when modal closes after upload
+            if (document.getElementById('uploadProgress').style.display !== 'none') {
+                loadModels();
+            }
         }
         
         function setupDragAndDrop() {
@@ -4846,8 +4957,8 @@
                 // Close modal and refresh models after 2 seconds
                 setTimeout(() => {
                     closeUploadModal();
-                    loadModels();
-                }, 2000);
+                    // Models will refresh automatically when modal closes
+                }, 1000);
 
             } catch (error) {
                 console.error('Upload failed:', error);
@@ -4858,12 +4969,7 @@
             }
         });
         
-        // Auto-refresh every 30 seconds ONLY if authenticated
-        setInterval(() => {
-            if (isAuthenticated && checkAuthentication()) {
-                loadModels();
-            }
-        }, 30000);
+        // Auto-refresh removed - models only reload when needed
         
         // Centralized Customer Data Management
         class CustomerDataManager {
@@ -5017,9 +5123,7 @@
                 filterByCustomer(null);
             }
             
-            console.log('Debug: Customers from API:', customers);
-            console.log('Debug: Unassigned customer found:', unassignedCustomer);
-            console.log('Debug: Unassigned count:', unassignedCount);
+            // Customer data loaded successfully
             
             // Add customer items (excluding unassigned which we show separately)
             customers.filter(customer => customer.id !== 'unassigned').forEach(customer => {
@@ -6547,11 +6651,7 @@
                     }));
                 }
                 
-                // Reload after a delay to allow debug info to be seen
-                console.log('⏰ Reloading in 5 seconds to show debug info...');
-                setTimeout(() => {
-                    location.reload();
-                }, 5000);
+                // Models will refresh when variant modal closes
                 
             } catch (error) {
                 console.error('❌ Direct variant upload failed:', error);
@@ -7670,7 +7770,7 @@
         
         // Universal Page Navigation
         function navigateToPage(pageName, updateURL = true) {
-            console.log(`🧭 Navigation requested to: ${pageName}`);
+            // Navigation request
             
             // Update URL hash to preserve state on refresh
             if (updateURL) {
@@ -7679,21 +7779,18 @@
             
             // Hide all pages
             const allPages = document.querySelectorAll('.page');
-            console.log(`📄 Found ${allPages.length} pages to hide`);
+            // Hide all pages
             allPages.forEach(page => {
-                console.log(`🙈 Hiding page:`, page.id);
                 page.style.display = 'none';
             });
             
             // Show selected page
             const targetPageId = pageName + 'Page';
             const targetPage = document.getElementById(targetPageId);
-            console.log(`🎯 Looking for page with ID: ${targetPageId}`, targetPage);
-            
+            // Show target page
             if (targetPage) {
                 targetPage.style.display = 'block';
                 currentPage = pageName;
-                console.log(`✅ Successfully showed page: ${targetPageId}`);
             } else {
                 console.error(`❌ Target page not found: ${targetPageId}`);
             }
@@ -7706,10 +7803,9 @@
             });
             
             const activeLink = document.querySelector(`[data-page="${pageName}"]`);
-            console.log(`🎯 Looking for nav link with data-page="${pageName}"`, activeLink);
+            // Activate nav link
             if (activeLink) {
                 activeLink.classList.add('active');
-                console.log(`✅ Successfully activated nav link for: ${pageName}`);
             }
             
             // Initialize page-specific functionality
@@ -7744,7 +7840,7 @@
                     console.warn(`⚠️ Unknown page: ${pageName}`);
             }
             
-            console.log(`📄 Navigation completed to: ${pageName}`);
+            // Navigation completed
         }
         
         // ========================================
@@ -8950,8 +9046,11 @@
                             iframe: { html: `<iframe src="${arUrl}" width="400" height="600"></iframe>` }
                         };
                     }
+                    // Generate QR code if missing
                     if (!model.qr_code) {
-                        model.qr_code = '<div style="padding: 40px; color: #999;">QR Code not available</div>';
+                        const arUrl = `https://newfurniture.live/view?id=${model.id}`;
+                        // For now, we'll fetch QR codes dynamically
+                        model.qr_code = `<div class="qr-loading" data-url="${arUrl}" data-model-id="${model.id}">Loading QR...</div>`;
                     }
                 });
             } else {
@@ -9014,19 +9113,19 @@
                         </td>
                         <td>
                             <div class="code-cell">
-                                <code>${model.embed_codes.direct_link.html}</code>
+                                <div class="code-preview">${model.embed_codes.direct_link.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
                                 <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.direct_link.html.replace(/`/g, '\\`')}\`)">Copy</button>
                             </div>
                         </td>
                         <td>
                             <div class="code-cell">
-                                <code>${model.embed_codes.styled_button.html}</code>
+                                <div class="code-preview">${model.embed_codes.styled_button.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
                                 <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.styled_button.html.replace(/`/g, '\\`')}\`)">Copy</button>
                             </div>
                         </td>
                         <td>
                             <div class="code-cell">
-                                <code>${model.embed_codes.iframe.html}</code>
+                                <div class="code-preview">${model.embed_codes.iframe.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
                                 <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.iframe.html.replace(/`/g, '\\`')}\`)">Copy</button>
                             </div>
                         </td>
@@ -9084,115 +9183,6 @@
             container.innerHTML = html;
         }
 
-        function renderModelIntegrationCard(model, exportInfo) {
-            let html = `
-                <div class="integration-model-card">
-                    <div class="integration-model-header">
-                        <div class="integration-model-icon">🏠</div>
-                        <div class="integration-model-info">
-                            <h3>${model.title}</h3>
-                            <p>${model.description}</p>
-                        </div>
-                    </div>
-
-                    <div class="integration-codes-grid">
-                        <div class="integration-qr-section">
-                            <h4 style="color: #58a6ff; margin-bottom: 1rem;">📱 QR Code</h4>
-                            <div class="integration-qr-preview">
-                                ${model.qr_code || '<div style="padding: 40px; color: #999;">No QR Code</div>'}
-                            </div>
-                            <div class="integration-qr-controls">
-                                <button class="integration-download-btn" onclick="downloadQRCode('${model.model_id}', '${model.title.replace(/'/g, "\\'")}', \`${model.qr_code ? model.qr_code.replace(/`/g, '\\`') : ''}\`)">
-                                    📥 Download SVG
-                                </button>
-                                <button class="integration-copy-btn" onclick="copyQRCode(\`${model.qr_code ? model.qr_code.replace(/`/g, '\\`') : ''}\`)">
-                                    📋 Copy SVG
-                                </button>
-                            </div>
-                        </div>
-
-                        <div class="integration-codes-section">
-                            <h4>🌐 Direct Link</h4>
-                            <div class="integration-code-block">
-                                <div class="integration-code-header">
-                                    <span>HTML Link Code</span>
-                                    <button class="integration-copy-btn" onclick="copyToClipboard(\`${model.embed_codes.direct_link.html.replace(/`/g, '\\`')}\`)">Copy</button>
-                                </div>
-                                <pre>${model.embed_codes.direct_link.html}</pre>
-                            </div>
-
-                            <h4>🎯 Styled Button</h4>
-                            <div class="integration-code-block">
-                                <div class="integration-code-header">
-                                    <span>Button HTML Code</span>
-                                    <button class="integration-copy-btn" onclick="copyToClipboard(\`${model.embed_codes.styled_button.html.replace(/`/g, '\\`')}\`)">Copy</button>
-                                </div>
-                                <pre>${model.embed_codes.styled_button.html}</pre>
-                            </div>
-
-                            <h4>📺 iFrame Embed</h4>
-                            <div class="integration-code-block">
-                                <div class="integration-code-header">
-                                    <span>iFrame HTML Code</span>
-                                    <button class="integration-copy-btn" onclick="copyToClipboard(\`${model.embed_codes.iframe.html.replace(/`/g, '\\`')}\`)">Copy</button>
-                                </div>
-                                <pre>${model.embed_codes.iframe.html}</pre>
-                            </div>
-                        </div>
-                    </div>
-            `;
-
-            // Add variants section if they exist
-            if (model.variants && model.variants.length > 0) {
-                html += `<div class="integration-variant-section">`;
-                html += `<h4 style="color: #f85149; margin-bottom: 1.5rem;">🎨 Variants (${model.variants.length})</h4>`;
-
-                model.variants.forEach(variant => {
-                    html += `
-                        <div class="integration-variant-section" style="margin-top: 1rem; padding-top: 1rem;">
-                            <div class="integration-variant-header">
-                                <div class="integration-variant-color" style="background-color: ${variant.hex_color || '#ccc'};"></div>
-                                <div class="integration-variant-info">
-                                    <h5>${variant.name || 'Unnamed Variant'}</h5>
-                                    <span>${variant.hex_color || 'No color'}</span>
-                                </div>
-                            </div>
-
-                            <div class="integration-codes-grid">
-                                <div class="integration-qr-section">
-                                    <div class="integration-qr-preview">
-                                        ${variant.qr_code || '<div style="padding: 20px; color: #999; font-size: 0.9rem;">No QR Code</div>'}
-                                    </div>
-                                    <div class="integration-qr-controls">
-                                        <button class="integration-download-btn" onclick="downloadQRCode('${variant.variant_id || model.model_id}', '${(model.title + '_' + (variant.name || 'variant')).replace(/'/g, "\\'")}', \`${variant.qr_code ? variant.qr_code.replace(/`/g, '\\`') : ''}\`)">
-                                            📥 Download SVG
-                                        </button>
-                                        <button class="integration-copy-btn" onclick="copyQRCode(\`${variant.qr_code ? variant.qr_code.replace(/`/g, '\\`') : ''}\`)">
-                                            📋 Copy SVG
-                                        </button>
-                                    </div>
-                                </div>
-
-                                <div class="integration-codes-section">
-                                    <h4>🔗 Variant Link</h4>
-                                    <div class="integration-code-block">
-                                        <div class="integration-code-header">
-                                            <span>Direct AR Link</span>
-                                            <button class="integration-copy-btn" onclick="copyToClipboard('${variant.ar_url || model.ar_url}')">Copy</button>
-                                        </div>
-                                        <pre>${variant.ar_url || model.ar_url}</pre>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    `;
-                });
-                html += `</div>`;
-            }
-
-            html += `</div>`;
-            return html;
-        }
 
         function downloadQRCode(modelId, modelTitle, svgContent) {
             if (!svgContent || svgContent === 'undefined') {
