@@ -9098,26 +9098,26 @@
                             </div>
                         </td>
                         <td>
-                            <button class="table-btn download" onclick="downloadQRCode('${model.model_id}', '${model.title.replace(/'/g, "\\'")}', \`${model.qr_code ? model.qr_code.replace(/`/g, '\\`') : ''}\`)">
+                            <button class="table-btn download" onclick="downloadQRCode('${model.model_id || model.id}', '${model.title ? model.title.replace(/'/g, "\\\\'") : 'Model'}', '${model.qr_code ? model.qr_code.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"') : ''}')">
                                 📥 SVG
                             </button>
                         </td>
                         <td>
                             <div class="code-cell">
                                 <div class="code-preview">${model.embed_codes.direct_link.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.direct_link.html.replace(/`/g, '\\`')}\`)">Copy</button>
+                                <button class="table-btn copy" onclick="copyToClipboard('${model.embed_codes.direct_link.html.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}')">Copy</button>
                             </div>
                         </td>
                         <td>
                             <div class="code-cell">
                                 <div class="code-preview">${model.embed_codes.styled_button.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.styled_button.html.replace(/`/g, '\\`')}\`)">Copy</button>
+                                <button class="table-btn copy" onclick="copyToClipboard('${model.embed_codes.styled_button.html.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}')">Copy</button>
                             </div>
                         </td>
                         <td>
                             <div class="code-cell">
                                 <div class="code-preview">${model.embed_codes.iframe.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.iframe.html.replace(/`/g, '\\`')}\`)">Copy</button>
+                                <button class="table-btn copy" onclick="copyToClipboard('${model.embed_codes.iframe.html.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}')">Copy</button>
                             </div>
                         </td>
                         <td>
@@ -9137,7 +9137,7 @@
                                 <td>
                                     <div class="variant-info">
                                         <div class="variant-color" style="background-color: ${variant.hex_color || '#ccc'};"></div>
-                                        <span>${variant.name || 'Unnamed'}</span>
+                                        <span>${variant.name || variant.variant_name || 'Unnamed'}</span>
                                     </div>
                                 </td>
                                 <td>
@@ -9146,14 +9146,14 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <button class="table-btn download" onclick="downloadQRCode('${variant.variant_id || model.model_id}', '${(model.title + '_' + (variant.name || 'variant')).replace(/'/g, "\\'")}', \`${variant.qr_code ? variant.qr_code.replace(/`/g, '\\`') : ''}\`)">
+                                    <button class="table-btn download" onclick="downloadQRCode('${variant.variant_id || variant.id || model.model_id || model.id}', '${(model.title + '_' + (variant.name || variant.variant_name || 'variant')).replace(/'/g, "\\\\'")'}', '${variant.qr_code ? variant.qr_code.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"') : ''}')">
                                         📥 SVG
                                     </button>
                                 </td>
                                 <td colspan="3">
                                     <div class="variant-link">
-                                        <code>${variant.ar_url || model.ar_url}</code>
-                                        <button class="table-btn copy" onclick="copyToClipboard('${variant.ar_url || model.ar_url}')">Copy</button>
+                                        <code>${variant.ar_url || `https://newfurniture.live/view?id=${model.id || model.model_id}&variant=${variant.id || variant.variant_id}`}</code>
+                                        <button class="table-btn copy" onclick="copyToClipboard('${variant.ar_url || `https://newfurniture.live/view?id=${model.id || model.model_id}&variant=${variant.id || variant.variant_id}`}')">Copy</button>
                                     </div>
                                 </td>
                                 <td>
