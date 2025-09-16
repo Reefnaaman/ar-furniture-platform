@@ -1688,40 +1688,46 @@
             overflow-y: auto;
             flex: 1;
             min-height: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-content: flex-start;
         }
 
         .customer-item {
             position: relative;
             cursor: pointer;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            border: 2px solid rgba(88, 166, 255, 0.3);
-            border-radius: 20px;
+            border: 1px solid rgba(88, 166, 255, 0.3);
+            border-radius: 12px;
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            padding: 8px 12px;
-            margin-bottom: 6px;
+            justify-content: center;
+            padding: 4px 8px;
             background: linear-gradient(135deg, rgba(88, 166, 255, 0.1), rgba(88, 166, 255, 0.05));
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
-            min-height: 36px;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            min-height: 24px;
+            flex: 1;
+            min-width: 0;
+            max-width: calc(50% - 3px);
         }
 
         .customer-item:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
             border-color: rgba(88, 166, 255, 0.6);
             background: linear-gradient(135deg, rgba(88, 166, 255, 0.2), rgba(88, 166, 255, 0.1));
-            box-shadow: 0 4px 16px rgba(88, 166, 255, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            box-shadow: 0 2px 8px rgba(88, 166, 255, 0.3);
         }
 
         .customer-item.active {
             border-color: rgba(88, 166, 255, 0.8);
             background: linear-gradient(135deg, rgba(88, 166, 255, 0.3), rgba(88, 166, 255, 0.2));
-            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.3), 0 4px 16px rgba(88, 166, 255, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+            box-shadow: 0 0 0 1px rgba(88, 166, 255, 0.3), 0 2px 8px rgba(88, 166, 255, 0.4);
         }
 
         .customer-item.active:hover {
-            transform: translateY(-2px);
+            transform: translateY(-1px);
         }
 
         /* Special styling for All and Unassigned */
@@ -1750,31 +1756,12 @@
         .customer-name {
             color: #e6edf3;
             font-weight: 500;
-            font-size: 0.85rem;
-            flex: 1;
-            text-align: left;
-        }
-
-        .customer-count {
-            background: rgba(88, 166, 255, 0.2);
-            color: #58a6ff;
-            padding: 2px 8px;
-            border-radius: 12px;
-            font-size: 0.75rem;
-            font-weight: 600;
-            min-width: 20px;
+            font-size: 0.7rem;
             text-align: center;
-        }
-
-        /* Count badge colors */
-        .customer-item[data-customer-id="all"] .customer-count {
-            background: rgba(34, 197, 94, 0.2);
-            color: #22c55e;
-        }
-
-        .customer-item[data-customer-id="unassigned"] .customer-count {
-            background: rgba(249, 115, 22, 0.2);
-            color: #f97316;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            width: 100%;
         }
 
         
@@ -5015,7 +5002,6 @@
             allItem.setAttribute('data-customer-id', 'all');
             allItem.innerHTML = `
                 <span class="customer-name">All Furniture</span>
-                <span class="customer-count">${totalCount}</span>
             `;
             allItem.onclick = () => filterByCustomer(null);
             customerList.appendChild(allItem);
@@ -5031,7 +5017,6 @@
                 unassignedItem.setAttribute('data-customer-id', 'unassigned');
                 unassignedItem.innerHTML = `
                     <span class="customer-name">Unassigned</span>
-                    <span class="customer-count">${unassignedCount}</span>
                 `;
                 unassignedItem.onclick = () => filterByCustomer('unassigned', 'Unassigned');
                 customerList.appendChild(unassignedItem);
@@ -5051,7 +5036,6 @@
                 item.setAttribute('data-customer-id', customer.id);
                 item.innerHTML = `
                     <span class="customer-name">${customer.name}</span>
-                    <span class="customer-count">${customer.count}</span>
                 `;
                 item.onclick = () => filterByCustomer(customer.id, customer.name);
                 customerList.appendChild(item);
@@ -8946,10 +8930,39 @@
         function renderIntegrationCodes(data) {
             const container = document.getElementById('integrationCodesContainer');
 
-            // Handle both possible data structures
-            const models = data.models || data.data?.models || [];
-            const exportInfo = data.export_info || data.data?.export_info || {};
-            const customerName = exportInfo.customer_name || exportInfo.customer || 'Unknown Customer';
+            // Handle different API response structures
+            let models, exportInfo, customerName;
+
+            if (data.data && data.data.models) {
+                // Export API format
+                models = data.data.models;
+                exportInfo = data.data.export_info || {};
+                customerName = exportInfo.customer_name || exportInfo.customer || 'Unknown Customer';
+            } else if (data.models) {
+                // Regular models API format - need to generate basic structure
+                models = data.models;
+                customerName = data.customer || 'Unknown Customer';
+                exportInfo = { customer_name: customerName };
+
+                // Add basic embed codes if missing
+                models.forEach(model => {
+                    if (!model.embed_codes) {
+                        const arUrl = `https://newfurniture.live/view?id=${model.id}`;
+                        model.embed_codes = {
+                            direct_link: { html: `<a href="${arUrl}" target="_blank">View in AR</a>` },
+                            styled_button: { html: `<button onclick="window.open('${arUrl}', '_blank')">View in AR</button>` },
+                            iframe: { html: `<iframe src="${arUrl}" width="400" height="600"></iframe>` }
+                        };
+                    }
+                    if (!model.qr_code) {
+                        model.qr_code = '<div style="padding: 40px; color: #999;">QR Code not available</div>';
+                    }
+                });
+            } else {
+                models = [];
+                customerName = 'Unknown Customer';
+                exportInfo = {};
+            }
 
             if (!models || models.length === 0) {
                 container.innerHTML = `
@@ -9118,17 +9131,8 @@
             copyToClipboard(svgContent);
         }
 
-        // Initialize integration codes when page loads
-        document.addEventListener('DOMContentLoaded', function() {
-            // Load customers for integration page when it becomes active
-            const integrationPage = document.getElementById('integrationPage');
-            if (integrationPage) {
-                // Load customers immediately if integration page exists
-                setTimeout(() => {
-                    loadIntegrationCodes();
-                }, 1000);
-            }
-        });
+        // Initialize integration codes only when needed
+        // Removed auto-loading to prevent popup notifications on other pages
     </script>
         </div>
     </div>
