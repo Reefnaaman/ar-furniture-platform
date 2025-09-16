@@ -2552,6 +2552,7 @@ async function handleCustomerExportKit(req, res, customerId) {
       format = 'json',
       qr_format = 'svg',
       qr_size = 256,
+      qr_error_level = 'M',
       include_variants = 'true',
       brand_primary,
       brand_background,
@@ -2614,6 +2615,7 @@ async function handleCustomerExportKit(req, res, customerId) {
     const exportOptions = {
       qr_format: qr_format,
       qr_size: qrSizeInt,
+      qr_error_level: qr_error_level,
       include_variants: include_variants === 'true'
     };
 
