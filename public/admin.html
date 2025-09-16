@@ -9103,19 +9103,19 @@
                         <td>
                             <div class="code-cell">
                                 <div class="code-preview">${model.embed_codes.direct_link.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.direct_link.html.replace(/\`/g, '\\\\`')}\`)">Copy</button>
+                                <button class="table-btn copy" data-copy-text="${model.embed_codes.direct_link.html}" onclick="copyToClipboard(this.dataset.copyText)">Copy</button>
                             </div>
                         </td>
                         <td>
                             <div class="code-cell">
                                 <div class="code-preview">${model.embed_codes.styled_button.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.styled_button.html.replace(/\`/g, '\\\\`')}\`)">Copy</button>
+                                <button class="table-btn copy" data-copy-text="${model.embed_codes.styled_button.html}" onclick="copyToClipboard(this.dataset.copyText)">Copy</button>
                             </div>
                         </td>
                         <td>
                             <div class="code-cell">
                                 <div class="code-preview">${model.embed_codes.iframe.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.iframe.html.replace(/\`/g, '\\\\`')}\`)">Copy</button>
+                                <button class="table-btn copy" data-copy-text="${model.embed_codes.iframe.html}" onclick="copyToClipboard(this.dataset.copyText)">Copy</button>
                             </div>
                         </td>
                         <td>
