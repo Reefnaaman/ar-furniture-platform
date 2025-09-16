@@ -8479,6 +8479,152 @@
                 document.getElementById('wallpaperUploadProgress').style.display = 'none';
             }
         }
+
+        // Export Modal Functions
+        function toggleExportModal() {
+            const modal = document.getElementById('exportModal');
+            const isVisible = modal.style.display === 'flex';
+
+            if (isVisible) {
+                closeExportModal();
+            } else {
+                openExportModal();
+            }
+        }
+
+        async function openExportModal() {
+            const modal = document.getElementById('exportModal');
+            const customerSelect = document.getElementById('exportCustomerSelect');
+
+            // Clear previous selections
+            customerSelect.innerHTML = '<option value="">Choose a customer...</option>';
+
+            try {
+                // Load customers for the dropdown
+                await customerManager.loadFromAPI();
+                const customers = customerManager.getAllCustomers();
+
+                customers.forEach(customer => {
+                    const option = document.createElement('option');
+                    option.value = customer.id;
+                    option.textContent = customer.name;
+                    customerSelect.appendChild(option);
+                });
+
+                modal.style.display = 'flex';
+            } catch (error) {
+                console.error('Error loading customers for export:', error);
+                showNotification('Failed to load customers for export', 'error');
+            }
+        }
+
+        function closeExportModal() {
+            const modal = document.getElementById('exportModal');
+            const form = document.getElementById('exportForm');
+            const status = document.getElementById('exportStatus');
+
+            modal.style.display = 'none';
+            form.reset();
+            status.style.display = 'none';
+
+            // Reset form to defaults
+            document.getElementById('exportFormatSelect').value = 'html';
+            document.getElementById('qrSize').value = '256';
+            document.getElementById('qrErrorLevel').value = 'M';
+            document.getElementById('qrDarkColor').value = '#000000';
+            document.getElementById('qrLightColor').value = '#ffffff';
+            document.getElementById('includeEmbedCodes').checked = true;
+            document.getElementById('includeBrandInfo').checked = true;
+        }
+
+        // Handle export form submission
+        document.getElementById('exportForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const customerId = document.getElementById('exportCustomerSelect').value;
+            const format = document.getElementById('exportFormatSelect').value;
+            const qrSize = document.getElementById('qrSize').value;
+            const qrErrorLevel = document.getElementById('qrErrorLevel').value;
+            const qrDarkColor = document.getElementById('qrDarkColor').value;
+            const qrLightColor = document.getElementById('qrLightColor').value;
+            const includeEmbedCodes = document.getElementById('includeEmbedCodes').checked;
+            const includeBrandInfo = document.getElementById('includeBrandInfo').checked;
+
+            if (!customerId) {
+                showNotification('Please select a customer first', 'error');
+                return;
+            }
+
+            const exportButton = document.getElementById('exportButton');
+            const exportStatus = document.getElementById('exportStatus');
+            const statusText = document.querySelector('.status-text');
+
+            try {
+                // Show loading state
+                exportButton.disabled = true;
+                exportButton.textContent = '⏳ Generating...';
+                exportStatus.style.display = 'block';
+                statusText.textContent = 'Preparing your export kit...';
+
+                // Build request parameters
+                const params = new URLSearchParams({
+                    format: format,
+                    qr_size: qrSize,
+                    qr_error_level: qrErrorLevel,
+                    qr_dark_color: qrDarkColor,
+                    qr_light_color: qrLightColor,
+                    include_embed_codes: includeEmbedCodes,
+                    include_brand_info: includeBrandInfo
+                });
+
+                // Make the export request
+                const response = await fetch(`/api/customer/${customerId}/export-kit?${params}`, {
+                    method: 'GET',
+                    headers: {
+                        'Accept': format === 'json' ? 'application/json' :
+                                 format === 'csv' ? 'text/csv' : 'text/html'
+                    }
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Export failed: ${response.status}`);
+                }
+
+                statusText.textContent = 'Download starting...';
+
+                // Handle download based on format
+                const customerName = document.getElementById('exportCustomerSelect').options[document.getElementById('exportCustomerSelect').selectedIndex].text;
+                const filename = `${customerName.replace(/[^a-zA-Z0-9]/g, '_')}_AR_Kit.${format}`;
+
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = filename;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                window.URL.revokeObjectURL(url);
+
+                showNotification(`Export kit generated successfully! Download: ${filename}`, 'success');
+                closeExportModal();
+
+            } catch (error) {
+                console.error('Export error:', error);
+                showNotification(`Export failed: ${error.message}`, 'error');
+                statusText.textContent = 'Export failed. Please try again.';
+
+            } finally {
+                // Reset button state
+                exportButton.disabled = false;
+                exportButton.innerHTML = '📋 Generate Export Kit';
+
+                setTimeout(() => {
+                    exportStatus.style.display = 'none';
+                }, 3000);
+            }
+        });
     </script>
         </div>
     </div>
