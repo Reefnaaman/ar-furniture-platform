@@ -736,7 +736,7 @@
         .integration-table-container {
             padding: 20px;
             overflow-x: auto;
-            background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+            background: rgba(255, 255, 255, 0.1);
             border-radius: 12px;
             margin: 20px 0;
             border: 1px solid #dee2e6;
@@ -9037,11 +9037,9 @@
                             iframe: { html: `<iframe src="${arUrl}" width="400" height="600"></iframe>` }
                         };
                     }
-                    // Generate QR code if missing
+                    // Set placeholder if QR code missing
                     if (!model.qr_code) {
-                        const arUrl = `https://newfurniture.live/view?id=${model.id}`;
-                        // For now, we'll fetch QR codes dynamically
-                        model.qr_code = `<div class="qr-loading" data-url="${arUrl}" data-model-id="${model.id}">Loading QR...</div>`;
+                        model.qr_code = null;
                     }
                 });
             } else {
@@ -9098,26 +9096,26 @@
                             </div>
                         </td>
                         <td>
-                            <button class="table-btn download" onclick="downloadQRCode('${model.model_id || model.id}', '${model.title ? model.title.replace(/'/g, "\\\\'") : 'Model'}', '${model.qr_code ? model.qr_code.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"') : ''}')">
+                            <button class="table-btn download" onclick="downloadQRCode('${model.model_id || model.id}', '${model.title ? model.title.replace(/'/g, \"\\\\\'\") : 'Model'}', \`${model.qr_code ? model.qr_code.replace(/\`/g, '\\\\`') : ''}\`)">
                                 📥 SVG
                             </button>
                         </td>
                         <td>
                             <div class="code-cell">
                                 <div class="code-preview">${model.embed_codes.direct_link.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                                <button class="table-btn copy" onclick="copyToClipboard('${model.embed_codes.direct_link.html.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}')">Copy</button>
+                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.direct_link.html.replace(/\`/g, '\\\\`')}\`)">Copy</button>
                             </div>
                         </td>
                         <td>
                             <div class="code-cell">
                                 <div class="code-preview">${model.embed_codes.styled_button.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                                <button class="table-btn copy" onclick="copyToClipboard('${model.embed_codes.styled_button.html.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}')">Copy</button>
+                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.styled_button.html.replace(/\`/g, '\\\\`')}\`)">Copy</button>
                             </div>
                         </td>
                         <td>
                             <div class="code-cell">
                                 <div class="code-preview">${model.embed_codes.iframe.html.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</div>
-                                <button class="table-btn copy" onclick="copyToClipboard('${model.embed_codes.iframe.html.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"')}')">Copy</button>
+                                <button class="table-btn copy" onclick="copyToClipboard(\`${model.embed_codes.iframe.html.replace(/\`/g, '\\\\`')}\`)">Copy</button>
                             </div>
                         </td>
                         <td>
@@ -9146,7 +9144,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <button class="table-btn download" onclick="downloadQRCode('${variant.variant_id || variant.id || model.model_id || model.id}', '${(model.title + '_' + (variant.name || variant.variant_name || 'variant')).replace(/'/g, "\\\\'")}', '${variant.qr_code ? variant.qr_code.replace(/'/g, "\\\\'").replace(/"/g, '\\\\"') : ''}')">
+                                    <button class="table-btn download" onclick="downloadQRCode('${variant.variant_id || variant.id || model.model_id || model.id}', '${(model.title + '_' + (variant.name || variant.variant_name || 'variant')).replace(/'/g, \"\\\\\'\")}', \`${variant.qr_code ? variant.qr_code.replace(/\`/g, '\\\\`') : ''}\`)">
                                         📥 SVG
                                     </button>
                                 </td>
