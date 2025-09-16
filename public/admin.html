@@ -3968,24 +3968,26 @@
                         ${model.variants && model.variants.length > 0 ? `
                             <div class="variants-circles">
                                 <!-- Always show original as first variant with extracted color -->
-                                <div class="variant-circle original-variant" 
-                                     style="background: ${model.dominant_color || '#6b7280'};" 
-                                     title="Original"
-                                     data-model-id="${model.id}"
-                                     onclick="switchToVariant('${model.id}', 'original', '${modelUrl}')">
+                                <div class="variant-wrapper">
+                                    <div class="variant-circle original-variant"
+                                         style="background: ${model.dominant_color || '#6b7280'};"
+                                         title="Original"
+                                         data-model-id="${model.id}"
+                                         onclick="switchToVariant('${model.id}', 'original', '${modelUrl}')">
+                                    </div>
+                                    <div class="variant-delete"
+                                         title="Delete Original"
+                                         onclick="deleteMainVariant('${model.id}', event)">×</div>
                                 </div>
                                 ${model.variants.map(variant => `
                                     <div class="variant-wrapper">
-                                        <div class="variant-circle ${variant.is_primary ? 'primary' : ''}" 
-                                             style="background-color: ${variant.hex_color};" 
+                                        <div class="variant-circle ${variant.is_primary ? 'primary' : ''}"
+                                             style="background-color: ${variant.hex_color};"
                                              title="${variant.variant_name}"
                                              onclick="switchToVariant('${model.id}', '${variant.id}', '${variant.cloudinary_url}', '${variant.hex_color}', '${variant.variant_type || 'upload'}')">
                                              ${variant.is_primary ? '★' : ''}
                                         </div>
-                                        <button class="variant-url-button" data-variant-id="${variant.id}" onclick="startEditVariantUrl(this)" ${!variant.product_url ? 'data-empty="true"' : ''}>
-                                            ${variant.product_url ? '🔗' : '➕'}
-                                        </button>
-                                        <div class="variant-delete" 
+                                        <div class="variant-delete"
                                              title="Delete ${variant.variant_name}"
                                              onclick="deleteVariant('${variant.id}', '${model.id}', event)">×</div>
                                     </div>
@@ -6923,11 +6925,11 @@
         async function deleteVariant(variantId, modelId, event) {
             // Stop event propagation to prevent triggering the variant click
             event.stopPropagation();
-            
+
             if (!confirm('Are you sure you want to delete this variant?')) {
                 return;
             }
-            
+
             try {
                 const response = await fetch('/api/models', {
                     method: 'DELETE',
@@ -6939,7 +6941,7 @@
                         type: 'variant'
                     })
                 });
-                
+
                 if (response.ok) {
                     console.log('✅ Variant deleted successfully');
                     // Refresh the models to reflect the change
@@ -6948,10 +6950,46 @@
                     const error = await response.json();
                     throw new Error(error.error || 'Failed to delete variant');
                 }
-                
+
             } catch (error) {
                 console.error('Error deleting variant:', error);
                 alert('Failed to delete variant: ' + error.message);
+            }
+        }
+
+        // Delete main/original variant (deletes the entire model)
+        async function deleteMainVariant(modelId, event) {
+            // Stop event propagation to prevent triggering the variant click
+            event.stopPropagation();
+
+            if (!confirm('Are you sure you want to delete the original model? This will delete the entire furniture item including all variants.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/models', {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        id: modelId,
+                        type: 'model'
+                    })
+                });
+
+                if (response.ok) {
+                    console.log('✅ Model deleted successfully');
+                    // Refresh the models to reflect the change
+                    loadModels();
+                } else {
+                    const error = await response.json();
+                    throw new Error(error.error || 'Failed to delete model');
+                }
+
+            } catch (error) {
+                console.error('Error deleting model:', error);
+                alert('Failed to delete model: ' + error.message);
             }
         }
         
