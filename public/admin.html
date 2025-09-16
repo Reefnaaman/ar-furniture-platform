@@ -266,31 +266,21 @@
             box-shadow: 0 8px 25px rgba(88, 166, 255, 0.3);
         }
 
-        .section-actions {
-            display: flex;
-            gap: 12px;
-            align-items: center;
+        /* Export Navigation Link Styling */
+        .export-nav-link {
+            background: linear-gradient(135deg, #f85149, #ff6b6b) !important;
+            color: white !important;
+            border: 1px solid rgba(248, 81, 73, 0.3) !important;
         }
 
-        .action-button.secondary {
-            background: linear-gradient(135deg, #f85149, #ff6b6b);
-            color: white;
-            border: none;
-            padding: 12px 20px;
-            border-radius: 12px;
-            cursor: pointer;
-            font-weight: 500;
-            font-size: 0.9rem;
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-            display: flex;
-            align-items: center;
-            gap: 6px;
+        .export-nav-link:hover {
+            background: linear-gradient(135deg, #ff6b6b, #f85149) !important;
+            transform: translateX(3px);
+            box-shadow: 0 4px 15px rgba(248, 81, 73, 0.4) !important;
         }
 
-        .action-button.secondary:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 8px 25px rgba(248, 81, 73, 0.3);
-            background: linear-gradient(135deg, #ff6b6b, #f85149);
+        .export-nav-link .nav-icon {
+            font-size: 1.1rem;
         }
         
         .models-grid {
@@ -2818,6 +2808,10 @@
                         <span class="nav-icon">📝</span>
                         <span class="nav-label">Requests</span>
                     </button>
+                    <button class="sidebar-nav-link export-nav-link" onclick="toggleExportModal()" title="Export Customer Integration Kits">
+                        <span class="nav-icon">📋</span>
+                        <span class="nav-label">Export Kits</span>
+                    </button>
                 </div>
             </div>
             
@@ -2884,12 +2878,7 @@
                     <div class="models-section">
                         <div class="section-header">
                             <h2 class="section-title">Uploaded Furniture</h2>
-                            <div class="section-actions">
-                                <button class="action-button secondary" onclick="toggleExportModal()" title="Export Customer Integration Kit">
-                                    📋 Export Kit
-                                </button>
-                                <button class="refresh-button" onclick="loadModels()">Refresh</button>
-                            </div>
+                            <button class="refresh-button" onclick="loadModels()">Refresh</button>
                         </div>
                         
                         <div id="modelsContainer">
