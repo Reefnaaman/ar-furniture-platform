@@ -2,6 +2,8 @@ import { uploadModel } from '../lib/cloudinary.js';
 import { saveModel, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, saveModelVariant, supabase, query } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import { getInternalEndpoint } from '../lib/endpoints.js';
+import { generateQR, generateBatchQR, QRGeneratorError, getSupportedFormats, getOptimalSettings } from '../lib/qr-generator.js';
+import { exportCustomerKit, getExportFormats, generateEmbedCodes } from '../lib/export-service.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
 
@@ -243,7 +245,22 @@ export default async function handler(req, res) {
       
       return res.status(405).json({ error: 'Method not allowed' });
     }
-    
+
+    // Route: /api/qr-generate - Single QR code generation
+    if (routePath === 'qr-generate') {
+      return await handleQRGenerate(req, res);
+    }
+
+    // Route: /api/qr-batch - Batch QR code generation
+    if (routePath === 'qr-batch') {
+      return await handleQRBatch(req, res);
+    }
+
+    // Route: /api/qr-formats - Get supported QR formats
+    if (routePath === 'qr-formats') {
+      return await handleQRFormats(req, res);
+    }
+
     // Route: /api/customers/[id]/brand-settings
     if (routePath?.match(/^customers\/[^\/]+\/brand-settings$/)) {
       const customerId = routePath.split('/')[1];
@@ -252,8 +269,16 @@ export default async function handler(req, res) {
 
     // Route: /api/customer/[id]
     if (routePath?.startsWith('customer/')) {
-      const customerId = routePath.split('/')[1];
-      return await handleCustomerModels(req, res, customerId);
+      const routeParts = routePath.split('/');
+      const customerId = routeParts[1];
+
+      if (routeParts.length === 2) {
+        // /api/customer/[id] - Get customer models
+        return await handleCustomerModels(req, res, customerId);
+      } else if (routeParts.length === 3 && routeParts[2] === 'export-kit') {
+        // /api/customer/[id]/export-kit - Export integration kit
+        return await handleCustomerExportKit(req, res, customerId);
+      }
     }
     
     // Route: /api/model/[id]
@@ -2124,6 +2149,562 @@ async function handleCloudinarySave(req, res) {
     return res.status(500).json({
       error: 'Failed to save model metadata',
       details: error.message
+    });
+  }
+}
+
+/**
+ * Rate limiting storage (in-memory for now, could be moved to Redis)
+ */
+const rateLimitStore = new Map();
+
+/**
+ * Simple rate limiter implementation
+ */
+function checkRateLimit(ip, route, limits) {
+  const key = `${ip}:${route}`;
+  const now = Date.now();
+  const windowMs = 60 * 60 * 1000; // 1 hour window
+
+  if (!rateLimitStore.has(key)) {
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    return { allowed: true, remaining: limits.max - 1 };
+  }
+
+  const record = rateLimitStore.get(key);
+
+  // Reset if window expired
+  if (now > record.resetTime) {
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    return { allowed: true, remaining: limits.max - 1 };
+  }
+
+  // Check if limit exceeded
+  if (record.count >= limits.max) {
+    return {
+      allowed: false,
+      remaining: 0,
+      resetTime: record.resetTime
+    };
+  }
+
+  // Increment count
+  record.count++;
+  rateLimitStore.set(key, record);
+
+  return { allowed: true, remaining: limits.max - record.count };
+}
+
+/**
+ * Handle single QR code generation
+ * GET /api/qr-generate?url=<url>&format=<format>&size=<size>
+ */
+async function handleQRGenerate(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Rate limiting
+  const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+  const rateLimit = checkRateLimit(clientIP, 'qr-generate', { max: 100 });
+
+  if (!rateLimit.allowed) {
+    return res.status(429).json({
+      success: false,
+      error: {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many QR generation requests. Please try again later.',
+        details: {
+          reset_time: new Date(rateLimit.resetTime).toISOString()
+        }
+      }
+    });
+  }
+
+  // Set rate limit headers
+  res.setHeader('X-RateLimit-Limit', '100');
+  res.setHeader('X-RateLimit-Remaining', rateLimit.remaining.toString());
+
+  try {
+    const { url, format, size, errorCorrectionLevel, margin, color } = req.query;
+
+    // Validate required parameters
+    if (!url) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'MISSING_URL',
+          message: 'URL parameter is required',
+          example: '/api/qr-generate?url=https://newfurniture.live/view?id=abc123'
+        }
+      });
+    }
+
+    // Build options object
+    const options = {};
+    if (format) options.format = format;
+    if (size) options.size = parseInt(size);
+    if (errorCorrectionLevel) options.errorCorrectionLevel = errorCorrectionLevel;
+    if (margin) options.margin = parseInt(margin);
+
+    // Handle color parameters
+    if (color) {
+      try {
+        options.color = JSON.parse(color);
+      } catch (e) {
+        // If JSON parse fails, assume it's just the dark color
+        options.color = { dark: color };
+      }
+    }
+
+    // Generate QR code
+    const result = await generateQR(url, options);
+
+    // Set appropriate content type for direct image responses
+    if (result.data.format === 'svg') {
+      res.setHeader('Content-Type', 'image/svg+xml');
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
+    } else if (result.data.format === 'png') {
+      res.setHeader('Content-Type', 'image/png');
+      res.setHeader('Cache-Control', 'public, max-age=3600');
+    }
+
+    // Check if client wants just the QR code content (for direct embedding)
+    if (req.query.raw === 'true') {
+      if (result.data.format === 'png') {
+        return res.status(200).send(result.data.qr_code);
+      } else {
+        return res.status(200).send(result.data.qr_code);
+      }
+    }
+
+    // Return JSON response with metadata
+    return res.status(200).json({
+      success: true,
+      data: {
+        qr_code: result.data.qr_code,
+        format: result.data.format,
+        size: result.data.size,
+        url: result.data.url,
+        content_type: result.data.content_type,
+        estimated_file_size: result.data.estimated_file_size,
+        generated_at: result.data.generated_at
+      },
+      metadata: {
+        processing_time_ms: result.metadata.processing_time_ms,
+        estimated_scannable_distance: result.metadata.estimated_scannable_distance,
+        error_correction: result.metadata.error_correction,
+        rate_limit: {
+          remaining: rateLimit.remaining,
+          limit: 100
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('QR Generation Error:', error);
+
+    // Handle our custom QR errors
+    if (error instanceof QRGeneratorError) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          timestamp: error.timestamp
+        }
+      });
+    }
+
+    // Handle unexpected errors
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'An unexpected error occurred during QR generation',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }
+    });
+  }
+}
+
+/**
+ * Handle batch QR code generation
+ * POST /api/qr-batch
+ * Body: { urls: [...], options: {...} }
+ */
+async function handleQRBatch(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  // Rate limiting (stricter for batch operations)
+  const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+  const rateLimit = checkRateLimit(clientIP, 'qr-batch', { max: 10 });
+
+  if (!rateLimit.allowed) {
+    return res.status(429).json({
+      success: false,
+      error: {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many batch QR requests. Please try again later.',
+        details: {
+          reset_time: new Date(rateLimit.resetTime).toISOString()
+        }
+      }
+    });
+  }
+
+  // Set rate limit headers
+  res.setHeader('X-RateLimit-Limit', '10');
+  res.setHeader('X-RateLimit-Remaining', rateLimit.remaining.toString());
+
+  try {
+    const { urls, options = {} } = req.body;
+
+    // Validate input
+    if (!urls || !Array.isArray(urls)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_INPUT',
+          message: 'Request body must contain a "urls" array',
+          example: { urls: ['https://example.com/1', 'https://example.com/2'], options: { format: 'svg' } }
+        }
+      });
+    }
+
+    if (urls.length === 0) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'EMPTY_URLS_ARRAY',
+          message: 'URLs array cannot be empty'
+        }
+      });
+    }
+
+    if (urls.length > 50) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'TOO_MANY_URLS',
+          message: 'Maximum 50 URLs allowed per batch request',
+          provided: urls.length,
+          maximum: 50
+        }
+      });
+    }
+
+    // Generate QR codes in batch
+    const result = await generateBatchQR(urls, options);
+
+    return res.status(200).json({
+      success: true,
+      data: result.data,
+      metadata: {
+        rate_limit: {
+          remaining: rateLimit.remaining,
+          limit: 10
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('Batch QR Generation Error:', error);
+
+    // Handle our custom QR errors
+    if (error instanceof QRGeneratorError) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: error.code,
+          message: error.message,
+          details: error.details,
+          timestamp: error.timestamp
+        }
+      });
+    }
+
+    // Handle unexpected errors
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'An unexpected error occurred during batch QR generation',
+        details: process.env.NODE_ENV === 'development' ? error.message : undefined
+      }
+    });
+  }
+}
+
+/**
+ * Handle QR formats and capabilities inquiry
+ * GET /api/qr-formats
+ */
+async function handleQRFormats(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { useCase } = req.query;
+
+    const formats = getSupportedFormats();
+
+    let optimalSettings = null;
+    if (useCase) {
+      optimalSettings = getOptimalSettings(useCase);
+    }
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        supported_formats: formats,
+        optimal_settings: optimalSettings,
+        use_cases: ['web', 'print', 'mobile', 'embed'],
+        size_limits: {
+          minimum: 64,
+          maximum: 1024,
+          recommended: 256
+        },
+        error_correction_levels: {
+          'L': { recovery: '~7%', use_case: 'Clean environments' },
+          'M': { recovery: '~15%', use_case: 'Standard use (recommended)' },
+          'Q': { recovery: '~25%', use_case: 'Noisy environments' },
+          'H': { recovery: '~30%', use_case: 'Very noisy/damaged' }
+        },
+        rate_limits: {
+          qr_generate: '100 requests per hour',
+          qr_batch: '10 requests per hour (max 50 URLs per request)'
+        }
+      },
+      examples: {
+        single_qr: '/api/qr-generate?url=https://newfurniture.live/view?id=abc123&format=svg&size=256',
+        batch_qr: {
+          method: 'POST',
+          endpoint: '/api/qr-batch',
+          body: {
+            urls: [
+              'https://newfurniture.live/view?id=chair1',
+              'https://newfurniture.live/view?id=table1'
+            ],
+            options: { format: 'svg', size: 200 }
+          }
+        },
+        direct_svg: '/api/qr-generate?url=https://newfurniture.live/view?id=abc123&raw=true'
+      }
+    });
+
+  } catch (error) {
+    console.error('QR Formats Error:', error);
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'INTERNAL_ERROR',
+        message: 'Failed to retrieve QR format information'
+      }
+    });
+  }
+}
+
+/**
+ * Handle customer export kit generation
+ * GET /api/customer/[id]/export-kit?format=json&options=...
+ */
+async function handleCustomerExportKit(req, res, customerId) {
+  // Only GET method allowed for export kit generation
+  if (req.method !== 'GET') {
+    return res.status(405).json({
+      success: false,
+      error: {
+        code: 'METHOD_NOT_ALLOWED',
+        message: 'Only GET method is allowed for export kit generation'
+      }
+    });
+  }
+
+  // Rate limiting for export operations
+  const clientIP = req.headers['x-forwarded-for'] || req.connection.remoteAddress || 'unknown';
+  const rateLimit = checkRateLimit(clientIP, 'export-kit', { max: 20 });
+
+  if (!rateLimit.allowed) {
+    return res.status(429).json({
+      success: false,
+      error: {
+        code: 'RATE_LIMIT_EXCEEDED',
+        message: 'Too many export requests. Please try again later.',
+        details: {
+          reset_time: new Date(rateLimit.resetTime).toISOString(),
+          limit: 20
+        }
+      }
+    });
+  }
+
+  // Set rate limit headers
+  res.setHeader('X-RateLimit-Limit', '20');
+  res.setHeader('X-RateLimit-Remaining', rateLimit.remaining.toString());
+
+  try {
+    const {
+      format = 'json',
+      qr_format = 'svg',
+      qr_size = 256,
+      include_variants = 'true',
+      brand_primary,
+      brand_background,
+      download = 'false'
+    } = req.query;
+
+    // Validate customer ID
+    if (!customerId || customerId === 'undefined') {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_CUSTOMER_ID',
+          message: 'Customer ID is required',
+          example: '/api/customer/acme-corp/export-kit?format=json'
+        }
+      });
+    }
+
+    // Validate format
+    const supportedFormats = getExportFormats();
+    if (!supportedFormats.formats[format]) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_FORMAT',
+          message: `Format '${format}' is not supported`,
+          supported_formats: Object.keys(supportedFormats.formats),
+          example: '/api/customer/acme-corp/export-kit?format=html'
+        }
+      });
+    }
+
+    // Validate QR format
+    if (!supportedFormats.supported_qr_formats.includes(qr_format)) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_QR_FORMAT',
+          message: `QR format '${qr_format}' is not supported`,
+          supported_qr_formats: supportedFormats.supported_qr_formats
+        }
+      });
+    }
+
+    // Validate QR size
+    const qrSizeInt = parseInt(qr_size);
+    if (isNaN(qrSizeInt) || qrSizeInt < 64 || qrSizeInt > 1024) {
+      return res.status(400).json({
+        success: false,
+        error: {
+          code: 'INVALID_QR_SIZE',
+          message: 'QR size must be between 64 and 1024 pixels',
+          provided: qr_size,
+          valid_range: '64-1024'
+        }
+      });
+    }
+
+    // Build export options
+    const exportOptions = {
+      qr_format: qr_format,
+      qr_size: qrSizeInt,
+      include_variants: include_variants === 'true'
+    };
+
+    // Add brand colors if provided
+    if (brand_primary || brand_background) {
+      exportOptions.brandColors = {};
+      if (brand_primary) exportOptions.brandColors.primary = brand_primary;
+      if (brand_background) exportOptions.brandColors.background = brand_background;
+    }
+
+    console.log(`🎨 Generating export kit for customer: ${customerId}, format: ${format}`);
+
+    // Generate the export kit
+    const exportResult = await exportCustomerKit(customerId, format, exportOptions);
+
+    // If download=true, return the file directly for download
+    if (download === 'true') {
+      const mimeType = supportedFormats.formats[format].mime_type;
+
+      res.setHeader('Content-Type', mimeType);
+      res.setHeader('Content-Disposition', `attachment; filename="${exportResult.filename}"`);
+      res.setHeader('Cache-Control', 'no-cache');
+
+      return res.status(200).send(exportResult.content);
+    }
+
+    // Return JSON response with export data and metadata
+    return res.status(200).json({
+      success: true,
+      data: {
+        customer_id: customerId,
+        format: format,
+        filename: exportResult.filename,
+        file_size: exportResult.size,
+        content: format === 'json' ? JSON.parse(exportResult.content) : exportResult.content,
+        generated_at: exportResult.generated_at,
+        options: exportResult.options
+      },
+      metadata: {
+        processing_info: {
+          format: format,
+          qr_format: qr_format,
+          qr_size: qrSizeInt,
+          includes_variants: include_variants === 'true'
+        },
+        download_url: req.url + (req.url.includes('?') ? '&' : '?') + 'download=true',
+        rate_limit: {
+          remaining: rateLimit.remaining,
+          limit: 20
+        },
+        export_formats: supportedFormats.formats
+      }
+    });
+
+  } catch (error) {
+    console.error('Export Kit Generation Error:', error);
+
+    // Handle specific export errors
+    if (error.message.includes('No models found')) {
+      return res.status(404).json({
+        success: false,
+        error: {
+          code: 'CUSTOMER_NO_MODELS',
+          message: `No models found for customer: ${customerId}`,
+          details: 'This customer either does not exist or has no uploaded models',
+          suggestion: 'Upload models first or check the customer ID'
+        }
+      });
+    }
+
+    if (error.message.includes('Database functions not available')) {
+      return res.status(503).json({
+        success: false,
+        error: {
+          code: 'SERVICE_UNAVAILABLE',
+          message: 'Export service is temporarily unavailable',
+          details: 'Database connection issue'
+        }
+      });
+    }
+
+    // Handle unexpected errors
+    return res.status(500).json({
+      success: false,
+      error: {
+        code: 'EXPORT_FAILED',
+        message: 'Failed to generate export kit',
+        details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
+        customer_id: customerId,
+        timestamp: new Date().toISOString()
+      }
     });
   }
 }
