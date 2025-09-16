@@ -9152,8 +9152,8 @@
                                 </td>
                                 <td colspan="3">
                                     <div class="variant-link">
-                                        <code>${variant.ar_url || `https://newfurniture.live/view?id=${model.id || model.model_id}&variant=${variant.id || variant.variant_id}`}</code>
-                                        <button class="table-btn copy" onclick="copyToClipboard('${variant.ar_url || `https://newfurniture.live/view?id=${model.id || model.model_id}&variant=${variant.id || variant.variant_id}`}')">Copy</button>
+                                        <code>${variant.ar_url || ('https://newfurniture.live/view?id=' + (model.id || model.model_id) + '&variant=' + (variant.id || variant.variant_id))}</code>
+                                        <button class="table-btn copy" onclick="copyToClipboard('${variant.ar_url || ('https://newfurniture.live/view?id=' + (model.id || model.model_id) + '&variant=' + (variant.id || variant.variant_id))}')">Copy</button>
                                     </div>
                                 </td>
                                 <td>
