@@ -9096,7 +9096,7 @@
                             </div>
                         </td>
                         <td>
-                            <button class="table-btn download" onclick="downloadQRCode('${model.model_id || model.id}', '${model.title ? model.title.replace(/'/g, \"\\\\\'\") : 'Model'}', \`${model.qr_code ? model.qr_code.replace(/\`/g, '\\\\`') : ''}\`)">
+                            <button class="table-btn download" onclick="downloadQRCode('${model.model_id || model.id}', '${(model.title || 'Model').replace(/'/g, \"\\\\\'\")}', '${model.qr_code || ''}')">
                                 📥 SVG
                             </button>
                         </td>
@@ -9144,7 +9144,7 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <button class="table-btn download" onclick="downloadQRCode('${variant.variant_id || variant.id || model.model_id || model.id}', '${(model.title + '_' + (variant.name || variant.variant_name || 'variant')).replace(/'/g, \"\\\\\'\")}', \`${variant.qr_code ? variant.qr_code.replace(/\`/g, '\\\\`') : ''}\`)">
+                                    <button class="table-btn download" onclick="downloadQRCode('${variant.variant_id || variant.id || model.model_id || model.id}', '${(model.title + '_' + (variant.name || variant.variant_name || 'variant')).replace(/'/g, \"\\\\\'\")}', '${variant.qr_code || ''}')">
                                         📥 SVG
                                     </button>
                                 </td>
