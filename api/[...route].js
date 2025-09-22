@@ -79,6 +79,11 @@ export default async function handler(req, res) {
       });
     }
     
+    // Route: /api/init-db - Initialize database tables
+    if (routePath === 'init-db') {
+      return await handleInitDb(req, res);
+    }
+
     // Route: /api/upload-simple
     if (routePath === 'upload-simple') {
       return await handleUpload(req, res);
@@ -2707,6 +2712,76 @@ async function handleCustomerExportKit(req, res, customerId) {
         customer_id: customerId,
         timestamp: new Date().toISOString()
       }
+    });
+  }
+}
+
+/**
+ * Initialize database tables
+ * GET /api/init-db
+ */
+async function handleInitDb(req, res) {
+  if (req.method \!== "GET") {
+    return res.status(405).json({ error: "Method not allowed" });
+  }
+
+  try {
+    console.log("🔧 Initializing database tables...");
+
+    // Test connection first
+    const { data: connectionTest, error: connectionError } = await supabase
+      .from("models")
+      .select("count")
+      .limit(1);
+
+    if (connectionError) {
+      console.error("❌ Database connection failed:", connectionError);
+      return res.status(500).json({
+        success: false,
+        error: "Database connection failed",
+        details: connectionError.message,
+        fix: "Check SUPABASE_URL and SUPABASE_ANON_KEY environment variables"
+      });
+    }
+
+    console.log("✅ Database connection successful");
+
+    // Try to query each table to see if it exists
+    const tables = ["models", "model_variants", "users", "model_views"];
+    const tableStatus = {};
+
+    for (const table of tables) {
+      try {
+        const { data, error } = await supabase
+          .from(table)
+          .select("*")
+          .limit(1);
+
+        if (error) {
+          tableStatus[table] = { exists: false, error: error.message };
+        } else {
+          tableStatus[table] = { exists: true, count: data?.length || 0 };
+        }
+      } catch (error) {
+        tableStatus[table] = { exists: false, error: error.message };
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Database initialization check complete",
+      connection: "OK",
+      tables: tableStatus,
+      timestamp: new Date().toISOString(),
+      note: "If tables do not exist, they need to be created in Supabase dashboard"
+    });
+
+  } catch (error) {
+    console.error("💥 Init DB failed:", error);
+    return res.status(500).json({
+      success: false,
+      error: "Database initialization failed",
+      details: error.message
     });
   }
 }
