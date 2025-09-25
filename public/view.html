@@ -1419,29 +1419,7 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
         }
 
         function createARVariantControls(modelId, modelInfo, selectedVariant, modelViewer) {
-            // 1. Create title (separate element, much higher up)
-            const instructionText = document.createElement('div');
-            instructionText.id = 'arVariantTitle';
-            instructionText.style.cssText = `
-                position: fixed;
-                bottom: 450px;
-                left: 50%;
-                transform: translateX(-50%);
-                color: #ffffff;
-                font-size: 18px;
-                font-weight: 600;
-                text-align: center;
-                text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
-                z-index: 10000;
-                white-space: nowrap;
-                max-width: 90vw;
-                overflow: hidden;
-                text-overflow: ellipsis;
-            `;
-            instructionText.textContent = 'Move your phone side-to-side to help find the floor, then tap to place';
-            document.body.appendChild(instructionText);
-            
-            // 2. Create variant circles (higher up)
+            // Create variant circles
             const variantControls = document.createElement('div');
             variantControls.id = 'arVariantControls';
             variantControls.style.cssText = `
