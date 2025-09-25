@@ -734,7 +734,7 @@
                                 
                                 <!-- QR Code with glassmorphism -->
                                 <div style="background: linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(163, 113, 247, 0.1) 100%); padding: 20px; border-radius: 20px; border: 1px solid rgba(240, 246, 252, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);">
-                                    <img id="qrCodeImage" src="/api/u4?url=${encodeURIComponent(selectedVariant ? window.location.href : window.location.origin + window.location.pathname + '?id=' + id)}&format=png&size=200&raw=true" 
+                                    <img id="qrCodeImage" src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9hRVLdAAAAABJRU5ErkJggg==" 
                                          style="border-radius: 12px; display: block;">
                                 </div>
                                 
@@ -768,7 +768,10 @@
                 
                 // Load customer logo for desktop
                 loadDesktopCustomerLogo(modelInfo);
-                
+
+                // Load initial QR code for desktop
+                loadInitialQRCode(modelInfo, variantId);
+
                 // Load customer brand settings and apply RTL if needed (non-blocking)
                 loadCustomerBrandSettings(modelInfo.customer_id).catch(err => {
                     console.warn('⚠️ Could not load brand settings (non-critical):', err.message);
@@ -778,7 +781,47 @@
                 showError(error.message);
             }
         }
-        
+
+        async function loadInitialQRCode(modelInfo, variantId) {
+            try {
+                // Determine the correct URL for QR code
+                const currentVariantId = variantId || 'original';
+                const baseUrl = window.location.origin + window.location.pathname;
+                const variantUrl = currentVariantId === 'original' ?
+                    baseUrl :
+                    `${baseUrl}?variant=${currentVariantId}`;
+
+                console.log('🔲 Loading initial QR code for URL:', variantUrl);
+
+                const qrCodeImage = document.getElementById('qrCodeImage');
+                if (qrCodeImage) {
+                    // Load QR code from our API and convert to data URL
+                    fetch(`/api/u4?url=${encodeURIComponent(variantUrl)}&format=png&size=200`)
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.data && data.data.qr_code && data.data.qr_code.data) {
+                                // Convert buffer array to base64
+                                const buffer = new Uint8Array(data.data.qr_code.data);
+                                const base64 = btoa(String.fromCharCode.apply(null, buffer));
+                                qrCodeImage.src = `data:image/png;base64,${base64}`;
+                                console.log('✅ Initial QR code loaded successfully');
+                            } else {
+                                console.error('❌ Invalid QR response format:', data);
+                                // Fallback to external QR service
+                                qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('❌ Failed to load initial QR code:', error);
+                            // Fallback to external QR service
+                            qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
+                        });
+                }
+            } catch (error) {
+                console.error('❌ Error in loadInitialQRCode:', error);
+            }
+        }
+
         async function loadDesktopCustomerLogo(modelInfo) {
             if (!modelInfo || !modelInfo.customer_id || modelInfo.customer_id === 'unassigned') return;
             
@@ -1119,9 +1162,27 @@
             // Update the existing QR code image instead of opening a popup
             const qrCodeImage = document.getElementById('qrCodeImage');
             if (qrCodeImage) {
-                const qrUrl = `/api/u4?url=${encodeURIComponent(variantUrl)}&format=png&size=200&raw=true`;
-                qrCodeImage.src = qrUrl;
-                console.log(`✅ Updated QR code to show ${variantName} variant`);
+                // Load QR code from our API and convert to data URL
+                fetch(`/api/u4?url=${encodeURIComponent(variantUrl)}&format=png&size=200`)
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.data && data.data.qr_code && data.data.qr_code.data) {
+                            // Convert buffer array to base64
+                            const buffer = new Uint8Array(data.data.qr_code.data);
+                            const base64 = btoa(String.fromCharCode.apply(null, buffer));
+                            qrCodeImage.src = `data:image/png;base64,${base64}`;
+                            console.log(`✅ Updated QR code to show ${variantName} variant`);
+                        } else {
+                            console.error('❌ Invalid QR response format during variant switch:', data);
+                            // Fallback to external QR service
+                            qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('❌ Failed to load QR code:', error);
+                        // Fallback to external QR service
+                        qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
+                    });
             }
             
             // Update the 3D model viewer to show the selected variant
