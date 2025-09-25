@@ -402,129 +402,28 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
+            background: rgba(0, 0, 0, 0.8);
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
             z-index: 10000;
-            opacity: 1;
-            transition: opacity 0.5s ease-out;
-        }
-
-        .ar-loading-overlay.fade-out {
-            opacity: 0;
-            pointer-events: none;
-        }
-
-        .ar-loading-content {
-            text-align: center;
-            color: #e6edf3;
-            max-width: 300px;
-        }
-
-        .ar-loading-logo {
-            width: 80px;
-            height: 80px;
-            margin-bottom: 30px;
-            border-radius: 20px;
-            background: linear-gradient(135deg, #58a6ff, #79c0ff);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            color: white;
-            box-shadow: 0 10px 30px rgba(88, 166, 255, 0.3);
-            animation: pulseGlow 2s ease-in-out infinite;
-        }
-
-        .ar-loading-title {
-            font-size: 24px;
-            font-weight: 600;
-            margin-bottom: 12px;
-            color: #e6edf3;
-        }
-
-        .ar-loading-message {
-            font-size: 16px;
-            color: #7d8590;
-            margin-bottom: 30px;
-            line-height: 1.4;
+            backdrop-filter: blur(10px);
         }
 
         .ar-loading-spinner {
-            width: 50px;
-            height: 50px;
-            border: 3px solid rgba(88, 166, 255, 0.2);
-            border-top: 3px solid #58a6ff;
+            width: 40px;
+            height: 40px;
+            border: 3px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid rgba(255, 255, 255, 0.8);
             border-radius: 50%;
             animation: spin 1s linear infinite;
-            margin-bottom: 20px;
         }
 
-        .ar-loading-progress {
-            width: 200px;
-            height: 4px;
-            background: rgba(88, 166, 255, 0.2);
-            border-radius: 2px;
-            overflow: hidden;
-            margin-bottom: 20px;
-        }
-
-        .ar-loading-progress-bar {
-            height: 100%;
-            background: linear-gradient(90deg, #58a6ff, #79c0ff);
-            border-radius: 2px;
-            width: 0%;
-            transition: width 0.3s ease;
-            animation: shimmer 1.5s infinite;
-        }
-
-        /* Loading Animations */
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
 
-        @keyframes pulseGlow {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 10px 30px rgba(88, 166, 255, 0.3);
-            }
-            50% {
-                transform: scale(1.05);
-                box-shadow: 0 15px 40px rgba(88, 166, 255, 0.5);
-            }
-        }
-
-        @keyframes shimmer {
-            0% { background-position: -200px 0; }
-            100% { background-position: 200px 0; }
-        }
-
-        .ar-loading-progress-bar {
-            background: linear-gradient(90deg,
-                transparent,
-                rgba(88, 166, 255, 0.8),
-                transparent
-            );
-            background-size: 200px 100%;
-        }
-
-        /* Mobile optimizations */
-        @media (max-width: 768px) {
-            .ar-loading-content {
-                padding: 20px;
-            }
-
-            .ar-loading-title {
-                font-size: 20px;
-            }
-
-            .ar-loading-message {
-                font-size: 14px;
-            }
-        }
 
     </style>
 </head>
@@ -2059,78 +1958,256 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
                 overlay.id = 'ar-loading-overlay';
                 overlay.className = 'ar-loading-overlay';
 
-                overlay.innerHTML = `
-                    <div class="ar-loading-content">
-                        <div class="ar-loading-logo">
-                            📱
-                        </div>
-                        <div class="ar-loading-title">NewFurniture AR</div>
-                        <div class="ar-loading-message" id="ar-loading-message">${message}</div>
-                        <div class="ar-loading-spinner"></div>
-                        <div class="ar-loading-progress">
-                            <div class="ar-loading-progress-bar" id="ar-loading-progress-bar"></div>
-                        </div>
-                    </div>
-                `;
+                overlay.innerHTML = `<div class="ar-loading-spinner"></div>`;
 
                 document.body.appendChild(overlay);
-            } else {
-                // Update existing message
-                const messageEl = document.getElementById('ar-loading-message');
-                if (messageEl) messageEl.textContent = message;
-
-                // Remove fade-out class if it exists
-                overlay.classList.remove('fade-out');
-            }
-
-            // Update progress bar
-            const progressBar = document.getElementById('ar-loading-progress-bar');
-            if (progressBar) {
-                progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
             }
         }
 
         /**
-         * Update loading message and progress
-         * @param {string} message - New loading message
-         * @param {number} progress - Progress percentage (0-100)
+         * Update loading state - simplified for spinner-only loading
          */
         function updateLoadingState(message, progress = null) {
-            console.log('🔄 Loading update:', message, progress ? `(${progress}%)` : '');
+            // No-op for simple spinner loading
+        }
 
-            const messageEl = document.getElementById('ar-loading-message');
-            if (messageEl) {
-                messageEl.textContent = message;
+        /**
+         * Hide loading state - simplified for spinner-only loading
+         */
+        function hideLoadingState(delay = 0) {
+            setTimeout(() => {
+                const overlay = document.getElementById('ar-loading-overlay');
+                if (overlay && overlay.parentNode) {
+                    overlay.parentNode.removeChild(overlay);
+                }
+            }, delay);
+        }
+
+        // ==================== Share Functions ====================
+
+        /**
+         * Generate SEO-friendly URL for current model and variant
+         */
+        function generateCurrentSEOUrl() {
+            if (!globalModelInfo) {
+                console.warn('⚠️ No model info available for URL generation');
+                return window.location.href; // Fallback to current URL
             }
 
-            if (progress !== null) {
-                const progressBar = document.getElementById('ar-loading-progress-bar');
-                if (progressBar) {
-                    progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
-                }
+            const model = globalModelInfo;
+            const currentVariantData = window.currentVariantData;
+
+            // Build SEO URL: /f/{customer-slug}/{product-slug-id}/{variant?}
+            const baseUrl = `${window.location.origin}/f/${model.customer_slug}/${model.url_slug}-${model.id}`;
+
+            if (currentVariantData && currentVariantData.id !== 'original') {
+                // Add variant slug if available (using variant name as slug for now)
+                const variantSlug = currentVariantData.variant_name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                return `${baseUrl}/${variantSlug}`;
+            }
+
+            return baseUrl;
+        }
+
+        /**
+         * Copy link to clipboard - uses SEO-friendly URL
+         */
+        function copyLink() {
+            const seoUrl = generateCurrentSEOUrl();
+
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(seoUrl).then(() => {
+                    showToast('📋 Link copied to clipboard!');
+                    console.log('✅ SEO URL copied:', seoUrl);
+                }).catch(err => {
+                    console.error('❌ Failed to copy:', err);
+                    fallbackCopy(seoUrl);
+                });
+            } else {
+                fallbackCopy(seoUrl);
             }
         }
 
         /**
-         * Hide loading state with smooth fade transition
-         * @param {number} delay - Optional delay in milliseconds before hiding
+         * Fallback copy method for older browsers
          */
-        function hideLoadingState(delay = 0) {
-            console.log('✅ Hiding loading state', delay ? `(${delay}ms delay)` : '');
+        function fallbackCopy(text) {
+            const textArea = document.createElement('textarea');
+            textArea.value = text;
+            textArea.style.position = 'fixed';
+            textArea.style.opacity = '0';
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
 
-            setTimeout(() => {
-                const overlay = document.getElementById('ar-loading-overlay');
-                if (overlay) {
-                    overlay.classList.add('fade-out');
+            try {
+                document.execCommand('copy');
+                showToast('📋 Link copied!');
+                console.log('✅ SEO URL copied (fallback):', text);
+            } catch (err) {
+                console.error('❌ Fallback copy failed:', err);
+                showToast('❌ Failed to copy link');
+            }
 
-                    // Remove from DOM after transition completes
-                    setTimeout(() => {
-                        if (overlay && overlay.parentNode) {
-                            overlay.parentNode.removeChild(overlay);
-                        }
-                    }, 500); // Match CSS transition duration
+            document.body.removeChild(textArea);
+        }
+
+        /**
+         * Share model using Web Share API or fallback
+         */
+        function shareModel() {
+            const seoUrl = generateCurrentSEOUrl();
+            const title = globalModelInfo ? globalModelInfo.title : 'AR Furniture';
+            const text = `Check out this ${title} in AR!`;
+
+            if (navigator.share) {
+                navigator.share({
+                    title: title,
+                    text: text,
+                    url: seoUrl
+                }).then(() => {
+                    console.log('✅ Successfully shared SEO URL:', seoUrl);
+                }).catch(err => {
+                    console.log('📤 Share cancelled or failed:', err);
+                    // Fallback to copy
+                    copyLink();
+                });
+            } else {
+                // Fallback: copy to clipboard
+                copyLink();
+            }
+        }
+
+        /**
+         * Show QR code in a modal (enhances existing desktop QR display)
+         */
+        function showQR() {
+            // On mobile, just copy the link since QR doesn't make sense
+            if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
+                copyLink();
+                return;
+            }
+
+            // On desktop, create a modal with a larger QR code
+            const seoUrl = generateCurrentSEOUrl();
+            const modelTitle = globalModelInfo ? globalModelInfo.title : 'AR Furniture';
+
+            // Create modal overlay
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: rgba(0, 0, 0, 0.8);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                backdrop-filter: blur(5px);
+            `;
+
+            modal.innerHTML = `
+                <div style="
+                    background: white;
+                    padding: 40px;
+                    border-radius: 20px;
+                    text-align: center;
+                    max-width: 400px;
+                    margin: 20px;
+                    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                ">
+                    <h2 style="margin: 0 0 20px 0; color: #333; font-size: 1.5rem;">📱 Scan with Phone</h2>
+                    <img src="/api/u4?url=${encodeURIComponent(seoUrl)}&format=svg&size=300&raw=true"
+                         style="width: 280px; height: 280px; margin: 20px 0; border: 2px solid #eee; border-radius: 12px;">
+                    <p style="margin: 20px 0; color: #666; font-size: 0.9rem; line-height: 1.4;">
+                        Point your phone camera at the QR code<br>
+                        to view <strong>${modelTitle}</strong> in AR
+                    </p>
+                    <div style="display: flex; gap: 10px; justify-content: center; margin-top: 30px;">
+                        <button onclick="copyQRUrl('${seoUrl}')" style="
+                            padding: 12px 24px;
+                            background: #667eea;
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 0.9rem;
+                        ">📋 Copy Link</button>
+                        <button onclick="this.parentElement.parentElement.parentElement.remove()" style="
+                            padding: 12px 24px;
+                            background: #6b7280;
+                            color: white;
+                            border: none;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-size: 0.9rem;
+                        ">✕ Close</button>
+                    </div>
+                </div>
+            `;
+
+            document.body.appendChild(modal);
+
+            // Close on background click
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.remove();
                 }
-            }, delay);
+            });
+
+            console.log('📲 QR modal opened for SEO URL:', seoUrl);
+        }
+
+        /**
+         * Copy QR URL from modal
+         */
+        function copyQRUrl(url) {
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(url).then(() => {
+                    showToast('📋 Link copied!');
+                });
+            }
+        }
+
+        /**
+         * Show toast notification
+         */
+        function showToast(message, duration = 3000) {
+            const existingToast = document.getElementById('toast');
+            if (existingToast) {
+                existingToast.textContent = message;
+                existingToast.classList.add('show');
+            } else {
+                // Create toast if it doesn't exist
+                const toast = document.createElement('div');
+                toast.id = 'toast';
+                toast.className = 'toast';
+                toast.textContent = message;
+                toast.style.cssText = `
+                    position: fixed;
+                    bottom: 30px;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: #333;
+                    color: white;
+                    padding: 15px 30px;
+                    border-radius: 50px;
+                    z-index: 1000;
+                    transition: opacity 0.3s ease;
+                `;
+                document.body.appendChild(toast);
+                toast.classList.add('show');
+            }
+
+            // Hide toast after duration
+            setTimeout(() => {
+                const toast = document.getElementById('toast');
+                if (toast) {
+                    toast.classList.remove('show');
+                }
+            }, duration);
         }
 
     </script>

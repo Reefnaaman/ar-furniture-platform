@@ -3630,7 +3630,42 @@
 
     <script>
         let deleteTarget = null;
-        
+
+        // ==================== SEO URL Generation ====================
+
+        /**
+         * Generate SEO-friendly URL for a model and variant
+         * @param {Object} model - Model object with url_slug, customer_slug, id
+         * @param {string|null} variantId - Optional variant ID
+         * @param {string|null} variantName - Optional variant name for slug
+         * @returns {string} SEO-friendly URL
+         */
+        function generateSEOUrl(model, variantId = null, variantName = null) {
+            if (!model || !model.customer_slug || !model.url_slug) {
+                console.warn('⚠️ Model missing SEO data, fallback to old URL:', model);
+                return `https://newfurniture.live/view?id=${model.id}`;
+            }
+
+            // Base SEO URL: /f/{customer-slug}/{product-slug-id}
+            const baseUrl = `https://newfurniture.live/f/${model.customer_slug}/${model.url_slug}-${model.id}`;
+
+            if (variantId && variantId !== 'original' && variantName) {
+                // Add variant slug if specified
+                const variantSlug = variantName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                return `${baseUrl}/${variantSlug}`;
+            }
+
+            return baseUrl;
+        }
+
+        /**
+         * Generate local SEO URL (for same-origin navigation)
+         */
+        function generateLocalSEOUrl(model, variantId = null, variantName = null) {
+            const fullUrl = generateSEOUrl(model, variantId, variantName);
+            return fullUrl.replace('https://newfurniture.live', '');
+        }
+
         // Error reporting utility
         async function showErrorReporting(errorMessage, reportData) {
             const reportButton = document.createElement('button');
@@ -3915,7 +3950,8 @@
         }
         
         function generateModelCard(model) {
-            const viewUrl = `https://newfurniture.live/view?id=${model.id}`;
+            const viewUrl = generateSEOUrl(model);
+            const localViewUrl = generateLocalSEOUrl(model);
             // Temporary fix: use working Cloudinary URL for the broken couch model
             let modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
             if (model.cloudinary_url && model.cloudinary_url.includes('1756571179025-couch.glb')) {
@@ -4023,7 +4059,7 @@
                         ` : ''}
                         
                         <div class="card-actions-consolidated">
-                            <a href="/view?id=${model.id}" target="_blank" class="action-button primary">
+                            <a href="${localViewUrl}" target="_blank" class="action-button primary">
                                 👁️ View
                             </a>
                             <button class="action-button primary" onclick="copyToClipboard('${viewUrl}', this)">
@@ -6444,7 +6480,7 @@
         
         function handleCopyLink() {
             if (!currentSettingsModel) return;
-            const viewUrl = `${window.location.origin}/view?id=${currentSettingsModel.id}`;
+            const viewUrl = generateSEOUrl(currentSettingsModel);
             copyToClipboard(viewUrl, document.getElementById('copyLinkButton'));
         }
         
@@ -6851,19 +6887,48 @@
         function updateCopyLinkUrl(card, modelId, variantId) {
             const copyButton = card.querySelector('button[onclick*="copyToClipboard"]');
             if (copyButton) {
+                // Find the model object from the global models data
+                const model = findModelById(modelId);
                 let newUrl;
-                if (variantId === 'original') {
-                    // Original variant - no variant parameter needed
-                    newUrl = `https://newfurniture.live/view?id=${modelId}`;
+
+                if (model && model.customer_slug && model.url_slug) {
+                    // Use SEO URL with variant support
+                    if (variantId === 'original') {
+                        newUrl = generateSEOUrl(model);
+                    } else {
+                        // Find variant name for SEO URL
+                        const variant = model.variants?.find(v => v.id === variantId);
+                        const variantName = variant ? variant.variant_name : null;
+                        newUrl = generateSEOUrl(model, variantId, variantName);
+                    }
                 } else {
-                    // Specific variant - include variant parameter
-                    newUrl = `https://newfurniture.live/view?id=${modelId}&variant=${variantId}`;
+                    // Fallback to old URL format if model lacks SEO data
+                    console.warn('⚠️ Model missing SEO data, using fallback URLs for:', modelId);
+                    if (variantId === 'original') {
+                        newUrl = `https://newfurniture.live/view?id=${modelId}`;
+                    } else {
+                        newUrl = `https://newfurniture.live/view?id=${modelId}&variant=${variantId}`;
+                    }
                 }
-                
+
                 // Update the onclick attribute with the new URL
                 copyButton.setAttribute('onclick', `copyToClipboard('${newUrl}', this)`);
-                console.log('🔗 Updated copy link URL:', newUrl);
+                console.log('🔗 Updated copy link URL to SEO format:', newUrl);
             }
+        }
+
+        /**
+         * Helper function to find model by ID from loaded data
+         */
+        function findModelById(modelId) {
+            // Search through customers and their models (assumes models are loaded in global scope)
+            if (window.loadedCustomers) {
+                for (const customer of window.loadedCustomers) {
+                    const model = customer.models?.find(m => m.id === modelId);
+                    if (model) return model;
+                }
+            }
+            return null;
         }
         
         // Update original variant colors ONLY for models without saved colors
