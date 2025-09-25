@@ -927,9 +927,10 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
                 // Determine the correct URL for QR code
                 const currentVariantId = variantId || 'original';
                 const baseUrl = window.location.origin + window.location.pathname;
+                const modelId = modelInfo?.id || new URLSearchParams(window.location.search).get('id');
                 const variantUrl = currentVariantId === 'original' ?
-                    baseUrl :
-                    `${baseUrl}?variant=${currentVariantId}`;
+                    `${baseUrl}?id=${modelId}` :
+                    `${baseUrl}?id=${modelId}&variant=${currentVariantId}`;
 
                 console.log('🔲 Loading initial QR code for URL:', variantUrl);
 
