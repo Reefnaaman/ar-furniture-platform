@@ -1290,40 +1290,47 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
         function navigateToLoadingScreen() {
             console.log('📍 ROUTE: Loading Screen');
 
-            // Complete clean slate
-            document.body.innerHTML = '';
-            document.body.style.cssText = '';
+            try {
+                // Complete clean slate
+                document.body.innerHTML = '';
+                document.body.style.cssText = '';
 
-            // ONLY loading spinner - nothing else
-            const loadingScreen = document.createElement('div');
-            loadingScreen.style.cssText = `
-                position: fixed;
-                top: 0;
-                left: 0;
-                width: 100vw;
-                height: 100vh;
-                background: rgba(0, 0, 0, 0.8);
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                backdrop-filter: blur(10px);
-            `;
+                // ONLY loading spinner - nothing else
+                const loadingScreen = document.createElement('div');
+                loadingScreen.style.cssText = `
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100vw;
+                    height: 100vh;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    backdrop-filter: blur(10px);
+                `;
 
-            const spinner = document.createElement('div');
-            spinner.style.cssText = `
-                width: 40px;
-                height: 40px;
-                border: 3px solid rgba(255, 255, 255, 0.1);
-                border-top: 3px solid rgba(255, 255, 255, 0.8);
-                border-radius: 50%;
-                animation: spin 1s linear infinite;
-            `;
+                const spinner = document.createElement('div');
+                spinner.style.cssText = `
+                    width: 40px;
+                    height: 40px;
+                    border: 3px solid rgba(255, 255, 255, 0.1);
+                    border-top: 3px solid rgba(255, 255, 255, 0.8);
+                    border-radius: 50%;
+                    animation: spin 1s linear infinite;
+                `;
 
-            loadingScreen.appendChild(spinner);
-            document.body.appendChild(loadingScreen);
+                loadingScreen.appendChild(spinner);
+                document.body.appendChild(loadingScreen);
 
-            // Start loading model (will navigate to AR-ready screen when done)
-            startModelLoading();
+                console.log('✅ Loading screen created');
+
+                // Start loading model (will navigate to AR-ready screen when done)
+                startModelLoading();
+            } catch (error) {
+                console.error('❌ Error creating loading screen:', error);
+                handleARFailure('Loading screen error: ' + error.message);
+            }
         }
 
         /**
@@ -1333,31 +1340,41 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
         function navigateToARReadyScreen() {
             console.log('📍 ROUTE: AR-Ready Screen');
 
-            // Complete clean slate
-            document.body.innerHTML = '';
-            document.body.style.cssText = '';
+            try {
+                // Complete clean slate
+                document.body.innerHTML = '';
+                document.body.style.cssText = '';
 
-            const { modelUrl, modelInfo, selectedVariant } = window.arRouteData;
+                const { modelUrl, modelInfo, selectedVariant } = window.arRouteData;
+                console.log('🔄 Creating AR-ready screen with:', { modelUrl, modelInfo, selectedVariant });
 
-            // Create model viewer
-            const modelViewer = document.createElement('model-viewer');
-            modelViewer.setAttribute('id', 'modelViewer');
-            modelViewer.setAttribute('src', modelUrl);
-            modelViewer.setAttribute('ar', '');
-            modelViewer.setAttribute('ar-modes', 'scene-viewer quick-look');
-            modelViewer.setAttribute('camera-controls', '');
-            modelViewer.style.cssText = 'width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1;';
-            document.body.appendChild(modelViewer);
+                if (!modelUrl) {
+                    throw new Error('No model URL for AR-ready screen');
+                }
 
-            // Add variant controls if available
-            if (modelInfo && modelInfo.variants && modelInfo.variants.length > 0) {
-                createARVariantControls(modelInfo.id, modelInfo, selectedVariant, modelViewer);
-            } else {
-                createARBackButton(modelInfo);
-            }
+                // Create model viewer
+                const modelViewer = document.createElement('model-viewer');
+                modelViewer.setAttribute('id', 'modelViewer');
+                modelViewer.setAttribute('src', modelUrl);
+                modelViewer.setAttribute('ar', '');
+                modelViewer.setAttribute('ar-modes', 'scene-viewer quick-look');
+                modelViewer.setAttribute('camera-controls', '');
+                modelViewer.style.cssText = 'width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1;';
+                document.body.appendChild(modelViewer);
 
-            // Listen for AR exit to navigate to post-AR screen
-            modelViewer.addEventListener('ar-status', (event) => {
+                console.log('✅ AR model-viewer created');
+
+                // Add variant controls if available
+                if (modelInfo && modelInfo.variants && modelInfo.variants.length > 0) {
+                    createARVariantControls(modelInfo.id, modelInfo, selectedVariant, modelViewer);
+                    console.log('✅ AR variant controls created');
+                } else {
+                    createARBackButton(modelInfo);
+                    console.log('✅ AR back button created');
+                }
+
+                // Listen for AR exit to navigate to post-AR screen
+                modelViewer.addEventListener('ar-status', (event) => {
                 console.log('📱 AR Status in route system:', event.detail.status);
 
                 switch (event.detail.status) {
@@ -1383,6 +1400,11 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
                         break;
                 }
             });
+
+            } catch (error) {
+                console.error('❌ Error creating AR-ready screen:', error);
+                handleARFailure('AR-ready screen error: ' + error.message);
+            }
         }
 
         /**
@@ -1411,25 +1433,46 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
          * Start model loading process (called from loading screen)
          */
         function startModelLoading() {
-            const { modelUrl } = window.arRouteData;
+            try {
+                const { modelUrl } = window.arRouteData;
+                console.log('🔄 Starting model loading with URL:', modelUrl);
 
-            // Create invisible model-viewer just for loading
-            const modelViewer = document.createElement('model-viewer');
-            modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
-            modelViewer.setAttribute('src', modelUrl);
-            modelViewer.setAttribute('ar', '');
-            document.body.appendChild(modelViewer);
+                if (!modelUrl) {
+                    throw new Error('No model URL provided');
+                }
 
-            // When model loads, navigate to AR-ready screen
-            modelViewer.addEventListener('load', () => {
-                console.log('✅ Model loaded - navigating to AR-ready screen');
-                navigateToARReadyScreen();
-            });
+                // Create invisible model-viewer just for loading
+                const modelViewer = document.createElement('model-viewer');
+                modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
+                modelViewer.setAttribute('src', modelUrl);
+                modelViewer.setAttribute('ar', '');
+                document.body.appendChild(modelViewer);
 
-            modelViewer.addEventListener('error', (event) => {
-                console.error('❌ Model loading error:', event);
-                handleARFailure('Failed to load 3D model');
-            });
+                console.log('✅ Model-viewer created for loading');
+
+                // When model loads, navigate to AR-ready screen
+                modelViewer.addEventListener('load', () => {
+                    console.log('✅ Model loaded - navigating to AR-ready screen');
+                    navigateToARReadyScreen();
+                });
+
+                modelViewer.addEventListener('error', (event) => {
+                    console.error('❌ Model loading error:', event);
+                    handleARFailure('Failed to load 3D model');
+                });
+
+                // Safety timeout - if model doesn't load in 15 seconds, show error
+                setTimeout(() => {
+                    if (!document.getElementById('modelViewer')) {
+                        console.warn('⚠️ Model loading timed out');
+                        handleARFailure('Model loading timed out');
+                    }
+                }, 15000);
+
+            } catch (error) {
+                console.error('❌ Error in startModelLoading:', error);
+                handleARFailure('Model loading setup error: ' + error.message);
+            }
         }
 
         /**
@@ -1512,113 +1555,26 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
         // ENTRY POINT: Route-based AR system
         function launchDirectAR(modelId, modelUrl, modelInfo = null, selectedVariant = null) {
             console.log('🚀 Route-based AR system starting');
+            console.log('🔍 Launch params:', { modelId, modelUrl, modelInfo, selectedVariant });
 
-            // Store data globally for route navigation
-            window.arRouteData = { modelId, modelUrl, modelInfo, selectedVariant };
-
-            // Navigate to loading screen (completely separate)
-            navigateToLoadingScreen();
-        }
-
-            // Step 4: Track AR states
-            let modelLoaded = false;
-            let arActivated = false;
-            let arSessionStarted = false;
-
-            // Step 5: Model loading progress tracking
-            // Event-driven model loading with progress updates
-            modelViewer.addEventListener('progress', (event) => {
-                const progress = event.detail.totalProgress * 100;
-                updateLoadingState(`Loading 3D model... ${Math.round(progress)}%`, progress);
-            });
-
-            modelViewer.addEventListener('load', () => {
-                console.log('📱 Model loaded successfully');
-                modelLoaded = true;
-
-                // CRITICAL: Hide loading spinner immediately when model is ready
-                hideLoadingState(0);
-                console.log('✅ Loading spinner hidden - model ready for AR interaction');
-
-                // Try to activate AR now that model is loaded
-                if (modelViewer.canActivateAR && !arActivated) {
-                    arActivated = true;
-                    console.log('🚀 Activating AR...');
-                    try {
-                        modelViewer.activateAR();
-                    } catch (error) {
-                        console.error('❌ AR activation failed:', error);
-                        handleARFailure('AR activation failed');
-                    }
-                } else {
-                    console.warn('⚠️ Cannot activate AR - checking AR availability');
-                    setTimeout(checkARAvailability, 1000);
-                }
-            });
-
-            // AR session status monitoring
-            modelViewer.addEventListener('ar-status', (event) => {
-                console.log('📱 AR Status:', event.detail.status);
-
-                switch (event.detail.status) {
-                    case 'session-started':
-                        console.log('✅ AR session started successfully');
-                        arSessionStarted = true;
-
-                        // Loading state should already be hidden when model loaded
-                        // Just show AR controls now
-                        showARControls();
-                        break;
-
-                    case 'failed':
-                        console.error('❌ AR session failed');
-                        handleARFailure('AR session failed to start');
-                        break;
-
-                    case 'not-presenting':
-                        console.log('⚠️ AR session ended or failed to start');
-                        if (!arSessionStarted) {
-                            // AR never started - probably a permission denial or device issue
-                            handleARFailure('AR not available on this device');
-                        } else {
-                            // User exited AR - create clean POST-AR back screen
-                            console.log('✅ User exited AR - creating post-AR back screen');
-                            createPostARBackScreen();
-                        }
-                        break;
-                }
-            });
-
-            // Model loading error handling
-            modelViewer.addEventListener('error', (event) => {
-                console.error('❌ Model loading error:', event);
-                handleARFailure('Failed to load 3D model');
-            });
-
-            // Timeout handlers for stuck states
-            function checkARAvailability() {
-                if (modelViewer.canActivateAR && !arActivated) {
-                    arActivated = true;
-                    console.log('🚀 Retrying AR activation...');
-                    try {
-                        modelViewer.activateAR();
-                    } catch (error) {
-                        handleARFailure('AR activation retry failed');
-                    }
-                } else if (!modelViewer.canActivateAR) {
-                    handleARFailure('AR not supported on this device');
-                }
+            // Validate required data before clearing page
+            if (!modelId || !modelUrl) {
+                console.error('❌ Missing required data for route system:', { modelId, modelUrl });
+                handleARFailure('Invalid model data');
+                return;
             }
 
-            // Overall timeout for the entire AR loading process
-            setTimeout(() => {
-                if (!arSessionStarted && !arActivated) {
-                    console.warn('🚨 AR loading timed out - showing fallback');
-                    handleARFailure('AR loading timed out');
-                }
-            }, 10000); // 10 seconds total timeout
+            try {
+                // Store data globally for route navigation
+                window.arRouteData = { modelId, modelUrl, modelInfo, selectedVariant };
+                console.log('✅ Route data stored:', window.arRouteData);
 
-            // View tracking already done in loadModel function
+                // Navigate to loading screen (completely separate)
+                navigateToLoadingScreen();
+            } catch (error) {
+                console.error('❌ Error in route system:', error);
+                handleARFailure('Route system error: ' + error.message);
+            }
         }
 
 
