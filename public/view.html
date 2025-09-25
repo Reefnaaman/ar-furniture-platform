@@ -799,9 +799,9 @@
                     fetch(`/api/u4?url=${encodeURIComponent(variantUrl)}&format=png&size=200`)
                         .then(response => response.json())
                         .then(data => {
-                            if (data.data && data.data.qr_code && data.data.qr_code.data) {
+                            if (data.qr_code && data.qr_code.qr_code && data.qr_code.qr_code.data) {
                                 // Convert buffer array to base64
-                                const buffer = new Uint8Array(data.data.qr_code.data);
+                                const buffer = new Uint8Array(data.qr_code.qr_code.data);
                                 const base64 = btoa(String.fromCharCode.apply(null, buffer));
                                 qrCodeImage.src = `data:image/png;base64,${base64}`;
                                 console.log('✅ Initial QR code loaded successfully');
@@ -1166,9 +1166,9 @@
                 fetch(`/api/u4?url=${encodeURIComponent(variantUrl)}&format=png&size=200`)
                     .then(response => response.json())
                     .then(data => {
-                        if (data.data && data.data.qr_code && data.data.qr_code.data) {
+                        if (data.qr_code && data.qr_code.qr_code && data.qr_code.qr_code.data) {
                             // Convert buffer array to base64
-                            const buffer = new Uint8Array(data.data.qr_code.data);
+                            const buffer = new Uint8Array(data.qr_code.qr_code.data);
                             const base64 = btoa(String.fromCharCode.apply(null, buffer));
                             qrCodeImage.src = `data:image/png;base64,${base64}`;
                             console.log(`✅ Updated QR code to show ${variantName} variant`);
