@@ -106,7 +106,7 @@ export default async function handler(req, res) {
     // Convert obfuscated endpoint back to internal name
     const routePath = getInternalEndpoint(externalRoutePath) || externalRoutePath;
     
-    logger.debug('Route debug', { routePath, method: req.method });
+    logger.debug('Route debug', { routePath, method: req.method, searchParams: Object.fromEntries(url.searchParams) });
     
     logger.debug('Users route detected', { routePath });
     
