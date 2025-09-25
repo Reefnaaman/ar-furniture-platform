@@ -84,6 +84,16 @@ export default async function handler(req, res) {
       return await handleInitDb(req, res);
     }
 
+    // Route: /api/test-db-connection - Test database connectivity
+    if (routePath === 'test-db-connection') {
+      return await handleTestDbConnection(req, res);
+    }
+
+    // Route: /api/qr-migration - Add QR persistence columns and migrate existing models
+    if (routePath === 'qr-migration') {
+      return await handleQRMigration(req, res);
+    }
+
     // Route: /api/upload-simple
     if (routePath === 'upload-simple') {
       return await handleUpload(req, res);
@@ -2045,6 +2055,13 @@ async function handleCloudinarySave(req, res) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Enhanced debugging information
+  console.log('🔍 [CLOUDINARY-SAVE] Request received at:', new Date().toISOString());
+  console.log('🔍 [CLOUDINARY-SAVE] Environment check:');
+  console.log('  - SUPABASE_URL:', process.env.SUPABASE_URL ? 'SET' : 'MISSING');
+  console.log('  - SUPABASE_ANON_KEY:', process.env.SUPABASE_ANON_KEY ? 'SET' : 'MISSING');
+  console.log('  - DOMAIN:', process.env.DOMAIN || 'DEFAULT');
+
   try {
     const {
       cloudinaryUrl,
@@ -2062,15 +2079,34 @@ async function handleCloudinarySave(req, res) {
       isVariant
     } = req.body;
 
+    console.log('🔍 [CLOUDINARY-SAVE] Request body parsed:', {
+      cloudinaryUrl: cloudinaryUrl ? 'SET' : 'MISSING',
+      cloudinaryPublicId: cloudinaryPublicId ? 'SET' : 'MISSING',
+      fileSize,
+      title,
+      isVariant,
+      customerId,
+      customerName
+    });
+
     if (!cloudinaryUrl || !cloudinaryPublicId) {
-      return res.status(400).json({ error: 'Cloudinary URL and public ID are required' });
+      console.error('❌ [CLOUDINARY-SAVE] Missing required fields');
+      return res.status(400).json({
+        error: 'Cloudinary URL and public ID are required',
+        received: {
+          cloudinaryUrl: !!cloudinaryUrl,
+          cloudinaryPublicId: !!cloudinaryPublicId
+        }
+      });
     }
 
     let dbResult;
 
     if (isVariant && parentModelId && variantName) {
       // Handle variant upload
-      console.log('Saving variant after direct upload...');
+      console.log('🎨 [CLOUDINARY-SAVE] Saving variant after direct upload...');
+      console.log('🎨 [CLOUDINARY-SAVE] Variant params:', { parentModelId, variantName, hexColor });
+
       dbResult = await saveModelVariant({
         parentModelId: parentModelId,
         variantName: variantName,
@@ -2081,21 +2117,24 @@ async function handleCloudinarySave(req, res) {
         isPrimary: false,
         variantType: 'upload'
       });
+
+      console.log('🎨 [CLOUDINARY-SAVE] Variant result:', { success: dbResult?.success, id: dbResult?.id });
     } else {
       // Handle regular model upload
-      console.log('Saving model after direct upload...');
+      console.log('📦 [CLOUDINARY-SAVE] Saving model after direct upload...');
 
       // Parse dimensions if provided
       let parsedDimensions = null;
       if (dimensions) {
         try {
           parsedDimensions = typeof dimensions === 'string' ? JSON.parse(dimensions) : dimensions;
+          console.log('📏 [CLOUDINARY-SAVE] Parsed dimensions:', parsedDimensions);
         } catch (error) {
-          console.warn('Failed to parse dimensions:', error.message);
+          console.warn('⚠️ [CLOUDINARY-SAVE] Failed to parse dimensions:', error.message);
         }
       }
 
-      dbResult = await saveModel({
+      const modelParams = {
         title: title || 'Untitled Model',
         description: description || '',
         filename: cloudinaryPublicId.split('/').pop() + '.glb',
@@ -2110,22 +2149,50 @@ async function handleCloudinarySave(req, res) {
           uploadMethod: 'direct',
           uploadedAt: new Date().toISOString()
         }
+      };
+
+      console.log('📦 [CLOUDINARY-SAVE] Model params:', {
+        ...modelParams,
+        metadata: JSON.stringify(modelParams.metadata)
+      });
+
+      dbResult = await saveModel(modelParams);
+
+      console.log('📦 [CLOUDINARY-SAVE] Model result:', { success: dbResult?.success, id: dbResult?.id, error: dbResult?.error });
+    }
+
+    if (!dbResult) {
+      console.error('❌ [CLOUDINARY-SAVE] dbResult is null/undefined');
+      return res.status(500).json({
+        error: 'Database operation returned no result',
+        debug: {
+          isVariant,
+          hasParentModelId: !!parentModelId,
+          hasVariantName: !!variantName,
+          timestamp: new Date().toISOString()
+        }
       });
     }
 
     if (!dbResult.success) {
-      console.error('Database save failed:', dbResult.error);
+      console.error('❌ [CLOUDINARY-SAVE] Database save failed:', dbResult.error);
       return res.status(500).json({
         error: 'Failed to save model to database',
-        details: dbResult.error
+        details: dbResult.error,
+        debug: {
+          dbResultType: typeof dbResult,
+          dbResultKeys: Object.keys(dbResult || {}),
+          timestamp: new Date().toISOString()
+        }
       });
     }
 
+    console.log('✅ [CLOUDINARY-SAVE] Database save successful, generating response...');
     const domain = process.env.DOMAIN || 'newfurniture.live';
 
     if (isVariant) {
       // Variant response
-      return res.status(200).json({
+      const variantResponse = {
         success: true,
         id: dbResult.id,
         parentModelId: parentModelId,
@@ -2134,10 +2201,12 @@ async function handleCloudinarySave(req, res) {
         cloudinaryUrl: cloudinaryUrl,
         viewUrl: `https://${domain}/view?id=${parentModelId}&variant=${dbResult.id}`,
         message: 'Variant uploaded successfully!'
-      });
+      };
+      console.log('🎨 [CLOUDINARY-SAVE] Sending variant response:', variantResponse);
+      return res.status(200).json(variantResponse);
     } else {
       // Model response
-      return res.status(200).json({
+      const modelResponse = {
         success: true,
         id: dbResult.id,
         viewUrl: `https://${domain}/view?id=${dbResult.id}`,
@@ -2146,14 +2215,40 @@ async function handleCloudinarySave(req, res) {
         title: title,
         fileSize: fileSize,
         message: 'Model uploaded successfully!'
-      });
+      };
+      console.log('📦 [CLOUDINARY-SAVE] Sending model response:', modelResponse);
+      return res.status(200).json(modelResponse);
     }
 
   } catch (error) {
-    console.error('Error saving after Cloudinary upload:', error);
+    console.error('💥 [CLOUDINARY-SAVE] Exception caught:', error);
+    console.error('💥 [CLOUDINARY-SAVE] Error name:', error.name);
+    console.error('💥 [CLOUDINARY-SAVE] Error message:', error.message);
+    console.error('💥 [CLOUDINARY-SAVE] Error stack:', error.stack);
+    console.error('💥 [CLOUDINARY-SAVE] Error type:', typeof error);
+    console.error('💥 [CLOUDINARY-SAVE] Error keys:', Object.keys(error));
+
+    // Check if it's a specific database error
+    if (error.message && error.message.includes('Missing Supabase environment variables')) {
+      return res.status(500).json({
+        error: 'Database configuration error',
+        details: 'Supabase environment variables are not configured properly',
+        debug: {
+          timestamp: new Date().toISOString(),
+          errorType: 'ENVIRONMENT_ERROR'
+        }
+      });
+    }
+
     return res.status(500).json({
       error: 'Failed to save model metadata',
-      details: error.message
+      details: error.message,
+      debug: {
+        errorName: error.name,
+        errorType: typeof error,
+        timestamp: new Date().toISOString(),
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+      }
     });
   }
 }
@@ -2711,6 +2806,224 @@ async function handleCustomerExportKit(req, res, customerId) {
         details: process.env.NODE_ENV === 'development' ? error.message : 'Internal server error',
         customer_id: customerId,
         timestamp: new Date().toISOString()
+      }
+    });
+  }
+}
+
+/**
+ * GET /api/qr-migration
+ * Add QR persistence columns to database and optionally regenerate all QR codes
+ */
+async function handleQRMigration(req, res) {
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    if (req.method === 'GET') {
+      // Return SQL for manual migration
+      return res.status(200).json({
+        success: true,
+        message: 'Run the following SQL in your Supabase dashboard to add QR persistence columns:',
+        sql: `
+-- Add QR Code Persistence Columns to existing tables
+-- This enables 100% uptime QR codes by storing them in Cloudinary
+
+-- Add QR columns to models table
+ALTER TABLE models
+ADD COLUMN IF NOT EXISTS qr_code_url TEXT,
+ADD COLUMN IF NOT EXISTS qr_generated_at TIMESTAMPTZ;
+
+-- Add QR columns to model_variants table
+ALTER TABLE model_variants
+ADD COLUMN IF NOT EXISTS qr_code_url TEXT,
+ADD COLUMN IF NOT EXISTS qr_generated_at TIMESTAMPTZ;
+
+-- Create indexes for faster QR lookups
+CREATE INDEX IF NOT EXISTS idx_models_qr_generated_at ON models(qr_generated_at);
+CREATE INDEX IF NOT EXISTS idx_variants_qr_generated_at ON model_variants(qr_generated_at);
+
+-- Optional: Create a QR generation log table for monitoring
+CREATE TABLE IF NOT EXISTS qr_generation_log (
+  id BIGSERIAL PRIMARY KEY,
+  model_id TEXT,
+  variant_id TEXT,
+  generation_method VARCHAR(20), -- 'local', 'fallback', 'emergency'
+  success BOOLEAN DEFAULT true,
+  error_message TEXT,
+  processing_time_ms INTEGER,
+  generated_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Create index for log queries
+CREATE INDEX IF NOT EXISTS idx_qr_log_model_variant ON qr_generation_log(model_id, variant_id);
+CREATE INDEX IF NOT EXISTS idx_qr_log_generated_at ON qr_generation_log(generated_at DESC);
+        `,
+        instructions: [
+          '1. Go to your Supabase dashboard',
+          '2. Navigate to the SQL Editor',
+          '3. Copy and paste the SQL above',
+          '4. Click "Run" to add the columns',
+          '5. POST to /api/qr-migration to regenerate all QR codes'
+        ]
+      });
+    } else {
+      // POST: Regenerate all QR codes for existing models
+      const { regenerateAll } = req.body;
+
+      if (regenerateAll) {
+        const qrPersistence = await import('../lib/qr-persistence.js');
+        const results = await qrPersistence.regenerateAllQRCodes();
+
+        return res.status(200).json({
+          success: true,
+          message: 'QR codes regenerated',
+          results
+        });
+      } else {
+        return res.status(200).json({
+          success: true,
+          message: 'QR persistence columns are ready. Send { "regenerateAll": true } to regenerate all QR codes.'
+        });
+      }
+    }
+  } catch (error) {
+    console.error('QR Migration error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'QR migration failed',
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Test database connection specifically for cloudinary-save debugging
+ * GET /api/test-db-connection
+ */
+async function handleTestDbConnection(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const startTime = Date.now();
+  console.log('🔍 [DB-TEST] Starting database connectivity test at:', new Date().toISOString());
+
+  try {
+    // Check environment variables
+    const envCheck = {
+      SUPABASE_URL: process.env.SUPABASE_URL ? 'SET' : 'MISSING',
+      SUPABASE_ANON_KEY: process.env.SUPABASE_ANON_KEY ? 'SET' : 'MISSING',
+      DOMAIN: process.env.DOMAIN || 'DEFAULT'
+    };
+
+    console.log('🔍 [DB-TEST] Environment variables:', envCheck);
+
+    // Test basic Supabase connection
+    console.log('🔍 [DB-TEST] Testing Supabase connection...');
+    const { data: pingTest, error: pingError } = await supabase
+      .from('models')
+      .select('id')
+      .limit(1);
+
+    const connectionTime = Date.now() - startTime;
+
+    if (pingError) {
+      console.error('❌ [DB-TEST] Supabase connection failed:', pingError);
+      return res.status(500).json({
+        success: false,
+        error: 'Database connection failed',
+        details: pingError.message,
+        debug: {
+          environment: envCheck,
+          connectionTimeMs: connectionTime,
+          timestamp: new Date().toISOString(),
+          errorCode: pingError.code,
+          errorHint: pingError.hint
+        }
+      });
+    }
+
+    console.log('✅ [DB-TEST] Basic connection successful');
+
+    // Test saveModel function with dummy data
+    console.log('🔍 [DB-TEST] Testing saveModel function...');
+    const testModelResult = await saveModel({
+      title: `TEST_MODEL_${Date.now()}`,
+      description: 'Test model for debugging cloudinary-save issue',
+      filename: 'test-model.glb',
+      cloudinaryUrl: 'https://example.com/test.glb',
+      cloudinaryPublicId: 'test/test-model',
+      fileSize: 1000,
+      customerId: 'test-customer',
+      customerName: 'Test Customer',
+      dominantColor: '#ff0000',
+      dimensions: null,
+      metadata: {
+        uploadMethod: 'test',
+        uploadedAt: new Date().toISOString()
+      }
+    });
+
+    const totalTime = Date.now() - startTime;
+
+    if (!testModelResult.success) {
+      console.error('❌ [DB-TEST] saveModel failed:', testModelResult.error);
+      return res.status(500).json({
+        success: false,
+        error: 'saveModel function failed',
+        details: testModelResult.error,
+        debug: {
+          environment: envCheck,
+          connectionTimeMs: connectionTime,
+          totalTimeMs: totalTime,
+          timestamp: new Date().toISOString(),
+          testResult: testModelResult
+        }
+      });
+    }
+
+    console.log('✅ [DB-TEST] saveModel test successful, ID:', testModelResult.id);
+
+    // Clean up test record
+    try {
+      await supabase
+        .from('models')
+        .delete()
+        .eq('id', testModelResult.id);
+      console.log('🧹 [DB-TEST] Test record cleaned up');
+    } catch (cleanupError) {
+      console.warn('⚠️ [DB-TEST] Failed to clean up test record:', cleanupError.message);
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: 'Database connectivity test passed',
+      debug: {
+        environment: envCheck,
+        connectionTimeMs: connectionTime,
+        totalTimeMs: totalTime,
+        testModelId: testModelResult.id,
+        modelsTableCount: pingTest?.length || 0,
+        timestamp: new Date().toISOString()
+      }
+    });
+
+  } catch (error) {
+    const totalTime = Date.now() - startTime;
+    console.error('💥 [DB-TEST] Exception:', error);
+
+    return res.status(500).json({
+      success: false,
+      error: 'Database test failed with exception',
+      details: error.message,
+      debug: {
+        errorName: error.name,
+        errorType: typeof error,
+        totalTimeMs: totalTime,
+        timestamp: new Date().toISOString(),
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
       }
     });
   }
