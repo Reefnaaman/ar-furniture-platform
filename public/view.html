@@ -1374,6 +1374,13 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
                             // User exited AR - ensure clean post-AR experience
                             console.log('✅ User exited AR - cleaning up');
                             hideLoadingState(0); // Immediately hide any loading overlay
+
+                            // CRITICAL: Hide model-viewer that's covering everything!
+                            const modelViewer = document.getElementById('modelViewer');
+                            if (modelViewer) {
+                                modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute; z-index: -1;';
+                                console.log('🔧 Model-viewer hidden - variant controls now visible');
+                            }
                         }
                         break;
                 }
