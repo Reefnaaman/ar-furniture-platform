@@ -3176,20 +3176,28 @@ async function handleQRGenerate(req, res) {
       // Return raw QR data (for direct embedding)
       console.log('✅ Raw format requested, setting headers...');
       res.setHeader('Content-Type', format === 'svg' ? 'image/svg+xml' : `image/${format}`);
+      res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
 
-      // Handle the nested QR result structure
-      if (qrResult.qr_code && qrResult.qr_code.data) {
-        console.log('✅ Found nested qr_code.data, converting to buffer...');
-        const buffer = Buffer.from(qrResult.qr_code.data);
-        console.log('✅ Buffer created, size:', buffer.length);
-        return res.send(buffer);
-      } else if (qrResult.data) {
-        console.log('✅ Found direct data property...');
-        return res.send(qrResult.data);
-      } else {
-        console.log('❌ No data found in QR result');
-        return res.status(500).json({ error: 'No QR data found' });
+      // Handle the QR result structure properly
+      if (qrResult.success && qrResult.data && qrResult.data.qr_code) {
+        const qrData = qrResult.data.qr_code;
+
+        if (format === 'svg') {
+          // For SVG, return the string directly
+          console.log('✅ Returning SVG string, length:', qrData.length);
+          return res.send(qrData);
+        } else {
+          // For PNG, convert buffer data to actual buffer
+          if (qrData.data) {
+            const buffer = Buffer.from(qrData.data);
+            console.log('✅ Returning PNG buffer, size:', buffer.length);
+            return res.send(buffer);
+          }
+        }
       }
+
+      console.log('❌ Invalid QR result structure:', Object.keys(qrResult));
+      return res.status(500).json({ error: 'Invalid QR data structure' });
     } else {
       // Return JSON response with metadata
       console.log('📄 JSON format requested');
