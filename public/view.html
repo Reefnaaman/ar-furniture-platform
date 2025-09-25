@@ -1353,13 +1353,34 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
             if (modelInfo && modelInfo.variants && modelInfo.variants.length > 0) {
                 createARVariantControls(modelInfo.id, modelInfo, selectedVariant, modelViewer);
             } else {
-                createNoVariantControls(modelInfo);
+                createARBackButton(modelInfo);
             }
 
             // Listen for AR exit to navigate to post-AR screen
             modelViewer.addEventListener('ar-status', (event) => {
-                if (event.detail.status === 'not-presenting' && window.arSessionStarted) {
-                    navigateToPostARScreen();
+                console.log('📱 AR Status in route system:', event.detail.status);
+
+                switch (event.detail.status) {
+                    case 'session-started':
+                        console.log('✅ AR session started in route system');
+                        window.arSessionStarted = true;
+                        break;
+
+                    case 'not-presenting':
+                        console.log('⚠️ AR session ended in route system');
+                        if (window.arSessionStarted) {
+                            console.log('✅ User exited AR - navigating to post-AR screen');
+                            navigateToPostARScreen();
+                        } else {
+                            console.log('❌ AR never started - showing error');
+                            handleARFailure('AR not available on this device');
+                        }
+                        break;
+
+                    case 'failed':
+                        console.error('❌ AR session failed in route system');
+                        handleARFailure('AR session failed to start');
+                        break;
                 }
             });
         }
