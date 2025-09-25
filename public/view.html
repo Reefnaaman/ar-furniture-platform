@@ -1371,16 +1371,9 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
                             // AR never started - probably a permission denial or device issue
                             handleARFailure('AR not available on this device');
                         } else {
-                            // User exited AR - ensure clean post-AR experience
-                            console.log('✅ User exited AR - cleaning up');
-                            hideLoadingState(0); // Immediately hide any loading overlay
-
-                            // CRITICAL: Hide model-viewer that's covering everything!
-                            const modelViewer = document.getElementById('modelViewer');
-                            if (modelViewer) {
-                                modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute; z-index: -1;';
-                                console.log('🔧 Model-viewer hidden - variant controls now visible');
-                            }
+                            // User exited AR - create clean POST-AR back screen
+                            console.log('✅ User exited AR - creating post-AR back screen');
+                            createPostARBackScreen();
                         }
                         break;
                 }
@@ -2007,6 +2000,131 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
                     overlay.parentNode.removeChild(overlay);
                 }
             }, delay);
+        }
+
+        /**
+         * Create clean POST-AR back screen - separate from loading screen
+         * This ensures complete separation between pre-AR loading and post-AR variant selection
+         */
+        function createPostARBackScreen() {
+            console.log('🔄 Creating clean post-AR back screen');
+
+            // Step 1: Complete clean slate - no loading elements
+            document.body.innerHTML = '';
+            document.body.style.background = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+            document.body.style.margin = '0';
+            document.body.style.padding = '0';
+
+            // Step 2: Get current model info from global variables
+            const modelInfo = window.globalModelInfo;
+            const currentVariant = window.currentVariantData;
+
+            if (!modelInfo) {
+                console.error('❌ No model info available for post-AR screen');
+                handleARFailure('Unable to load variant controls');
+                return;
+            }
+
+            // Step 3: Create variant controls container
+            const container = document.createElement('div');
+            container.style.cssText = `
+                position: fixed;
+                bottom: 120px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                flex-wrap: wrap;
+                gap: 15px;
+                align-items: center;
+                justify-content: center;
+                z-index: 9999;
+                max-width: 90vw;
+            `;
+
+            // Step 4: Add variant circles if available
+            if (modelInfo.variants && modelInfo.variants.length > 0) {
+                // Original variant
+                const originalCircle = document.createElement('div');
+                const isOriginalActive = !currentVariant || currentVariant.id === 'original';
+                originalCircle.style.cssText = `
+                    width: 60px;
+                    height: 60px;
+                    border-radius: 50%;
+                    background: ${modelInfo.dominant_color || '#6b7280'};
+                    border: 3px solid ${isOriginalActive ? '#fff' : 'rgba(255,255,255,0.5)'};
+                    box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                    cursor: pointer;
+                    transition: all 0.3s ease;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 12px;
+                    color: white;
+                    font-weight: bold;
+                `;
+                originalCircle.title = 'Original';
+                originalCircle.textContent = 'OR';
+                container.appendChild(originalCircle);
+
+                // Variant circles
+                modelInfo.variants.forEach(variant => {
+                    const circle = document.createElement('div');
+                    const isActive = currentVariant && currentVariant.id === variant.id;
+                    circle.style.cssText = `
+                        width: 60px;
+                        height: 60px;
+                        border-radius: 50%;
+                        background: ${variant.hex_color || '#6b7280'};
+                        border: 3px solid ${isActive ? '#fff' : 'rgba(255,255,255,0.5)'};
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+                        cursor: pointer;
+                        transition: all 0.3s ease;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        color: white;
+                        font-size: 16px;
+                    `;
+                    circle.title = variant.variant_name;
+                    circle.innerHTML = variant.is_primary ? '★' : '';
+                    container.appendChild(circle);
+                });
+            }
+
+            document.body.appendChild(container);
+
+            // Step 5: Create back button
+            const backButton = document.createElement('button');
+            backButton.style.cssText = `
+                position: fixed;
+                bottom: 40px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #58a6ff 0%, #4e9eff 100%);
+                color: white;
+                border: none;
+                padding: 16px 32px;
+                border-radius: 50px;
+                font-size: 16px;
+                font-weight: 600;
+                cursor: pointer;
+                transition: all 0.3s ease;
+                box-shadow: 0 8px 24px rgba(88, 166, 255, 0.4);
+                z-index: 9999;
+                min-width: 180px;
+            `;
+            backButton.textContent = `← Back to ${modelInfo.customer_name || 'Product'}`;
+
+            // Back button functionality
+            backButton.onclick = () => {
+                console.log('🔙 Back button clicked from post-AR screen');
+                const returnUrl = sessionStorage.getItem('ar_return_url') || window.location.origin;
+                window.location.href = returnUrl;
+            };
+
+            document.body.appendChild(backButton);
+
+            console.log('✅ Clean post-AR back screen created - NO loading elements');
         }
 
         // ==================== Share Functions ====================
