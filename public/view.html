@@ -795,27 +795,10 @@
 
                 const qrCodeImage = document.getElementById('qrCodeImage');
                 if (qrCodeImage) {
-                    // Load QR code from our API and convert to data URL
-                    fetch(`/api/u4?url=${encodeURIComponent(variantUrl)}&format=png&size=200`)
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.qr_code && data.qr_code.qr_code && data.qr_code.qr_code.data) {
-                                // Convert buffer array to base64
-                                const buffer = new Uint8Array(data.qr_code.qr_code.data);
-                                const base64 = btoa(String.fromCharCode.apply(null, buffer));
-                                qrCodeImage.src = `data:image/png;base64,${base64}`;
-                                console.log('✅ Initial QR code loaded successfully');
-                            } else {
-                                console.error('❌ Invalid QR response format:', data);
-                                // Fallback to external QR service
-                                qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
-                            }
-                        })
-                        .catch(error => {
-                            console.error('❌ Failed to load initial QR code:', error);
-                            // Fallback to external QR service
-                            qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
-                        });
+                    // Use direct SVG URL for permanent, client-friendly QR codes
+                    const qrUrl = `/api/u4?url=${encodeURIComponent(variantUrl)}&format=svg&size=200&raw=true`;
+                    qrCodeImage.src = qrUrl;
+                    console.log('✅ Initial QR code loaded with permanent SVG URL:', qrUrl);
                 }
             } catch (error) {
                 console.error('❌ Error in loadInitialQRCode:', error);
@@ -1162,27 +1145,10 @@
             // Update the existing QR code image instead of opening a popup
             const qrCodeImage = document.getElementById('qrCodeImage');
             if (qrCodeImage) {
-                // Load QR code from our API and convert to data URL
-                fetch(`/api/u4?url=${encodeURIComponent(variantUrl)}&format=png&size=200`)
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.qr_code && data.qr_code.qr_code && data.qr_code.qr_code.data) {
-                            // Convert buffer array to base64
-                            const buffer = new Uint8Array(data.qr_code.qr_code.data);
-                            const base64 = btoa(String.fromCharCode.apply(null, buffer));
-                            qrCodeImage.src = `data:image/png;base64,${base64}`;
-                            console.log(`✅ Updated QR code to show ${variantName} variant`);
-                        } else {
-                            console.error('❌ Invalid QR response format during variant switch:', data);
-                            // Fallback to external QR service
-                            qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
-                        }
-                    })
-                    .catch(error => {
-                        console.error('❌ Failed to load QR code:', error);
-                        // Fallback to external QR service
-                        qrCodeImage.src = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
-                    });
+                // Use direct SVG URL for permanent, client-friendly QR codes
+                const qrUrl = `/api/u4?url=${encodeURIComponent(variantUrl)}&format=svg&size=200&raw=true`;
+                qrCodeImage.src = qrUrl;
+                console.log(`✅ Updated QR code to show ${variantName} variant with permanent URL: ${qrUrl}`);
             }
             
             // Update the 3D model viewer to show the selected variant
