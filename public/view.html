@@ -1364,6 +1364,37 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
 
                 console.log('✅ AR model-viewer created');
 
+                // CRITICAL: Immediately try to activate AR when model is ready
+                modelViewer.addEventListener('load', () => {
+                    console.log('🚀 Model ready - attempting AR activation');
+
+                    if (modelViewer.canActivateAR) {
+                        try {
+                            modelViewer.activateAR();
+                            console.log('✅ AR activation triggered - native popup should appear');
+                        } catch (error) {
+                            console.error('❌ AR activation failed:', error);
+                            handleARFailure('AR activation failed');
+                        }
+                    } else {
+                        console.warn('⚠️ AR not available - will retry');
+                        // Retry after a short delay
+                        setTimeout(() => {
+                            if (modelViewer.canActivateAR) {
+                                try {
+                                    modelViewer.activateAR();
+                                    console.log('✅ AR activation retry successful');
+                                } catch (error) {
+                                    console.error('❌ AR activation retry failed');
+                                    handleARFailure('AR not supported on this device');
+                                }
+                            } else {
+                                handleARFailure('AR not available on this device');
+                            }
+                        }, 1000);
+                    }
+                });
+
                 // Add variant controls if available
                 if (modelInfo && modelInfo.variants && modelInfo.variants.length > 0) {
                     createARVariantControls(modelInfo.id, modelInfo, selectedVariant, modelViewer);
