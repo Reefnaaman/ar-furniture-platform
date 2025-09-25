@@ -1371,8 +1371,9 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
                             // AR never started - probably a permission denial or device issue
                             handleARFailure('AR not available on this device');
                         } else {
-                            // User exited AR - enhance controls for post-AR experience
-                            enhancePostARControls();
+                            // User exited AR - ensure clean post-AR experience
+                            console.log('✅ User exited AR - cleaning up');
+                            hideLoadingState(0); // Immediately hide any loading overlay
                         }
                         break;
                 }
