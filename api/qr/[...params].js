@@ -22,14 +22,26 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get dynamic route parameters
-    const { params } = req.query;
+    // Get dynamic route parameters - different parsing approaches
+    let customerSlug, filenamePart;
 
-    if (!params || params.length !== 2) {
-      return res.status(400).json({ error: 'Invalid QR URL format. Expected: /qr/{customer}/{product}.svg' });
+    // Method 1: Try req.query.params (Vercel dynamic routes)
+    if (req.query.params && Array.isArray(req.query.params)) {
+      [customerSlug, filenamePart] = req.query.params;
+    } else {
+      // Method 2: Parse from URL path manually
+      const { pathname } = new URL(req.url, `https://${req.headers.host}`);
+      const pathParts = pathname.split('/').filter(Boolean); // ['qr', 'customer', 'product.svg']
+
+      if (pathParts.length !== 3) {
+        return res.status(400).json({
+          error: 'Invalid QR URL format. Expected: /qr/{customer}/{product}.svg',
+          debug: { pathname, pathParts, query: req.query }
+        });
+      }
+
+      [, customerSlug, filenamePart] = pathParts;
     }
-
-    const [customerSlug, filenamePart] = params;
 
     // Remove .svg extension
     if (!filenamePart.endsWith('.svg')) {

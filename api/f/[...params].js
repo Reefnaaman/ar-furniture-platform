@@ -21,16 +21,34 @@ export default async function handler(req, res) {
   }
 
   try {
-    // Get dynamic route parameters
-    const { params } = req.query;
+    // Get dynamic route parameters - different parsing approaches
+    let customerSlug, productSlugWithId, variantSlug;
 
-    if (!params || params.length < 2) {
-      return res.status(400).json({ error: 'Invalid URL format. Expected: /f/{customer}/{product}' });
+    // Method 1: Try req.query.params (Vercel dynamic routes)
+    if (req.query.params && Array.isArray(req.query.params)) {
+      [customerSlug, productSlugWithId, variantSlug] = req.query.params;
+    } else {
+      // Method 2: Parse from URL path manually
+      const { pathname } = new URL(req.url, `https://${req.headers.host}`);
+      const pathParts = pathname.split('/').filter(Boolean); // ['f', 'customer', 'product', 'variant?']
+
+      if (pathParts.length < 3) {
+        return res.status(400).json({
+          error: 'Invalid URL format. Expected: /f/{customer}/{product}',
+          debug: { pathname, pathParts, query: req.query }
+        });
+      }
+
+      [, customerSlug, productSlugWithId, variantSlug] = pathParts;
     }
 
-    const [customerSlug, productSlugWithId, variantSlug] = params;
-
-    console.log('🔍 SEO URL Resolution:', { customerSlug, productSlugWithId, variantSlug });
+    console.log('🔍 SEO URL Resolution:', {
+      customerSlug,
+      productSlugWithId,
+      variantSlug,
+      url: req.url,
+      query: req.query
+    });
 
     // Resolve URL to model data
     const resolution = await resolveUrlToModel(customerSlug, productSlugWithId, variantSlug);
