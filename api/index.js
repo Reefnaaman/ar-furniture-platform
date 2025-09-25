@@ -3146,7 +3146,8 @@ async function handleQRGenerate(req, res) {
   }
 
   try {
-    const { url, format = 'png', size = 256, raw = false } = req.query;
+    const { url, format = 'png', size = 256, raw } = req.query;
+    const isRawFormat = raw === 'true';
 
     if (!url) {
       return res.status(400).json({
@@ -3169,10 +3170,10 @@ async function handleQRGenerate(req, res) {
       errorCorrectionLevel: 'M'
     });
 
-    console.log('🔍 QR Handler - raw parameter:', raw, 'type:', typeof raw);
+    console.log('🔍 QR Handler - raw parameter:', raw, 'isRawFormat:', isRawFormat);
     console.log('🔍 QR result structure:', Object.keys(qrResult));
 
-    if (raw === 'true') {
+    if (isRawFormat) {
       // Return raw QR data (for direct embedding)
       console.log('✅ Raw format requested, setting headers...');
       res.setHeader('Content-Type', format === 'svg' ? 'image/svg+xml' : `image/${format}`);
