@@ -1364,72 +1364,100 @@
             let arSessionStarted = false;
 
             // Step 5: Model loading progress tracking
-            
+            // Event-driven model loading with progress updates
+            modelViewer.addEventListener('progress', (event) => {
+                const progress = event.detail.totalProgress * 100;
+                updateLoadingState(`Loading 3D model... ${Math.round(progress)}%`, progress);
+            });
+
             modelViewer.addEventListener('load', () => {
-                console.log('📱 Model load event fired');
-                console.log('📱 canActivateAR:', modelViewer.canActivateAR);
-                if (!arActivated && modelViewer.canActivateAR) {
+                console.log('📱 Model loaded successfully');
+                modelLoaded = true;
+                updateLoadingState("Activating camera...", 75);
+
+                // Try to activate AR now that model is loaded
+                if (modelViewer.canActivateAR && !arActivated) {
                     arActivated = true;
-                    console.log('🚀 Model loaded, activating AR...');
+                    console.log('🚀 Activating AR...');
                     try {
                         modelViewer.activateAR();
-                        console.log('✅ AR activation call successful');
                     } catch (error) {
                         console.error('❌ AR activation failed:', error);
+                        handleARFailure('AR activation failed');
                     }
                 } else {
-                    console.warn('⚠️ Cannot activate AR on load - canActivateAR:', modelViewer.canActivateAR, 'arActivated:', arActivated);
+                    console.warn('⚠️ Cannot activate AR - checking AR availability');
+                    setTimeout(checkARAvailability, 1000);
                 }
             });
 
-            // Add AR session status monitoring with fallback
-            let arSessionStarted = false;
+            // AR session status monitoring
             modelViewer.addEventListener('ar-status', (event) => {
                 console.log('📱 AR Status:', event.detail.status);
-                if (event.detail.status === 'session-started') {
-                    console.log('✅ AR session started successfully');
-                    arSessionStarted = true;
-                } else if (event.detail.status === 'failed') {
-                    console.error('❌ AR session failed - redirecting to desktop view');
-                    redirectToDesktopView();
-                } else if (event.detail.status === 'not-presenting') {
-                    console.log('⚠️ AR not presenting - session ended or failed to start');
-                    // Only redirect if AR never actually started (immediate failure)
-                    if (!arSessionStarted) {
-                        console.log('🔄 AR never started, redirecting to desktop view');
-                        setTimeout(() => redirectToDesktopView(), 500);
-                    }
+
+                switch (event.detail.status) {
+                    case 'session-started':
+                        console.log('✅ AR session started successfully');
+                        arSessionStarted = true;
+                        updateLoadingState("AR camera active!", 100);
+
+                        // Hide loading state after a brief moment
+                        setTimeout(() => {
+                            hideLoadingState();
+                            showARControls(); // Show variant controls now that AR is active
+                        }, 1000);
+                        break;
+
+                    case 'failed':
+                        console.error('❌ AR session failed');
+                        handleARFailure('AR session failed to start');
+                        break;
+
+                    case 'not-presenting':
+                        console.log('⚠️ AR session ended or failed to start');
+                        if (!arSessionStarted) {
+                            // AR never started - probably a permission denial or device issue
+                            handleARFailure('AR not available on this device');
+                        } else {
+                            // User exited AR - enhance controls for post-AR experience
+                            enhancePostARControls();
+                        }
+                        break;
                 }
             });
 
-            // Add error monitoring
+            // Model loading error handling
             modelViewer.addEventListener('error', (event) => {
-                console.error('❌ Model viewer error:', event);
+                console.error('❌ Model loading error:', event);
+                handleARFailure('Failed to load 3D model');
             });
-            
-            // Backup: Try AR after a delay if load event doesn't fire
-            setTimeout(() => {
-                if (!arActivated && modelViewer.canActivateAR) {
+
+            // Timeout handlers for stuck states
+            function checkARAvailability() {
+                if (modelViewer.canActivateAR && !arActivated) {
                     arActivated = true;
-                    console.log('🚀 Activating AR via timeout...');
-                    modelViewer.activateAR();
-                } else if (!arActivated) {
-                    console.warn('⚠️ AR not activated: canActivateAR =', modelViewer.canActivateAR);
-                    console.log('🔍 AR modes available:', modelViewer.getAttribute('ar-modes'));
-                    console.log('🔍 Model src:', modelViewer.src);
+                    console.log('🚀 Retrying AR activation...');
+                    try {
+                        modelViewer.activateAR();
+                    } catch (error) {
+                        handleARFailure('AR activation retry failed');
+                    }
+                } else if (!modelViewer.canActivateAR) {
+                    handleARFailure('AR not supported on this device');
                 }
-            }, 3000); // Increased to 3 seconds for slower networks
+            }
 
-            // Final fallback: If AR completely fails to start within 5 seconds, redirect
+            // Overall timeout for the entire AR loading process
             setTimeout(() => {
-                if (!arActivated && !arSessionStarted) {
-                    console.warn('🚨 AR failed to start within 5 seconds - redirecting to desktop view');
-                    redirectToDesktopView();
+                if (!arSessionStarted && !arActivated) {
+                    console.warn('🚨 AR loading timed out - showing fallback');
+                    handleARFailure('AR loading timed out');
                 }
-            }, 5000);
+            }, 10000); // 10 seconds total timeout
 
-            // View already tracked once per page load
+            // View tracking already done in loadModel function
         }
+
 
         // Redirect to desktop variant selection view when AR fails
         function redirectToDesktopView() {
