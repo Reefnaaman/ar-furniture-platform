@@ -8,6 +8,7 @@ A serverless platform for uploading and sharing 3D furniture models with AR view
 - 🔗 **Instant Share Links** - Generate unique URLs for each model
 - 📱 **AR Viewing** - View furniture in your space using phone camera
 - 📊 **Admin Dashboard** - Manage all uploaded models
+- 🔲 **QR Code Generator** - Built-in QR code API for client integration
 - ☁️ **Serverless** - Deploys to Vercel with automatic scaling
 - 🔒 **Secure Storage** - Models stored on Cloudinary CDN
 
@@ -99,6 +100,7 @@ In Vercel Dashboard:
 - `POST /api/model/[id]/view` - Track view
 - `GET /api/models` - List all models
 - `DELETE /api/models` - Delete model (requires admin password)
+- `GET /api/u4` - Generate QR code (see QR API section below)
 
 ## Project Structure
 
@@ -107,14 +109,17 @@ ar-platform/
 ├── api/                # Serverless functions
 │   ├── upload.js       # Handle uploads
 │   ├── models.js       # List/delete models
-│   └── model/          # Model-specific endpoints
+│   ├── model/          # Model-specific endpoints
+│   └── index.js        # Main API router with QR generation
 ├── pages/              # Frontend pages
 │   ├── index.html      # Upload interface
 │   ├── view.html       # AR viewer
 │   └── admin.html      # Admin dashboard
 ├── lib/                # Utilities
 │   ├── cloudinary.js   # Storage handler
-│   └── database.js     # Database operations
+│   ├── database.js     # Database operations
+│   ├── qr-generator.js # Local QR code generator
+│   └── endpoints.js    # API endpoint mapping
 └── public/             # Static assets
 ```
 
@@ -154,6 +159,43 @@ ar-platform/
 - Check Planetscale connection string
 - Ensure table is created
 - Verify database is active
+
+## QR Code API
+
+### Overview
+The platform includes a built-in QR code generation API for creating permanent, embeddable QR codes.
+
+### Endpoint
+`GET /api/u4`
+
+### Parameters
+- `url` (required) - The URL to encode (must be URL-encoded)
+- `format` (optional) - Output format: `svg` or `png` (default: `svg`)
+- `size` (optional) - QR code size in pixels (default: 256)
+- `raw=true` (required for embedding) - Returns raw image instead of JSON
+
+### Examples
+
+#### Client Website Integration
+```html
+<!-- Direct SVG embedding for websites -->
+<img src="https://newfurniture.live/api/u4?url=https%3A//newfurniture.live/view%3Fid%3D123&format=svg&size=200&raw=true"
+     alt="AR QR Code" />
+```
+
+#### Programmatic Use
+```javascript
+// Get QR code with metadata (JSON response)
+fetch('https://newfurniture.live/api/u4?url=https://newfurniture.live/view?id=123')
+  .then(res => res.json())
+  .then(data => console.log(data.qr_code));
+```
+
+### Features
+- ✅ Permanent URLs that work as direct image sources
+- ✅ Clean SVG/PNG output with proper Content-Type headers
+- ✅ Built for client integration (no external dependencies)
+- ✅ Cached for performance (1-hour cache)
 
 ## Support
 
