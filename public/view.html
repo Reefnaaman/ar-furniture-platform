@@ -663,6 +663,18 @@
         console.log('🔍 URL params:', Object.fromEntries(urlParams));
         console.log('🔍 Model ID from URL:', modelId);
         console.log('🔍 Variant ID from URL:', variantId);
+
+        // Mobile-friendly debug display
+        if (/Android|iPhone|iPad/i.test(navigator.userAgent) && !modelId) {
+            document.body.innerHTML = `
+                <div style="padding: 20px; font-family: monospace; font-size: 12px; background: #000; color: #0f0; white-space: pre-wrap;">
+🔍 DEBUG INFO:
+URL: ${window.location.href}
+ModelID: ${modelId || 'NULL'}
+Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
+                </div>
+            `;
+        }
         
         if (!modelId) {
             console.error('❌ No model ID in URL parameters');

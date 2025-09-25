@@ -111,7 +111,19 @@ export default async function handler(req, res) {
     logger.debug('Users route detected', { routePath });
     
     logger.debug('Model route detected', { routePath });
-    
+
+    // Handle SEO URL routes from vercel.json rewrites
+    const seoRoute = url.searchParams.get('route');
+    const seoPath = url.searchParams.get('path');
+
+    if (seoRoute === 'f' && seoPath) {
+      return await handleSEOFurnitureUrl(req, res, seoPath);
+    }
+
+    if (seoRoute === 'qr' && seoPath) {
+      return await handleSEOQRUrl(req, res, seoPath);
+    }
+
     // Route: /api/upload-simple
     if (routePath === 'upload-simple') {
       return await handleUpload(req, res);
@@ -3314,5 +3326,133 @@ CREATE INDEX IF NOT EXISTS idx_models_slug_lookup ON models(customer_slug, url_s
       error: 'Migration failed',
       details: error.message
     });
+  }
+}
+
+/**
+ * Handle SEO-friendly furniture URLs like: /f/{customer}/{product-slug-id}/{variant?}
+ */
+async function handleSEOFurnitureUrl(req, res, path) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const pathParts = path.split('/');
+
+    if (pathParts.length < 2) {
+      return res.status(400).json({
+        error: 'Invalid URL format. Expected: /f/{customer}/{product}',
+        debug: { path, pathParts }
+      });
+    }
+
+    const [customerSlug, productSlugWithId, variantSlug] = pathParts;
+
+    console.log('🔍 SEO URL Resolution:', {
+      customerSlug,
+      productSlugWithId,
+      variantSlug,
+      path
+    });
+
+    // Resolve URL to model data
+    const resolution = await resolveUrlToModel(customerSlug, productSlugWithId, variantSlug);
+
+    if (!resolution.success) {
+      console.log('❌ URL resolution failed:', resolution.error);
+      return res.status(404).json({ error: resolution.error });
+    }
+
+    const { model } = resolution;
+
+    // Build the redirect URL to the current view.html system
+    let redirectUrl = `/view?id=${model.id}`;
+    if (variantSlug) {
+      redirectUrl += `&variant=${variantSlug}`;
+    }
+
+    console.log('✅ Redirecting to:', redirectUrl);
+
+    // Redirect to existing view system (301 for SEO)
+    res.writeHead(301, { Location: redirectUrl });
+    return res.end();
+
+  } catch (error) {
+    console.error('❌ SEO URL handler error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
+  }
+}
+
+/**
+ * Handle SEO-friendly QR URLs like: /qr/{customer}/{product-slug-id.svg}
+ */
+async function handleSEOQRUrl(req, res, path) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const pathParts = path.split('/');
+
+    if (pathParts.length !== 2) {
+      return res.status(400).json({
+        error: 'Invalid QR URL format. Expected: /qr/{customer}/{product}.svg',
+        debug: { path, pathParts }
+      });
+    }
+
+    const [customerSlug, filenamePart] = pathParts;
+
+    // Remove .svg extension
+    if (!filenamePart.endsWith('.svg')) {
+      return res.status(400).json({ error: 'QR URLs must end with .svg' });
+    }
+
+    const productPart = filenamePart.replace('.svg', '');
+
+    // Check if this includes a variant (format: product-slug-id-variant)
+    let productSlugWithId, variantSlug;
+
+    // Try to match pattern: product-slug-ID-variant
+    const variantMatch = productPart.match(/^(.+-[a-zA-Z0-9_-]{8})-(.+)$/);
+    if (variantMatch) {
+      [, productSlugWithId, variantSlug] = variantMatch;
+    } else {
+      // No variant, just product-slug-ID
+      productSlugWithId = productPart;
+      variantSlug = null;
+    }
+
+    console.log('🔍 QR URL Resolution:', { customerSlug, productSlugWithId, variantSlug });
+
+    // Resolve URL to model data
+    const resolution = await resolveUrlToModel(customerSlug, productSlugWithId, variantSlug);
+
+    if (!resolution.success) {
+      console.log('❌ QR URL resolution failed:', resolution.error);
+      return res.status(404).json({ error: resolution.error });
+    }
+
+    const { model } = resolution;
+
+    // Build the target URL for QR code
+    const domain = process.env.DOMAIN || 'https://newfurniture.live';
+    let targetUrl = `${domain}/f/${customerSlug}/${productSlugWithId}`;
+    if (variantSlug) {
+      targetUrl += `/${variantSlug}`;
+    }
+
+    console.log('🔲 Generating QR for URL:', targetUrl);
+
+    // Redirect to QR generation endpoint with the SEO URL
+    const qrUrl = `/api/u4?url=${encodeURIComponent(targetUrl)}&format=svg&size=256&raw=true`;
+
+    res.writeHead(302, { Location: qrUrl });
+    return res.end();
+
+  } catch (error) {
+    console.error('❌ QR URL handler error:', error);
+    return res.status(500).json({ error: 'Internal server error' });
   }
 }
