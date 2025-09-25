@@ -1,5 +1,5 @@
 import { uploadModel, uploadImage } from '../lib/cloudinary.js';
-import { saveModel, saveModelVariant, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, supabase, query } from '../lib/supabase.js';
+import { saveModel, saveModelVariant, getModel, getAllModels, getModelsWithVariants, getModelsByCustomer, getModelsByCustomerWithVariants, getCustomers, getStats, deleteModel, incrementViewCount, updateModelCustomer, migrateModelSlugs, resolveUrlToModel, supabase, query } from '../lib/supabase.js';
 import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import { validateFileContent, sanitizeFilename, checkRateLimit, getRateLimitHeaders, hashIP } from '../lib/security.js';
 import { logger } from '../lib/logger.js';
@@ -130,6 +130,11 @@ export default async function handler(req, res) {
     // Route: /api/qr-migration - Add QR persistence columns to database
     if (routePath === 'qr-migration') {
       return await handleQRMigration(req, res);
+    }
+
+    // Route: /api/url-slug-migration - Generate URL slugs for existing models
+    if (routePath === 'url-slug-migration') {
+      return await handleUrlSlugMigration(req, res);
     }
 
     // Route: /api/qr-generate - Generate QR code using local generator
@@ -3226,6 +3231,87 @@ async function handleQRGenerate(req, res) {
     return res.status(500).json({
       success: false,
       error: 'QR generation failed',
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Handle URL slug migration for existing models
+ */
+async function handleUrlSlugMigration(req, res) {
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    if (req.method === 'GET') {
+      // Return migration instructions
+      return res.status(200).json({
+        success: true,
+        message: 'URL Slug Migration for SEO-Friendly URLs',
+        description: 'This migration adds URL slug columns to enable SEO-friendly URLs like /f/napo/modern-sofa-utEaiw2a',
+        instructions: [
+          '1. Run the SQL below in your Supabase SQL editor to add columns',
+          '2. Make a POST request to this endpoint to generate slugs for existing models',
+          '3. New models will automatically get slugs generated'
+        ],
+        sql: `
+-- Add URL slug columns for SEO-friendly URLs
+-- This enables URLs like: /f/napo/modern-sofa-utEaiw2a/black
+
+-- Add slug columns to models table
+ALTER TABLE models
+ADD COLUMN IF NOT EXISTS url_slug VARCHAR(255),
+ADD COLUMN IF NOT EXISTS category_slug VARCHAR(100),
+ADD COLUMN IF NOT EXISTS customer_slug VARCHAR(100);
+
+-- Add color slug to variants table
+ALTER TABLE model_variants
+ADD COLUMN IF NOT EXISTS color_slug VARCHAR(50);
+
+-- Create indexes for URL resolution
+CREATE INDEX IF NOT EXISTS idx_models_url_slug ON models(url_slug);
+CREATE INDEX IF NOT EXISTS idx_models_customer_slug ON models(customer_slug);
+CREATE INDEX IF NOT EXISTS idx_variants_color_slug ON model_variants(color_slug);
+
+-- Combined index for fast URL lookups
+CREATE INDEX IF NOT EXISTS idx_models_slug_lookup ON models(customer_slug, url_slug);
+`,
+        benefits: [
+          'SEO-friendly URLs: /f/napo/modern-sofa-utEaiw2a',
+          'Better branding for clients',
+          'Improved search engine ranking',
+          'Professional QR code URLs'
+        ]
+      });
+    }
+
+    if (req.method === 'POST') {
+      // Run the migration
+      console.log('🚀 Starting URL slug migration...');
+      const result = await migrateModelSlugs();
+
+      if (result.success) {
+        return res.status(200).json({
+          success: true,
+          message: `Migration completed! Updated ${result.updated} models`,
+          ...result
+        });
+      } else {
+        return res.status(500).json({
+          success: false,
+          error: 'Migration failed',
+          details: result.error
+        });
+      }
+    }
+
+  } catch (error) {
+    console.error('URL Slug Migration error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'Migration failed',
       details: error.message
     });
   }

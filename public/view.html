@@ -125,8 +125,7 @@
         /* Hide everything on mobile initially */
         @media (max-width: 768px) {
             body {
-                visibility: hidden;
-                background: #000 !important;
+                                background: #000 !important;
             }
         }
         
@@ -395,7 +394,138 @@
             from { opacity: 0; transform: translateX(-50%) translateY(20px); }
             to { opacity: 1; transform: translateX(-50%) translateY(0); }
         }
-        
+
+        /* AR Loading State Styles */
+        .ar-loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 50%, #21262d 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            opacity: 1;
+            transition: opacity 0.5s ease-out;
+        }
+
+        .ar-loading-overlay.fade-out {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .ar-loading-content {
+            text-align: center;
+            color: #e6edf3;
+            max-width: 300px;
+        }
+
+        .ar-loading-logo {
+            width: 80px;
+            height: 80px;
+            margin-bottom: 30px;
+            border-radius: 20px;
+            background: linear-gradient(135deg, #58a6ff, #79c0ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            color: white;
+            box-shadow: 0 10px 30px rgba(88, 166, 255, 0.3);
+            animation: pulseGlow 2s ease-in-out infinite;
+        }
+
+        .ar-loading-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #e6edf3;
+        }
+
+        .ar-loading-message {
+            font-size: 16px;
+            color: #7d8590;
+            margin-bottom: 30px;
+            line-height: 1.4;
+        }
+
+        .ar-loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 3px solid rgba(88, 166, 255, 0.2);
+            border-top: 3px solid #58a6ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+
+        .ar-loading-progress {
+            width: 200px;
+            height: 4px;
+            background: rgba(88, 166, 255, 0.2);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-bottom: 20px;
+        }
+
+        .ar-loading-progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #58a6ff, #79c0ff);
+            border-radius: 2px;
+            width: 0%;
+            transition: width 0.3s ease;
+            animation: shimmer 1.5s infinite;
+        }
+
+        /* Loading Animations */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes pulseGlow {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 10px 30px rgba(88, 166, 255, 0.3);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 15px 40px rgba(88, 166, 255, 0.5);
+            }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200px 0; }
+            100% { background-position: 200px 0; }
+        }
+
+        .ar-loading-progress-bar {
+            background: linear-gradient(90deg,
+                transparent,
+                rgba(88, 166, 255, 0.8),
+                transparent
+            );
+            background-size: 200px 100%;
+        }
+
+        /* Mobile optimizations */
+        @media (max-width: 768px) {
+            .ar-loading-content {
+                padding: 20px;
+            }
+
+            .ar-loading-title {
+                font-size: 20px;
+            }
+
+            .ar-loading-message {
+                font-size: 14px;
+            }
+        }
+
     </style>
 </head>
 <body>
@@ -576,8 +706,6 @@
                 
                 // For mobile - go straight to AR with variant support
                 if (/Android|iPhone|iPad/i.test(navigator.userAgent)) {
-                    document.body.style.visibility = 'hidden';
-                    document.body.style.background = '#000';
 
                     // Use direct Cloudinary URL for AR compatibility (no redirects)
                     let modelUrl = modelInfo.cloudinary_url;
@@ -1201,39 +1329,41 @@
         }
 
 
-        // Direct AR launch with variant support
+        // Progressive Enhancement AR launch with event-driven UI
         function launchDirectAR(modelId, modelUrl, modelInfo = null, selectedVariant = null) {
-            // Keep body completely black and hidden
-            document.body.style.cssText = 'visibility: hidden; background: #000 !important; margin: 0; padding: 0;';
-            
-            // Clear any existing content
+            console.log('🚀 Starting Progressive AR Experience');
+
+            // Step 1: Show loading state immediately
+            showLoadingState("Preparing AR experience...", 0);
+
+            // Step 2: Clear existing content and create model-viewer
             document.body.innerHTML = '';
-            
-            // Create invisible model-viewer
+
             const modelViewer = document.createElement('model-viewer');
             modelViewer.setAttribute('id', 'modelViewer');
             modelViewer.setAttribute('src', modelUrl);
             modelViewer.setAttribute('ar', '');
-            // ARCore Scene Viewer for Android, Quick Look for iOS
             modelViewer.setAttribute('ar-modes', 'scene-viewer quick-look');
-            modelViewer.setAttribute('environment-image', 'neutral'); // Use neutral lighting
-            modelViewer.setAttribute('exposure', '1'); // Optimize exposure for AR
-            
+            modelViewer.setAttribute('environment-image', 'neutral');
+            modelViewer.setAttribute('exposure', '1');
             modelViewer.setAttribute('auto-rotate', '');
             modelViewer.setAttribute('camera-controls', '');
-            modelViewer.style.cssText = 'width: 300px; height: 300px; opacity: 0; position: absolute; top: -1000px;';
+            modelViewer.style.cssText = 'width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1;';
             document.body.appendChild(modelViewer);
 
-            // Create floating controls (variants if they exist, or back button if no variants)
+            // Step 3: Create AR controls (but they'll be hidden behind loading screen initially)
             if (modelInfo && modelInfo.variants && modelInfo.variants.length > 0) {
                 createARVariantControls(modelId, modelInfo, selectedVariant, modelViewer);
             } else {
-                // No variants - create simple back button for when user exits AR
                 createARBackButton(modelInfo);
             }
 
-            // Wait for model to load, then activate AR
+            // Step 4: Track AR states
+            let modelLoaded = false;
             let arActivated = false;
+            let arSessionStarted = false;
+
+            // Step 5: Model loading progress tracking
             
             modelViewer.addEventListener('load', () => {
                 console.log('📱 Model load event fired');
@@ -1304,9 +1434,6 @@
         // Redirect to desktop variant selection view when AR fails
         function redirectToDesktopView() {
             console.log('🔄 Redirecting to desktop variant selection view');
-            // Remove black screen
-            document.body.style.visibility = 'visible';
-            document.body.style.background = '';
             // Clear body and reload the page without mobile AR
             window.location.reload();
         }
@@ -1326,7 +1453,6 @@
                 text-align: center;
                 text-shadow: 2px 2px 4px rgba(0,0,0,0.9);
                 z-index: 10000;
-                visibility: hidden;
                 white-space: nowrap;
                 max-width: 90vw;
                 overflow: hidden;
@@ -1348,7 +1474,6 @@
                 flex-wrap: wrap;
                 justify-content: center;
                 z-index: 9999;
-                visibility: hidden;
                 max-width: 90vw;
             `;
             
@@ -1419,8 +1544,7 @@
                     text-align: center;
                     text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
                     z-index: 9999;
-                    visibility: hidden;
-                    border: 1px solid rgba(255, 255, 255, 0.2);
+                                        border: 1px solid rgba(255, 255, 255, 0.2);
                     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
                 `;
                 
@@ -1481,8 +1605,7 @@
                 text-shadow: 1px 1px 2px rgba(0,0,0,0.3);
                 transition: all 0.3s ease;
                 z-index: 9999;
-                visibility: hidden;
-                min-width: 180px;
+                                min-width: 180px;
             `;
             backButton.textContent = `← Back to ${modelInfo.customer_name || 'Product'}`;
             backButton.onclick = () => {
@@ -1512,36 +1635,7 @@
             
             document.body.appendChild(backButton);
             
-            // Show all controls after AR is activated (with delay for AR to fully load)
-            setTimeout(() => {
-                // Show title
-                if (instructionText) {
-                    instructionText.style.visibility = 'visible';
-                    instructionText.style.animation = 'fadeIn 0.5s ease-in-out';
-                }
-                // Show variant circles
-                if (variantControls) {
-                    variantControls.style.visibility = 'visible';
-                    variantControls.style.animation = 'fadeIn 0.5s ease-in-out';
-                }
-                // Show dimensions display
-                const dimensionsDisplay = document.getElementById('arDimensionsDisplay');
-                if (dimensionsDisplay) {
-                    dimensionsDisplay.style.visibility = 'visible';
-                    dimensionsDisplay.style.animation = 'fadeIn 0.5s ease-in-out';
-                }
-                // Show back button or help message
-                const backButton = document.getElementById('arBackButton');
-                const helpMessage = document.getElementById('arHelpMessage');
-                if (backButton) {
-                    backButton.style.visibility = 'visible';
-                    backButton.style.animation = 'fadeIn 0.5s ease-in-out';
-                }
-                if (helpMessage) {
-                    helpMessage.style.visibility = 'visible';
-                    helpMessage.style.animation = 'fadeIn 0.5s ease-in-out';
-                }
-            }, 3000);
+            // Controls visibility will now be handled by AR events, not timers
         }
         
         function switchARVariant(modelViewer, newUrl, variantName, clickedCircle, variantData) {
@@ -1569,7 +1663,7 @@
                         
                         // Hide model-viewer after AR starts (it will show AR camera)
                         setTimeout(() => {
-                            modelViewer.style.cssText = 'width: 1px; height: 1px; opacity: 0; position: absolute;';
+                            modelViewer.style.cssText = 'width: 100vw; height: 100vh; position: fixed; top: 0; left: 0; z-index: 1;';
                         }, 2000);
                     } else {
                         console.warn('⚠️ Cannot activate AR after variant switch');
@@ -1653,8 +1747,7 @@
                     text-align: center;
                     text-shadow: 1px 1px 2px rgba(0,0,0,0.8);
                     z-index: 9999;
-                    visibility: hidden;
-                    border: 1px solid rgba(255, 255, 255, 0.2);
+                                        border: 1px solid rgba(255, 255, 255, 0.2);
                     box-shadow: 0 4px 16px rgba(0, 0, 0, 0.5);
                 `;
                 
@@ -1704,8 +1797,7 @@
                 left: 50%;
                 transform: translateX(-50%);
                 z-index: 10000;
-                visibility: hidden;
-                text-align: center;
+                                text-align: center;
             `;
             
             // Create the back button
@@ -1747,23 +1839,11 @@
             backButtonContainer.appendChild(backButton);
             document.body.appendChild(backButtonContainer);
             
-            // Show back button and dimensions after a delay (when user likely finished with AR)
-            setTimeout(() => {
-                backButtonContainer.style.visibility = 'visible';
-                backButtonContainer.style.animation = 'fadeIn 0.5s ease-in-out';
-                
-                // Also show dimensions display
-                const dimensionsDisplay = document.getElementById('arDimensionsDisplay');
-                if (dimensionsDisplay) {
-                    dimensionsDisplay.style.visibility = 'visible';
-                    dimensionsDisplay.style.animation = 'fadeIn 0.5s ease-in-out';
-                }
-            }, 3000);
+            // Back button and dimensions are now visible by default
         }
         
         function showError(message) {
             // Show error in a clean way
-            document.body.style.visibility = 'visible';
             document.body.innerHTML = `
                 <div class="mobile-error-gradient" style="display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                     <div style="background: white; padding: 40px; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); text-align: center; max-width: 500px;">
@@ -1921,6 +2001,97 @@
             console.log('🔄 Direction updated to:', direction);
         }
         
+        // ==================== AR Loading State Management ====================
+
+        /**
+         * Show loading state with custom message
+         * @param {string} message - Loading message to display
+         * @param {number} progress - Optional progress percentage (0-100)
+         */
+        function showLoadingState(message = "Preparing AR experience...", progress = 0) {
+            console.log('🔄 Loading state:', message, `(${progress}%)`);
+
+            // Create loading overlay if it doesn't exist
+            let overlay = document.getElementById('ar-loading-overlay');
+            if (!overlay) {
+                overlay = document.createElement('div');
+                overlay.id = 'ar-loading-overlay';
+                overlay.className = 'ar-loading-overlay';
+
+                overlay.innerHTML = `
+                    <div class="ar-loading-content">
+                        <div class="ar-loading-logo">
+                            📱
+                        </div>
+                        <div class="ar-loading-title">NewFurniture AR</div>
+                        <div class="ar-loading-message" id="ar-loading-message">${message}</div>
+                        <div class="ar-loading-spinner"></div>
+                        <div class="ar-loading-progress">
+                            <div class="ar-loading-progress-bar" id="ar-loading-progress-bar"></div>
+                        </div>
+                    </div>
+                `;
+
+                document.body.appendChild(overlay);
+            } else {
+                // Update existing message
+                const messageEl = document.getElementById('ar-loading-message');
+                if (messageEl) messageEl.textContent = message;
+
+                // Remove fade-out class if it exists
+                overlay.classList.remove('fade-out');
+            }
+
+            // Update progress bar
+            const progressBar = document.getElementById('ar-loading-progress-bar');
+            if (progressBar) {
+                progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+            }
+        }
+
+        /**
+         * Update loading message and progress
+         * @param {string} message - New loading message
+         * @param {number} progress - Progress percentage (0-100)
+         */
+        function updateLoadingState(message, progress = null) {
+            console.log('🔄 Loading update:', message, progress ? `(${progress}%)` : '');
+
+            const messageEl = document.getElementById('ar-loading-message');
+            if (messageEl) {
+                messageEl.textContent = message;
+            }
+
+            if (progress !== null) {
+                const progressBar = document.getElementById('ar-loading-progress-bar');
+                if (progressBar) {
+                    progressBar.style.width = `${Math.min(100, Math.max(0, progress))}%`;
+                }
+            }
+        }
+
+        /**
+         * Hide loading state with smooth fade transition
+         * @param {number} delay - Optional delay in milliseconds before hiding
+         */
+        function hideLoadingState(delay = 0) {
+            console.log('✅ Hiding loading state', delay ? `(${delay}ms delay)` : '');
+
+            setTimeout(() => {
+                const overlay = document.getElementById('ar-loading-overlay');
+                if (overlay) {
+                    overlay.classList.add('fade-out');
+
+                    // Remove from DOM after transition completes
+                    setTimeout(() => {
+                        if (overlay && overlay.parentNode) {
+                            overlay.parentNode.removeChild(overlay);
+                        }
+                    }, 500); // Match CSS transition duration
+                }
+            }, delay);
+        }
+
     </script>
 </body>
 </html>
