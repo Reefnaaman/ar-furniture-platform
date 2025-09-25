@@ -734,7 +734,7 @@
                                 
                                 <!-- QR Code with glassmorphism -->
                                 <div style="background: linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(163, 113, 247, 0.1) 100%); padding: 20px; border-radius: 20px; border: 1px solid rgba(240, 246, 252, 0.15); box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);">
-                                    <img id="qrCodeImage" src="https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(selectedVariant ? window.location.href : window.location.origin + window.location.pathname + '?id=' + id)}" 
+                                    <img id="qrCodeImage" src="/api/qr-generate?url=${encodeURIComponent(selectedVariant ? window.location.href : window.location.origin + window.location.pathname + '?id=' + id)}&format=png&size=200&raw=true" 
                                          style="border-radius: 12px; display: block;">
                                 </div>
                                 
@@ -1119,7 +1119,7 @@
             // Update the existing QR code image instead of opening a popup
             const qrCodeImage = document.getElementById('qrCodeImage');
             if (qrCodeImage) {
-                const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(variantUrl)}`;
+                const qrUrl = `/api/qr-generate?url=${encodeURIComponent(variantUrl)}&format=png&size=200&raw=true`;
                 qrCodeImage.src = qrUrl;
                 console.log(`✅ Updated QR code to show ${variantName} variant`);
             }

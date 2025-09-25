@@ -4,6 +4,7 @@ import { deleteModel as deleteFromCloudinary } from '../lib/cloudinary.js';
 import { validateFileContent, sanitizeFilename, checkRateLimit, getRateLimitHeaders, hashIP } from '../lib/security.js';
 import { logger } from '../lib/logger.js';
 import { getInternalEndpoint } from '../lib/endpoints.js';
+import { generateQR } from '../lib/qr-generator.js';
 import multiparty from 'multiparty';
 import bcrypt from 'bcryptjs';
 
@@ -129,6 +130,11 @@ export default async function handler(req, res) {
     // Route: /api/qr-migration - Add QR persistence columns to database
     if (routePath === 'qr-migration') {
       return await handleQRMigration(req, res);
+    }
+
+    // Route: /api/qr-generate - Generate QR code using local generator
+    if (routePath === 'qr-generate') {
+      return await handleQRGenerate(req, res);
     }
 
     // Route: /api/upload-wallpaper
@@ -3125,6 +3131,65 @@ CREATE TABLE IF NOT EXISTS model_views (
     return res.status(500).json({
       success: false,
       error: 'QR migration failed',
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Handle QR Code generation using local generator
+ * GET /api/qr-generate?url=<url>&format=<format>&size=<size>
+ */
+async function handleQRGenerate(req, res) {
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const { url, format = 'png', size = 256, raw = false } = req.query;
+
+    if (!url) {
+      return res.status(400).json({
+        error: 'Missing required parameter: url',
+        example: '/api/qr-generate?url=https://newfurniture.live/view?id=abc123'
+      });
+    }
+
+    // Validate URL format
+    try {
+      new URL(url);
+    } catch {
+      return res.status(400).json({ error: 'Invalid URL format' });
+    }
+
+    // Generate QR code using local generator
+    const qrResult = await generateQR(url, {
+      format,
+      width: parseInt(size) || 256,
+      errorCorrectionLevel: 'M'
+    });
+
+    if (raw === 'true') {
+      // Return raw QR data (for direct embedding)
+      res.setHeader('Content-Type', format === 'svg' ? 'image/svg+xml' : `image/${format}`);
+      return res.send(qrResult.data);
+    } else {
+      // Return JSON response with metadata
+      return res.status(200).json({
+        success: true,
+        qr_code: qrResult.data,
+        format: qrResult.format,
+        url: url,
+        size: parseInt(size) || 256,
+        generated_at: new Date().toISOString()
+      });
+    }
+
+  } catch (error) {
+    console.error('QR Generation error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'QR generation failed',
       details: error.message
     });
   }
