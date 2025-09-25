@@ -7,11 +7,11 @@
   "rewrites": [
     {
       "source": "/f/(.*)",
-      "destination": "/api/f/[...params].js"
+      "destination": "/api/index.js?route=f&path=$1"
     },
     {
       "source": "/qr/(.*)",
-      "destination": "/api/qr/[...params].js"
+      "destination": "/api/index.js?route=qr&path=$1"
     },
     {
       "source": "/api/(.*)",

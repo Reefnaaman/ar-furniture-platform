@@ -1333,11 +1333,11 @@
         function launchDirectAR(modelId, modelUrl, modelInfo = null, selectedVariant = null) {
             console.log('🚀 Starting Progressive AR Experience');
 
-            // Step 1: Show loading state immediately
-            showLoadingState("Preparing AR experience...", 0);
-
-            // Step 2: Clear existing content and create model-viewer
+            // Step 1: Clear existing content first
             document.body.innerHTML = '';
+
+            // Step 2: Show loading state immediately
+            showLoadingState("Preparing AR experience...", 0);
 
             const modelViewer = document.createElement('model-viewer');
             modelViewer.setAttribute('id', 'modelViewer');
