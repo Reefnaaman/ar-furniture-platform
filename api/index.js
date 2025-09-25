@@ -126,6 +126,11 @@ export default async function handler(req, res) {
       return await handleCloudinarySave(req, res);
     }
 
+    // Route: /api/qr-migration - Add QR persistence columns to database
+    if (routePath === 'qr-migration') {
+      return await handleQRMigration(req, res);
+    }
+
     // Route: /api/upload-wallpaper
     if (routePath === 'upload-wallpaper') {
       return await handleWallpaperUpload(req, res);
@@ -2924,9 +2929,78 @@ async function handleCustomerLogoUpload(req, res, customerId) {
 
   } catch (error) {
     console.error('Error uploading customer logo:', error);
-    return res.status(500).json({ 
+    return res.status(500).json({
       error: 'Failed to upload logo',
-      details: error.message 
+      details: error.message
+    });
+  }
+}
+
+/**
+ * Handle QR Migration - Add QR persistence columns and optionally regenerate QR codes
+ * GET /api/qr-migration (mapped from /api/s8)
+ */
+async function handleQRMigration(req, res) {
+  if (req.method !== 'GET' && req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    if (req.method === 'GET') {
+      // Return SQL for manual migration
+      return res.status(200).json({
+        success: true,
+        message: 'Run the following SQL in your Supabase dashboard to add QR persistence columns:',
+        sql: `
+-- Add QR Code Persistence Columns to existing tables
+-- This enables 100% uptime QR codes by storing them in Cloudinary
+
+-- Add QR columns to models table
+ALTER TABLE models
+ADD COLUMN IF NOT EXISTS qr_code_url TEXT,
+ADD COLUMN IF NOT EXISTS qr_generated_at TIMESTAMPTZ;
+
+-- Add QR columns to model_variants table
+ALTER TABLE model_variants
+ADD COLUMN IF NOT EXISTS qr_code_url TEXT,
+ADD COLUMN IF NOT EXISTS qr_generated_at TIMESTAMPTZ;
+
+-- Create indexes for faster QR lookups
+CREATE INDEX IF NOT EXISTS idx_models_qr_generated_at ON models(qr_generated_at);
+CREATE INDEX IF NOT EXISTS idx_variants_qr_generated_at ON model_variants(qr_generated_at);
+
+-- Create missing model_views table (CRITICAL - fixes upload 500 errors)
+CREATE TABLE IF NOT EXISTS model_views (
+  id BIGSERIAL PRIMARY KEY,
+  model_id TEXT NOT NULL,
+  variant_id TEXT NULL,
+  viewed_at TIMESTAMPTZ DEFAULT NOW(),
+  user_agent TEXT,
+  ip_hash TEXT
+);
+        `,
+        instructions: [
+          '1. Go to your Supabase dashboard',
+          '2. Navigate to the SQL Editor',
+          '3. Copy and paste the SQL above',
+          '4. Click "Run" to add the columns and fix upload errors',
+          '5. Test model upload at https://newfurniture.live/admin'
+        ]
+      });
+    } else {
+      // POST: Future QR regeneration feature
+      return res.status(200).json({
+        success: true,
+        message: 'QR regeneration feature coming soon. For now, run the SQL migration above.',
+        note: 'New uploads will automatically generate QR codes once the persistence system is stable.'
+      });
+    }
+  } catch (error) {
+    console.error('QR Migration error:', error);
+    return res.status(500).json({
+      success: false,
+      error: 'QR migration failed',
+      details: error.message
     });
   }
 }
