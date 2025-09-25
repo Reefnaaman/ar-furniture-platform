@@ -6921,12 +6921,9 @@
          * Helper function to find model by ID from loaded data
          */
         function findModelById(modelId) {
-            // Search through customers and their models (assumes models are loaded in global scope)
-            if (window.loadedCustomers) {
-                for (const customer of window.loadedCustomers) {
-                    const model = customer.models?.find(m => m.id === modelId);
-                    if (model) return model;
-                }
+            // Search through the globally stored models data
+            if (window.currentModelsData) {
+                return window.currentModelsData.find(model => model.id === modelId);
             }
             return null;
         }

@@ -2451,6 +2451,41 @@
     </div> <!-- End main-content -->
     
     <script>
+        // ==================== SEO URL Generation ====================
+
+        /**
+         * Generate SEO-friendly URL for a model and variant
+         * @param {Object} model - Model object with url_slug, customer_slug, id
+         * @param {string|null} variantId - Optional variant ID
+         * @param {string|null} variantName - Optional variant name for slug
+         * @returns {string} SEO-friendly URL
+         */
+        function generateSEOUrl(model, variantId = null, variantName = null) {
+            if (!model || !model.customer_slug || !model.url_slug) {
+                console.warn('⚠️ Model missing SEO data, fallback to old URL:', model);
+                return `https://newfurniture.live/view?id=${model.id}`;
+            }
+
+            // Base SEO URL: /f/{customer-slug}/{product-slug-id}
+            const baseUrl = `https://newfurniture.live/f/${model.customer_slug}/${model.url_slug}-${model.id}`;
+
+            if (variantId && variantId !== 'original' && variantName) {
+                // Add variant slug if specified
+                const variantSlug = variantName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                return `${baseUrl}/${variantSlug}`;
+            }
+
+            return baseUrl;
+        }
+
+        /**
+         * Generate local SEO URL (for same-origin navigation)
+         */
+        function generateLocalSEOUrl(model, variantId = null, variantName = null) {
+            const fullUrl = generateSEOUrl(model, variantId, variantName);
+            return fullUrl.replace('https://newfurniture.live', '');
+        }
+
         // Error reporting utility for customers
         async function reportCustomerIssue(errorMessage, context = {}) {
             const userDescription = prompt('Please describe what you were doing when this error occurred (optional):');
@@ -2720,6 +2755,9 @@
         }
         
         function displayFurniture(models) {
+            // Store models data globally for variant switching
+            window.currentModelsData = models;
+
             if (!models || models.length === 0) {
                 document.getElementById('furnitureContainer').innerHTML = `
                     <div class="empty-state">
@@ -2733,13 +2771,15 @@
             let html = '<div class="models-grid" id="modelsGrid">';
             
             models.forEach(model => {
-                // Create view URL with background color if set
-                let viewUrl = `https://newfurniture.live/view?id=${model.id}`;
-                let localViewUrl = `/view?id=${model.id}`;
+                // Create SEO-friendly view URLs
+                let viewUrl = generateSEOUrl(model);
+                let localViewUrl = generateLocalSEOUrl(model);
                 const savedColor = localStorage.getItem('furniture_background_color');
                 if (savedColor && savedColor !== '#ffffff' && savedColor !== 'default') {
-                    viewUrl += `&bg=${encodeURIComponent(savedColor)}`;
-                    localViewUrl += `&bg=${encodeURIComponent(savedColor)}`;
+                    // For SEO URLs, append as query parameter
+                    const separator = viewUrl.includes('?') ? '&' : '?';
+                    viewUrl += `${separator}bg=${encodeURIComponent(savedColor)}`;
+                    localViewUrl += `${separator}bg=${encodeURIComponent(savedColor)}`;
                 }
                 const modelUrl = model.cloudinary_url || `/api/model/${model.id}`;
                 
@@ -2882,43 +2922,84 @@
         function updateCopyLinkUrl(card, modelId, variantId) {
             const copyButton = card.querySelector('button[onclick*="copyToClipboard"]');
             if (copyButton) {
+                // Find the model object from the global models data
+                const model = findModelById(modelId);
                 let newUrl;
-                if (variantId === 'original') {
-                    // Original variant - no variant parameter needed
-                    newUrl = `https://newfurniture.live/view?id=${modelId}`;
+
+                if (model && model.customer_slug && model.url_slug) {
+                    // Use SEO URL with variant support
+                    if (variantId === 'original') {
+                        newUrl = generateSEOUrl(model);
+                    } else {
+                        // Find variant name for SEO URL
+                        const variant = model.variants?.find(v => v.id === variantId);
+                        const variantName = variant ? variant.variant_name : null;
+                        newUrl = generateSEOUrl(model, variantId, variantName);
+                    }
                 } else {
-                    // Specific variant - include variant parameter
-                    newUrl = `https://newfurniture.live/view?id=${modelId}&variant=${variantId}`;
+                    // Fallback to old URL format if model lacks SEO data
+                    console.warn('⚠️ Model missing SEO data, using fallback URLs for:', modelId);
+                    if (variantId === 'original') {
+                        newUrl = `https://newfurniture.live/view?id=${modelId}`;
+                    } else {
+                        newUrl = `https://newfurniture.live/view?id=${modelId}&variant=${variantId}`;
+                    }
                 }
-                
+
                 // Update the onclick attribute with the new URL
                 copyButton.setAttribute('onclick', `copyToClipboard('${newUrl}', this)`);
-                console.log('🔗 Updated copy link URL:', newUrl);
+                console.log('🔗 Updated copy link URL to SEO format:', newUrl);
             }
+        }
+
+        /**
+         * Helper function to find model by ID from loaded data
+         */
+        function findModelById(modelId) {
+            // Search through the globally stored models data
+            if (window.currentModelsData) {
+                return window.currentModelsData.find(model => model.id === modelId);
+            }
+            return null;
         }
 
         function updateViewARUrl(card, modelId, variantId) {
             const viewARLink = card.querySelector('a.view-ar-link[data-model-id="' + modelId + '"]');
             if (viewARLink) {
+                // Find the model object from the global models data
+                const model = findModelById(modelId);
                 let newUrl;
-                if (variantId === 'original') {
-                    // Original variant - no variant parameter needed
-                    newUrl = `/view?id=${modelId}`;
+
+                if (model && model.customer_slug && model.url_slug) {
+                    // Use SEO URL with variant support
+                    if (variantId === 'original') {
+                        newUrl = generateLocalSEOUrl(model);
+                    } else {
+                        // Find variant name for SEO URL
+                        const variant = model.variants?.find(v => v.id === variantId);
+                        const variantName = variant ? variant.variant_name : null;
+                        newUrl = generateLocalSEOUrl(model, variantId, variantName);
+                    }
                 } else {
-                    // Specific variant - include variant parameter
-                    newUrl = `/view?id=${modelId}&variant=${variantId}`;
+                    // Fallback to old URL format if model lacks SEO data
+                    console.warn('⚠️ Model missing SEO data, using fallback URLs for view AR:', modelId);
+                    if (variantId === 'original') {
+                        newUrl = `/view?id=${modelId}`;
+                    } else {
+                        newUrl = `/view?id=${modelId}&variant=${variantId}`;
+                    }
                 }
-                
+
                 // Add background color parameter if set (but not for default)
                 const savedColor = localStorage.getItem('furniture_background_color');
                 if (savedColor && savedColor !== '#ffffff' && savedColor !== 'default') {
                     const separator = newUrl.includes('?') ? '&' : '?';
                     newUrl += `${separator}bg=${encodeURIComponent(savedColor)}`;
                 }
-                
+
                 // Update the href attribute with the new URL
                 viewARLink.setAttribute('href', newUrl);
-                console.log('👁️ Updated View AR URL:', newUrl);
+                console.log('👁️ Updated View AR URL to SEO format:', newUrl);
             }
         }
         

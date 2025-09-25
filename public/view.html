@@ -823,15 +823,37 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
 
         async function loadInitialQRCode(modelInfo, variantId) {
             try {
-                // Determine the correct URL for QR code
+                // Generate SEO-friendly URL for QR code
                 const currentVariantId = variantId || 'original';
-                const baseUrl = window.location.origin + window.location.pathname;
-                const modelId = modelInfo?.id || new URLSearchParams(window.location.search).get('id');
-                const variantUrl = currentVariantId === 'original' ?
-                    `${baseUrl}?id=${modelId}` :
-                    `${baseUrl}?id=${modelId}&variant=${currentVariantId}`;
+                let variantUrl;
 
-                console.log('🔲 Loading initial QR code for URL:', variantUrl);
+                if (modelInfo && modelInfo.customer_slug && modelInfo.url_slug) {
+                    // Use SEO URL format: /f/{customer}/{product-slug-id}/{variant?}
+                    const baseUrl = `${window.location.origin}/f/${modelInfo.customer_slug}/${modelInfo.url_slug}-${modelInfo.id}`;
+
+                    if (currentVariantId === 'original') {
+                        variantUrl = baseUrl;
+                    } else {
+                        // Find variant info for SEO URL
+                        const variant = modelInfo.variants?.find(v => v.id === currentVariantId);
+                        if (variant) {
+                            const variantSlug = variant.variant_name.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                            variantUrl = `${baseUrl}/${variantSlug}`;
+                        } else {
+                            variantUrl = baseUrl; // Fallback to base if variant not found
+                        }
+                    }
+                } else {
+                    // Fallback to old URL format if model lacks SEO data
+                    console.warn('⚠️ Model missing SEO data for QR, using fallback URLs:', modelInfo);
+                    const baseUrl = window.location.origin + window.location.pathname;
+                    const modelId = modelInfo?.id || new URLSearchParams(window.location.search).get('id');
+                    variantUrl = currentVariantId === 'original' ?
+                        `${baseUrl}?id=${modelId}` :
+                        `${baseUrl}?id=${modelId}&variant=${currentVariantId}`;
+                }
+
+                console.log('🔲 Loading initial QR code for SEO URL:', variantUrl);
 
                 const qrCodeImage = document.getElementById('qrCodeImage');
                 if (qrCodeImage) {
@@ -1171,16 +1193,34 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
 
         // Generate QR code for specific variant
         function generateVariantQR(modelId, variantId, variantName, clickedElement) {
-            const baseUrl = window.location.origin + window.location.pathname;
-            let variantUrl = variantId ? `${baseUrl}?id=${modelId}&variant=${variantId}` : `${baseUrl}?id=${modelId}`;
-            
+            let variantUrl;
+
+            // Generate SEO-friendly URL for QR code
+            if (globalModelInfo && globalModelInfo.customer_slug && globalModelInfo.url_slug) {
+                // Use SEO URL format: /f/{customer}/{product-slug-id}/{variant?}
+                const baseUrl = `${window.location.origin}/f/${globalModelInfo.customer_slug}/${globalModelInfo.url_slug}-${globalModelInfo.id}`;
+
+                if (variantId) {
+                    // Add variant slug if specified
+                    const variantSlug = variantName.toLowerCase().replace(/[^a-z0-9]/g, '-');
+                    variantUrl = `${baseUrl}/${variantSlug}`;
+                } else {
+                    variantUrl = baseUrl;
+                }
+            } else {
+                // Fallback to old URL format if model lacks SEO data
+                console.warn('⚠️ Model missing SEO data for variant QR, using fallback URLs:', globalModelInfo);
+                const baseUrl = window.location.origin + window.location.pathname;
+                variantUrl = variantId ? `${baseUrl}?id=${modelId}&variant=${variantId}` : `${baseUrl}?id=${modelId}`;
+            }
+
             // Add background color parameter if present
             if (backgroundColorParam) {
                 const separator = variantUrl.includes('?') ? '&' : '?';
                 variantUrl += `${separator}bg=${encodeURIComponent(backgroundColorParam)}`;
             }
-            
-            console.log(`📱 Generating QR for ${variantName}: ${variantUrl}`);
+
+            console.log(`📱 Generating QR for ${variantName} with SEO URL: ${variantUrl}`);
             
             // Update the existing QR code image instead of opening a popup
             const qrCodeImage = document.getElementById('qrCodeImage');
