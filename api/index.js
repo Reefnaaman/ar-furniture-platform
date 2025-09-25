@@ -3169,20 +3169,33 @@ async function handleQRGenerate(req, res) {
       errorCorrectionLevel: 'M'
     });
 
+    console.log('🔍 QR Handler - raw parameter:', raw, 'type:', typeof raw);
+    console.log('🔍 QR result structure:', Object.keys(qrResult));
+
     if (raw === 'true') {
       // Return raw QR data (for direct embedding)
+      console.log('✅ Raw format requested, setting headers...');
       res.setHeader('Content-Type', format === 'svg' ? 'image/svg+xml' : `image/${format}`);
-      // Handle different QR result formats
+
+      // Handle the nested QR result structure
       if (qrResult.qr_code && qrResult.qr_code.data) {
-        return res.send(Buffer.from(qrResult.qr_code.data));
+        console.log('✅ Found nested qr_code.data, converting to buffer...');
+        const buffer = Buffer.from(qrResult.qr_code.data);
+        console.log('✅ Buffer created, size:', buffer.length);
+        return res.send(buffer);
+      } else if (qrResult.data) {
+        console.log('✅ Found direct data property...');
+        return res.send(qrResult.data);
       } else {
-        return res.send(qrResult.data || qrResult);
+        console.log('❌ No data found in QR result');
+        return res.status(500).json({ error: 'No QR data found' });
       }
     } else {
       // Return JSON response with metadata
+      console.log('📄 JSON format requested');
       return res.status(200).json({
         success: true,
-        qr_code: qrResult.data || qrResult.qr_code,
+        qr_code: qrResult.qr_code || qrResult.data,
         format: qrResult.format,
         url: url,
         size: parseInt(size) || 256,
