@@ -3178,10 +3178,16 @@ async function handleQRGenerate(req, res) {
       res.setHeader('Content-Type', format === 'svg' ? 'image/svg+xml' : `image/${format}`);
       res.setHeader('Cache-Control', 'public, max-age=3600'); // Cache for 1 hour
 
-      // Handle the QR result structure properly
-      if (qrResult.success && qrResult.data && qrResult.data.qr_code) {
-        const qrData = qrResult.data.qr_code;
+      // Handle the QR result structure properly - check both possible structures
+      let qrData = null;
 
+      if (qrResult.success && qrResult.data && qrResult.data.qr_code) {
+        qrData = qrResult.data.qr_code;
+      } else if (qrResult.qr_code && qrResult.qr_code.qr_code) {
+        qrData = qrResult.qr_code.qr_code;
+      }
+
+      if (qrData) {
         if (format === 'svg') {
           // For SVG, return the string directly
           console.log('✅ Returning SVG string, length:', qrData.length);
@@ -3192,6 +3198,9 @@ async function handleQRGenerate(req, res) {
             const buffer = Buffer.from(qrData.data);
             console.log('✅ Returning PNG buffer, size:', buffer.length);
             return res.send(buffer);
+          } else if (Buffer.isBuffer(qrData)) {
+            console.log('✅ Returning PNG buffer directly, size:', qrData.length);
+            return res.send(qrData);
           }
         }
       }
