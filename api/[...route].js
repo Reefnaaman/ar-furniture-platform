@@ -2873,18 +2873,16 @@ CREATE INDEX IF NOT EXISTS idx_qr_log_generated_at ON qr_generation_log(generate
       const { regenerateAll } = req.body;
 
       if (regenerateAll) {
-        const qrPersistence = await import('../lib/qr-persistence.js');
-        const results = await qrPersistence.regenerateAllQRCodes();
-
+        // TODO: Implement QR regeneration once persistence layer is stable
         return res.status(200).json({
           success: true,
-          message: 'QR codes regenerated',
-          results
+          message: 'QR regeneration feature coming soon. For now, run the SQL migration above.',
+          note: 'New uploads will automatically generate QR codes once columns are added.'
         });
       } else {
         return res.status(200).json({
           success: true,
-          message: 'QR persistence columns are ready. Send { "regenerateAll": true } to regenerate all QR codes.'
+          message: 'QR persistence columns are ready. Send { "regenerateAll": true } to regenerate all QR codes (feature in development).'
         });
       }
     }
