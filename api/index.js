@@ -2937,6 +2937,131 @@ async function handleCustomerLogoUpload(req, res, customerId) {
 }
 
 /**
+ * Handle saving model metadata after successful Cloudinary upload
+ * POST /api/cloudinary-save (mapped from /api/u3)
+ */
+async function handleCloudinarySave(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  try {
+    const {
+      cloudinaryUrl,
+      cloudinaryPublicId,
+      fileSize,
+      title,
+      description,
+      customerId,
+      customerName,
+      dimensions,
+      parentModelId,
+      variantName,
+      hexColor,
+      isVariant
+    } = req.body;
+
+    if (!cloudinaryUrl || !cloudinaryPublicId) {
+      return res.status(400).json({
+        error: 'Cloudinary URL and public ID are required'
+      });
+    }
+
+    let dbResult;
+
+    if (isVariant && parentModelId && variantName) {
+      // Handle variant upload
+      dbResult = await saveModelVariant({
+        parentModelId: parentModelId,
+        variantName: variantName,
+        hexColor: hexColor || '#000000',
+        cloudinaryUrl: cloudinaryUrl,
+        cloudinaryPublicId: cloudinaryPublicId,
+        fileSize: fileSize || 0,
+        isPrimary: false,
+        variantType: 'upload'
+      });
+    } else {
+      // Handle regular model upload
+      let parsedDimensions = null;
+      if (dimensions) {
+        try {
+          parsedDimensions = typeof dimensions === 'string' ? JSON.parse(dimensions) : dimensions;
+        } catch (error) {
+          console.warn('Failed to parse dimensions:', error.message);
+        }
+      }
+
+      const modelParams = {
+        title: title || 'Untitled Model',
+        description: description || '',
+        filename: cloudinaryPublicId.split('/').pop() + '.glb',
+        cloudinaryUrl: cloudinaryUrl,
+        cloudinaryPublicId: cloudinaryPublicId,
+        fileSize: fileSize || 0,
+        customerId: customerId || 'unassigned',
+        customerName: customerName || 'Unassigned',
+        dominantColor: '#6b7280',
+        dimensions: parsedDimensions,
+        metadata: {
+          uploadMethod: 'direct',
+          uploadedAt: new Date().toISOString()
+        }
+      };
+
+      dbResult = await saveModel(modelParams);
+    }
+
+    if (!dbResult || !dbResult.success) {
+      return res.status(500).json({
+        error: 'Failed to save model to database',
+        details: dbResult?.error || 'Unknown database error'
+      });
+    }
+
+    const domain = process.env.DOMAIN || 'newfurniture.live';
+
+    if (isVariant) {
+      return res.status(200).json({
+        success: true,
+        id: dbResult.id,
+        parentModelId: parentModelId,
+        variantName: variantName,
+        hexColor: hexColor || '#000000',
+        cloudinaryUrl: cloudinaryUrl,
+        viewUrl: `https://${domain}/view?id=${parentModelId}&variant=${dbResult.id}`,
+        message: 'Variant uploaded successfully!'
+      });
+    } else {
+      return res.status(200).json({
+        success: true,
+        id: dbResult.id,
+        viewUrl: `https://${domain}/view?id=${dbResult.id}`,
+        directUrl: cloudinaryUrl,
+        shareUrl: `https://${domain}/view?id=${dbResult.id}`,
+        title: title,
+        fileSize: fileSize,
+        message: 'Model uploaded successfully!'
+      });
+    }
+
+  } catch (error) {
+    console.error('Cloudinary save error:', error);
+
+    return res.status(500).json({
+      error: 'Something went wrong on our end. Please try again in a few moments.',
+      message: 'Service temporarily unavailable',
+      showReportButton: true,
+      reportData: {
+        errorType: 'server_error',
+        timestamp: new Date().toISOString(),
+        userAgent: req.headers['user-agent']
+      }
+    });
+  }
+}
+
+/**
  * Handle QR Migration - Add QR persistence columns and optionally regenerate QR codes
  * GET /api/qr-migration (mapped from /api/s8)
  */
