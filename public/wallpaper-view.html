@@ -558,7 +558,7 @@
             
             // Generate QR code for mobile access
             const currentUrl = window.location.href;
-            const qrCodeUrl = `/api/qr-generate?url=${encodeURIComponent(currentUrl)}&format=png&size=200&raw=true`;
+            const qrCodeUrl = `/api/u4?url=${encodeURIComponent(currentUrl)}&format=png&size=200&raw=true`;
             document.getElementById('qrCode').src = qrCodeUrl;
             
             console.log('✅ Desktop view setup complete');
