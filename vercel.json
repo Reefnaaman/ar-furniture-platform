@@ -6,6 +6,14 @@
   },
   "rewrites": [
     {
+      "source": "/f/(.*)",
+      "destination": "/api/f/[...params].js"
+    },
+    {
+      "source": "/qr/(.*)",
+      "destination": "/api/qr/[...params].js"
+    },
+    {
       "source": "/api/(.*)",
       "destination": "/api/index.js"
     },
