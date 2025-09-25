@@ -3172,12 +3172,17 @@ async function handleQRGenerate(req, res) {
     if (raw === 'true') {
       // Return raw QR data (for direct embedding)
       res.setHeader('Content-Type', format === 'svg' ? 'image/svg+xml' : `image/${format}`);
-      return res.send(qrResult.data);
+      // Handle different QR result formats
+      if (qrResult.qr_code && qrResult.qr_code.data) {
+        return res.send(Buffer.from(qrResult.qr_code.data));
+      } else {
+        return res.send(qrResult.data || qrResult);
+      }
     } else {
       // Return JSON response with metadata
       return res.status(200).json({
         success: true,
-        qr_code: qrResult.data,
+        qr_code: qrResult.data || qrResult.qr_code,
         format: qrResult.format,
         url: url,
         size: parseInt(size) || 256,
