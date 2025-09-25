@@ -1325,7 +1325,10 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
             modelViewer.addEventListener('load', () => {
                 console.log('📱 Model loaded successfully');
                 modelLoaded = true;
-                updateLoadingState("Activating camera...", 75);
+
+                // CRITICAL: Hide loading spinner immediately when model is ready
+                hideLoadingState(0);
+                console.log('✅ Loading spinner hidden - model ready for AR interaction');
 
                 // Try to activate AR now that model is loaded
                 if (modelViewer.canActivateAR && !arActivated) {
@@ -1351,13 +1354,10 @@ Params: ${JSON.stringify(Object.fromEntries(urlParams), null, 2)}
                     case 'session-started':
                         console.log('✅ AR session started successfully');
                         arSessionStarted = true;
-                        updateLoadingState("AR camera active!", 100);
 
-                        // Hide loading state after a brief moment
-                        setTimeout(() => {
-                            hideLoadingState();
-                            showARControls(); // Show variant controls now that AR is active
-                        }, 1000);
+                        // Loading state should already be hidden when model loaded
+                        // Just show AR controls now
+                        showARControls();
                         break;
 
                     case 'failed':
