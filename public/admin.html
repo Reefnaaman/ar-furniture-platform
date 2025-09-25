@@ -4920,7 +4920,7 @@
                 document.getElementById('progressBar').style.width = '80%';
                 document.getElementById('progressPercentage').textContent = '80%';
 
-                const saveResponse = await fetch('/api/cloudinary-save', {
+                const saveResponse = await fetch('/api/u3', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -6611,7 +6611,7 @@
 
                 console.log('🔧 Sending variant save request:', requestData);
 
-                const saveResponse = await fetch('/api/cloudinary-save', {
+                const saveResponse = await fetch('/api/u3', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
